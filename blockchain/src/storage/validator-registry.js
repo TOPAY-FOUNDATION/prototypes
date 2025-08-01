@@ -4,6 +4,12 @@
  */
 
 import crypto from 'crypto';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { ValidatorRegistrationRPC } from '../rpc/validator-registration-rpc.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export class ValidatorRegistry {
     constructor(options = {}) {
@@ -15,8 +21,18 @@ export class ValidatorRegistry {
             maxRetries: options.maxRetries || 3,
             retryDelay: options.retryDelay || 1000,
             healthCheckInterval: options.healthCheckInterval || 30000,
+            enableRPC: options.enableRPC !== false, // Default to true
             ...options
         };
+        
+        // Initialize RPC registration system
+        if (this.options.enableRPC) {
+            this.rpcSystem = new ValidatorRegistrationRPC({
+                registryFile: path.join(__dirname, '../../validator-registry.json'),
+                ...options.rpcOptions
+            });
+            console.log('🌐 RPC registration system enabled');
+        }
         
         // Load default validators
         this.loadDefaultValidators();
@@ -31,34 +47,39 @@ export class ValidatorRegistry {
      * Load default validator configurations
      */
     loadDefaultValidators() {
+        // Get base host and protocol from environment
+        const baseHost = process.env.VALIDATOR_HOST || 'localhost';
+        const protocol = process.env.VALIDATOR_PROTOCOL || 'http';
+        
         const defaultValidators = [
             {
                 code: 'TOPAY-VAL-LOCAL-001',
                 name: 'Local Validator 1',
-                url: 'http://localhost:8547',
+                port: 8547,
                 region: 'local',
                 tier: 'primary'
             },
             {
                 code: 'TOPAY-VAL-LOCAL-002', 
                 name: 'Local Validator 2',
-                url: 'http://localhost:8548',
+                port: 8548,
                 region: 'local',
                 tier: 'secondary'
             }
         ];
 
         // Load from environment if available
-        if (process.env.VALIDATOR_CODES) {
+        if (process.env.VALIDATOR_CODES && process.env.VALIDATOR_PORTS) {
             const codes = process.env.VALIDATOR_CODES.split(',');
-            const urls = process.env.VALIDATOR_URLS ? process.env.VALIDATOR_URLS.split(',') : [];
+            const ports = process.env.VALIDATOR_PORTS.split(',').map(p => parseInt(p.trim()));
             
             codes.forEach((code, index) => {
-                const url = urls[index] || `http://localhost:${8547 + index}`;
+                const port = ports[index] || (8547 + index);
                 this.registerValidator({
                     code: code.trim(),
                     name: `Validator ${index + 1}`,
-                    url: url.trim(),
+                    url: this.buildValidatorUrl(protocol, baseHost, port, code.trim()),
+                    port: port,
                     region: process.env.VALIDATOR_REGION || 'local',
                     tier: index === 0 ? 'primary' : 'secondary'
                 });
@@ -66,9 +87,17 @@ export class ValidatorRegistry {
         } else {
             // Use defaults
             defaultValidators.forEach(validator => {
+                validator.url = this.buildValidatorUrl(protocol, baseHost, validator.port, validator.code);
                 this.registerValidator(validator);
             });
         }
+    }
+
+    /**
+     * Build validator URL with port and /code structure
+     */
+    buildValidatorUrl(protocol, host, port, code) {
+        return `${protocol}://${host}:${port}/code/${code}`;
     }
 
     /**
@@ -119,6 +148,25 @@ export class ValidatorRegistry {
     }
 
     /**
+     * Get validator URL for a specific code
+     */
+    getValidatorUrl(code) {
+        const validator = this.getValidator(code);
+        return validator ? validator.url : null;
+    }
+
+    /**
+     * Get root URL from validator URL
+     */
+    getRootUrlFromValidator(code) {
+        const validator = this.getValidator(code);
+        if (!validator) return null;
+        
+        // Extract root URL by removing /code/{CODE} part
+        return validator.url.replace(/\/code\/[^\/]+$/, '');
+    }
+
+    /**
      * Get all validators
      */
     getAllValidators() {
@@ -129,7 +177,69 @@ export class ValidatorRegistry {
      * Get active validators
      */
     getActiveValidators() {
+        // Sync with RPC system if enabled
+        if (this.options.enableRPC) {
+            this.syncWithRPCSystem();
+        }
+        
         return this.getAllValidators().filter(v => this.activeValidators.has(v.code));
+    }
+
+    /**
+     * Sync validators from RPC registration system
+     */
+    syncWithRPCSystem() {
+        if (!this.rpcSystem) return;
+        
+        try {
+            const rpcValidators = this.rpcSystem.getActiveValidators();
+            
+            rpcValidators.forEach(rpcValidator => {
+                // Convert RPC validator format to registry format
+                const validator = {
+                    code: rpcValidator.code,
+                    name: rpcValidator.name,
+                    url: rpcValidator.url,
+                    ip: rpcValidator.ip,
+                    port: rpcValidator.port,
+                    region: rpcValidator.region,
+                    tier: rpcValidator.tier,
+                    capabilities: rpcValidator.capabilities,
+                    status: rpcValidator.status,
+                    healthScore: rpcValidator.healthScore,
+                    responseTime: 0,
+                    lastCheck: rpcValidator.lastSeen,
+                    registeredAt: rpcValidator.registeredAt,
+                    source: 'rpc' // Mark as RPC-registered
+                };
+                
+                // Add or update validator in main registry
+                this.validators.set(rpcValidator.code, validator);
+            });
+            
+            console.log(`🔄 Synced ${rpcValidators.length} RPC validators`);
+        } catch (error) {
+            console.error('❌ Error syncing with RPC system:', error.message);
+        }
+    }
+
+    /**
+     * Get RPC registration system
+     */
+    getRPCSystem() {
+        return this.rpcSystem;
+    }
+
+    /**
+     * Setup RPC routes on Express app
+     */
+    setupRPCRoutes(app) {
+        if (this.rpcSystem) {
+            this.rpcSystem.setupRoutes(app);
+            console.log('🌐 RPC routes setup complete');
+        } else {
+            console.warn('⚠️ RPC system not enabled');
+        }
     }
 
     /**
@@ -245,13 +355,15 @@ export class ValidatorRegistry {
     /**
      * Make HTTP request to validator
      */
-    async makeRequest(baseUrl, endpoint, method = 'GET', data = null) {
-        const url = `${baseUrl}${endpoint}`;
+    async makeRequest(validatorUrl, endpoint, method = 'GET', data = null) {
+        // validatorUrl already includes /code/{CODE}, just append endpoint
+        const url = `${validatorUrl}${endpoint}`;
         const options = {
             method,
             headers: {
                 'Content-Type': 'application/json',
-                'User-Agent': 'TOPAY-Blockchain/1.0'
+                'User-Agent': 'TOPAY-Blockchain/1.0',
+                'X-Validator-Code': this.extractCodeFromUrl(validatorUrl)
             },
             timeout: this.options.timeout
         };
@@ -267,6 +379,14 @@ export class ValidatorRegistry {
         }
         
         return await response.json();
+    }
+
+    /**
+     * Extract validator code from URL
+     */
+    extractCodeFromUrl(url) {
+        const match = url.match(/\/code\/([^\/]+)/);
+        return match ? match[1] : 'unknown';
     }
 
     /**

@@ -5,14 +5,14 @@
  * Features quantum-safe cryptography using TOPAY-Z512
  */
 
-const {
+import {
   generateKeyPair,
   computeHash,
   kemEncapsulate,
   kemDecapsulate,
   fragmentData,
   reconstructData
-} = require('@topayfoundation/topayz512');
+} from '@topayfoundation/topayz512';
 
 class Transaction {
   constructor(from, to, amount, data = null) {
@@ -214,4 +214,4 @@ class Transaction {
   }
 }
 
-module.exports = { Transaction };
+export { Transaction };

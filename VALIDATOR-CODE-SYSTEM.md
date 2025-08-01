@@ -268,8 +268,16 @@ const persistence = new RemotePersistenceManager(validatorCodes, {
 1. **Validator Not Found**
 
    ```err
-   Error: Validator TOPAY-VAL-LOCAL-001 not found in registry
+   Error: Connection timeout after 10000ms
    ```
+
+   Error: Validator TOPAY-VAL-LOCAL-001 not found in registry
+
+   ```err
+
+   Error: Validator TOPAY-VAL-LOCAL-001 not found in registry
+
+   ```err
 
    - Check if validator code is registered
    - Verify environment variables are set correctly

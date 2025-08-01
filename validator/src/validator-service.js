@@ -4,16 +4,21 @@
  */
 
 // Load environment variables
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const EventEmitter = require('events');
-const express = require('express');
-const WebSocket = require('ws');
-const fs = require('fs').promises;
-const path = require('path');
-const crypto = require('crypto');
-const { machineId } = require('node-machine-id');
-const si = require('systeminformation');
+import EventEmitter from 'events';
+import express from 'express';
+import WebSocket from 'ws';
+import { promises as fs } from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+import pkg from 'node-machine-id';
+const { machineId } = pkg;
+import si from 'systeminformation';
+
+// Import ValidatorClient for RPC registration
+import { ValidatorClient } from './rpc/validator-client.js';
 
 // Dynamic import for ES modules
 let fetch;
@@ -42,6 +47,9 @@ class ValidatorService extends EventEmitter {
         // Connection status tracking
         this.rpcConnected = false;
         this.wsConnected = false;
+        
+        // RPC Client for blockchain registration
+        this.validatorClient = null;
 
         // Blockchain classes (loaded dynamically)
         this.Blockchain = null;
@@ -79,6 +87,9 @@ class ValidatorService extends EventEmitter {
             
             // Start WebSocket server
             await this.startWebSocketServer();
+            
+            // Initialize and register with blockchain via RPC
+            await this.initializeRPCClient();
             
             // Connect to blockchain network
             await this.connectToNetwork();
@@ -129,6 +140,16 @@ class ValidatorService extends EventEmitter {
                 this.server.close();
             }
 
+            // Unregister from blockchain
+            if (this.validatorClient) {
+                try {
+                    await this.validatorClient.unregister();
+                    console.log('✅ Unregistered from blockchain');
+                } catch (error) {
+                    console.warn('⚠️ Failed to unregister from blockchain:', error.message);
+                }
+            }
+
             // Disconnect from peers
             this.peers.clear();
 
@@ -166,10 +187,10 @@ class ValidatorService extends EventEmitter {
 
     async loadBlockchainClasses() {
         try {
-            // Use local blockchain files with require for CommonJS modules
-            const { Blockchain } = require('./blockchain/blockchain.js');
-            const { Transaction } = require('./blockchain/transaction.js');
-            const { Block } = require('./blockchain/block.js');
+            // Use local blockchain files with ES module imports
+            const { Blockchain } = await import('./blockchain/blockchain.js');
+            const { Transaction } = await import('./blockchain/transaction.js');
+            const { Block } = await import('./blockchain/block.js');
 
             this.Blockchain = Blockchain;
             this.Transaction = Transaction;
@@ -227,7 +248,10 @@ class ValidatorService extends EventEmitter {
     async startApiServer() {
         const app = express();
         app.use(express.json());
-        app.use(require('cors')());
+        
+        // Import cors dynamically
+        const cors = await import('cors');
+        app.use(cors.default());
         
         const apiPort = process.env.VALIDATOR_PORT || this.config.get('apiPort', 8547);
 
@@ -897,6 +921,49 @@ class ValidatorService extends EventEmitter {
         }
     }
 
+    async initializeRPCClient() {
+        try {
+            const blockchainUrl = process.env.BLOCKCHAIN_URL || this.config.get('blockchainUrl', 'http://localhost:3001');
+            const validatorPort = process.env.VALIDATOR_PORT || this.config.get('apiPort', 8547);
+            
+            this.validatorClient = new ValidatorClient(blockchainUrl, {
+                validatorId: this.validatorId,
+                port: validatorPort,
+                host: 'localhost'
+            });
+            
+            // Register with blockchain
+            const registrationResult = await this.validatorClient.register();
+            console.log('✅ Registered with blockchain:', registrationResult);
+            
+            // Start periodic status updates
+            this.startStatusUpdates();
+            
+        } catch (error) {
+            console.error('❌ Failed to initialize RPC client:', error);
+            throw error;
+        }
+    }
+
+    startStatusUpdates() {
+        // Send status updates every 30 seconds
+        setInterval(async () => {
+            if (this.validatorClient && this.isRunning) {
+                try {
+                    const status = this.getStatus();
+                    await this.validatorClient.updateStatus({
+                        status: 'active',
+                        blockHeight: status.blockchain?.blockCount || 0,
+                        lastValidation: status.validationStats.lastValidation,
+                        uptime: status.uptime
+                    });
+                } catch (error) {
+                    console.warn('⚠️ Failed to update status:', error.message);
+                }
+            }
+        }, 30000);
+    }
+
     getStatus() {
         const latestBlock = this.blockchain ? this.blockchain.getLatestBlock() : null;
         
@@ -1005,4 +1072,26 @@ class ValidatorService extends EventEmitter {
     }
 }
 
-module.exports = ValidatorService;
+export default ValidatorService;
+
+// Main execution - start validator when file is run directly
+const validator = new ValidatorService();
+
+// Handle graceful shutdown
+process.on('SIGINT', async () => {
+    console.log('\n🛑 Shutting down validator...');
+    await validator.stop();
+    process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+    console.log('\n🛑 Shutting down validator...');
+    await validator.stop();
+    process.exit(0);
+});
+
+// Start the validator
+validator.start().catch(error => {
+    console.error('❌ Failed to start validator:', error);
+    process.exit(1);
+});

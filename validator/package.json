@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "TOPAY Foundation Quantum-Safe Blockchain Validator Client for Windows",
   "main": "src/main.js",
-  "type": "commonjs",
+  "type": "module",
   "homepage": "./",
   "author": {
     "name": "TOPAY Foundation",
@@ -36,7 +36,9 @@
     "service:install": "node scripts/install-service.js",
     "service:uninstall": "node scripts/uninstall-service.js",
     "installer:create": "npm run build:installer",
-    "desktop:icon": "node scripts/add-desktop-icon.js"
+    "desktop:icon": "node scripts/add-desktop-icon.js",
+    "example:register": "node example-validator-registration.js",
+    "validator:register": "node example-validator-registration.js"
   },
   "dependencies": {
     "@topayfoundation/topayz512": "^0.1.2",

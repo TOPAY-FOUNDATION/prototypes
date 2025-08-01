@@ -84,7 +84,7 @@ class TOPAYNetworkNode {
     console.log(`📡 Node ID: ${this.nodeId}`);
     console.log(`🌐 RPC Port: ${this.port}`);
     console.log(`⛏️  Auto Mining: ${this.autoMining ? 'Enabled' : 'Disabled'}`);
-    console.log(`🔗 Validator Nodes: ${this.persistence.validatorNodes.join(', ')}`);
+    console.log(`🔗 Validator Codes: ${this.persistence.validatorCodes.join(', ')}`);
     
     // Initialize persistence
     console.log('\n🔄 Initializing remote persistence...');

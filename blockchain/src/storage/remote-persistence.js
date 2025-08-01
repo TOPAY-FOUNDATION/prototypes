@@ -5,11 +5,13 @@
 
 import fetch from 'node-fetch';
 import { ValidatorRegistry } from './validator-registry.js';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 export class RemotePersistenceManager {
   constructor(validatorCodes = [], options = {}) {
-    // Load environment variables
-    require('dotenv').config();
     
     // Initialize validator registry
     this.validatorRegistry = new ValidatorRegistry(options);

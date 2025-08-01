@@ -13,6 +13,9 @@
     "test:remote": "node test-remote-storage.js",
     "example:env": "node example-env-config.js",
     "example:validators": "node example-validator-codes.js",
+    "example:rooturl": "node example-root-url-system.js",
+    "example:rpc": "node example-rpc-validator-system.js",
+    "blockchain:rpc": "node example-rpc-validator-system.js",
     "dev": "node --watch src/network-node.js"
   },
   "keywords": [

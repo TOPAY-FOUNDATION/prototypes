@@ -8,6 +8,7 @@
 import { Blockchain } from './blockchain/blockchain.js';
 import { Transaction } from './blockchain/transaction.js';
 import { BlockchainRPCServer } from './blockchain-rpc-server.js';
+import { ValidatorRegistry } from './storage/validator-registry.js';
 
 async function main() {
   console.log('🚀 TOPAY Foundation Quantum-Safe Blockchain Prototype');
@@ -17,6 +18,14 @@ async function main() {
     // Initialize blockchain
     console.log('\n📊 Initializing blockchain...');
     const blockchain = new Blockchain();
+    
+    // Initialize validator registry with RPC system
+    console.log('\n🔧 Initializing validator registry with RPC system...');
+    const validatorRegistry = new ValidatorRegistry({
+      enableRPC: true,
+      registryFile: 'validator-registry.json'
+    });
+    console.log('✅ Validator Registry RPC system enabled');
     
     // Use predefined addresses (wallets should be created externally)
     console.log('\n👛 Using predefined test addresses...');
@@ -89,6 +98,19 @@ async function main() {
     console.log(`Fragmented Blocks: ${stats.fragmentedBlocks}`);
     console.log(`Network Nodes: ${stats.networkNodes}`);
     
+    // Display validator registry statistics
+    console.log('\n🔧 Validator Registry Statistics:');
+    console.log('=' .repeat(40));
+    const activeValidators = validatorRegistry.getActiveValidators();
+    console.log(`Active Validators: ${activeValidators.length}`);
+    if (activeValidators.length > 0) {
+      console.log('Registered Validators:');
+      activeValidators.forEach((validator, index) => {
+        console.log(`  ${index + 1}. ${validator.code} (${validator.url})`);
+        console.log(`     Status: ${validator.status}, Last Update: ${new Date(validator.lastUpdate).toLocaleTimeString()}`);
+      });
+    }
+    
     // Display wallet balances
     console.log('\n💰 Address Balances:');
     console.log('=' .repeat(40));
@@ -153,15 +175,37 @@ async function main() {
   }
 }
 
-// Start the RPC server
-const PORT = process.env.PORT || 3001;
-console.log('🚀 Starting TOPAY Blockchain RPC Server...');
-console.log(`📡 RPC Endpoint: http://localhost:${PORT}/rpc`);
-console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
-console.log(`📊 API Methods: http://localhost:${PORT}/api/rpc/methods`);
+// Initialize and start the integrated system
+async function startIntegratedSystem() {
+  const PORT = process.env.PORT || 3001;
+  
+  console.log('🚀 Starting TOPAY Blockchain with Validator Registry...');
+  console.log(`📡 RPC Endpoint: http://localhost:${PORT}/rpc`);
+  console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
+  console.log(`📊 API Methods: http://localhost:${PORT}/api/rpc/methods`);
+  console.log(`🔧 Validator Registration: http://localhost:${PORT}/rpc/validator/*`);
 
-const server = new BlockchainRPCServer(PORT);
-server.start();
+  try {
+    // Start the RPC server
+    const server = new BlockchainRPCServer(PORT);
+    await server.start();
+    
+    // Run the blockchain demonstration
+    await main();
+    
+    console.log('\n🎉 TOPAY Blockchain with Validator Registry is ready!');
+    console.log(`🌐 Access the system at: http://localhost:${PORT}`);
+    console.log('📋 Validator Registration Endpoints:');
+    console.log(`   POST http://localhost:${PORT}/rpc/validator/register`);
+    console.log(`   GET  http://localhost:${PORT}/rpc/validator/list`);
+    console.log(`   POST http://localhost:${PORT}/rpc/validator/status`);
+    console.log(`   POST http://localhost:${PORT}/rpc/validator/unregister`);
+    
+  } catch (error) {
+    console.error('❌ Failed to start integrated system:', error);
+    process.exit(1);
+  }
+}
 
-// Run the demonstration
-main().catch(console.error);
+// Start the integrated system
+startIntegratedSystem();

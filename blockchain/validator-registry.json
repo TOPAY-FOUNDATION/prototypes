@@ -1,0 +1,108 @@
+{
+  "lastUpdated": "2025-08-01T21:42:20.799Z",
+  "totalValidators": 5,
+  "validators": {
+    "TOPAY-VAL-::1-8547-MDTCGBJG": {
+      "code": "TOPAY-VAL-::1-8547-MDTCGBJG",
+      "name": "Demo Validator 1",
+      "ip": "::1",
+      "port": 8547,
+      "url": "http://::1:8547/code/TOPAY-VAL-::1-8547-MDTCGBJG",
+      "region": "us-east",
+      "tier": "primary",
+      "capabilities": [
+        "storage",
+        "validation",
+        "consensus"
+      ],
+      "metadata": {},
+      "status": "active",
+      "registeredAt": "2025-08-01T21:36:56.428Z",
+      "lastSeen": "2025-08-01T21:36:56.428Z",
+      "healthScore": 100,
+      "requestCount": 0
+    },
+    "TOPAY-VAL-::1-8548-MDTCGBJV": {
+      "code": "TOPAY-VAL-::1-8548-MDTCGBJV",
+      "name": "Demo Validator 2",
+      "ip": "::1",
+      "port": 8548,
+      "url": "http://::1:8548/code/TOPAY-VAL-::1-8548-MDTCGBJV",
+      "region": "eu-west",
+      "tier": "secondary",
+      "capabilities": [
+        "storage",
+        "validation"
+      ],
+      "metadata": {},
+      "status": "active",
+      "registeredAt": "2025-08-01T21:36:56.443Z",
+      "lastSeen": "2025-08-01T21:36:56.443Z",
+      "healthScore": 100,
+      "requestCount": 0
+    },
+    "TOPAY-VAL-::1-8547-MDTCKEI8": {
+      "code": "TOPAY-VAL-::1-8547-MDTCKEI8",
+      "name": "Demo Validator 1",
+      "ip": "::1",
+      "port": 8547,
+      "url": "http://::1:8547/code/TOPAY-VAL-::1-8547-MDTCKEI8",
+      "region": "us-east",
+      "tier": "primary",
+      "capabilities": [
+        "storage",
+        "validation",
+        "consensus"
+      ],
+      "metadata": {},
+      "status": "active",
+      "registeredAt": "2025-08-01T21:40:06.896Z",
+      "lastSeen": "2025-08-01T21:40:06.896Z",
+      "healthScore": 100,
+      "requestCount": 0
+    },
+    "TOPAY-VAL-::1-8548-MDTCKEIJ": {
+      "code": "TOPAY-VAL-::1-8548-MDTCKEIJ",
+      "name": "Demo Validator 2",
+      "ip": "::1",
+      "port": 8548,
+      "url": "http://::1:8548/code/TOPAY-VAL-::1-8548-MDTCKEIJ",
+      "region": "eu-west",
+      "tier": "secondary",
+      "capabilities": [
+        "storage",
+        "validation"
+      ],
+      "metadata": {},
+      "status": "active",
+      "registeredAt": "2025-08-01T21:40:06.907Z",
+      "lastSeen": "2025-08-01T21:40:06.907Z",
+      "healthScore": 100,
+      "requestCount": 0
+    },
+    "TOPAY-VAL-8547-MDTCMMNM-3KEQPC": {
+      "code": "TOPAY-VAL-8547-MDTCMMNM-3KEQPC",
+      "name": "Validator-8547",
+      "ip": "::1",
+      "port": 8547,
+      "url": "http://::1:8547/code/TOPAY-VAL-8547-MDTCMMNM-3KEQPC",
+      "region": "local",
+      "tier": "secondary",
+      "capabilities": [
+        "storage",
+        "validation"
+      ],
+      "metadata": {
+        "version": "1.0.0",
+        "startTime": "2025-08-01T21:41:50.770Z",
+        "nodeType": "validator",
+        "lastUpdate": "2025-08-01T21:42:20.795Z"
+      },
+      "status": "active",
+      "registeredAt": "2025-08-01T21:41:50.786Z",
+      "lastSeen": "2025-08-01T21:42:20.799Z",
+      "healthScore": 100,
+      "requestCount": 1
+    }
+  }
+}

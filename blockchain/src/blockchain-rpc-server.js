@@ -3,6 +3,7 @@ import cors from 'cors';
 import { Blockchain } from './blockchain/blockchain.js';
 import { Transaction } from './blockchain/transaction.js';
 import { PersistenceManager } from './storage/persistence.js';
+import { ValidatorRegistry } from './storage/validator-registry.js';
 
 /**
  * TOPAY Blockchain RPC Server
@@ -14,10 +15,15 @@ class BlockchainRPCServer {
     this.port = port;
     this.blockchain = new Blockchain();
     this.persistence = new PersistenceManager();
+    this.validatorRegistry = new ValidatorRegistry({
+      enableRPC: true,
+      registryFile: 'validator-registry.json'
+    });
     this.isMining = false;
     this.coinbaseAddress = null;
     this.setupMiddleware();
     this.setupRoutes();
+    this.setupValidatorRoutes();
   }
 
   setupMiddleware() {
@@ -132,6 +138,14 @@ class BlockchainRPCServer {
         status: 'planned'
       });
     });
+  }
+
+  setupValidatorRoutes() {
+    // Setup validator registry RPC routes
+    if (this.validatorRegistry && this.validatorRegistry.getRPCSystem()) {
+      this.validatorRegistry.setupRPCRoutes(this.app);
+      console.log('✅ Validator Registry RPC routes enabled');
+    }
   }
 
   async handleRPCMethod(method, params) {
