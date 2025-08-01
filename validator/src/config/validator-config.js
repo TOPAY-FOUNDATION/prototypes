@@ -3,6 +3,9 @@
  * Handles configuration loading, validation, and persistence
  */
 
+// Load environment variables
+require('dotenv').config();
+
 const fs = require('fs').promises;
 const path = require('path');
 const os = require('os');
@@ -24,20 +27,30 @@ class ValidatorConfig {
         return {
             // Validator Settings
             validatorId: null,
-            validationInterval: 30000, // 30 seconds
+            validationInterval: parseInt(process.env.VALIDATION_INTERVAL) || 30000, // 30 seconds
             syncInterval: 60000, // 60 seconds
             
             // Network Settings
-            rpcUrl: 'http://localhost:3001/rpc',
-            apiPort: 8547,
+            rpcUrl: process.env.BLOCKCHAIN_RPC_URL || 'http://localhost:3001/rpc',
+            apiPort: parseInt(process.env.VALIDATOR_API_PORT) || 8547,
             wsPort: 8548,
             maxPeers: 50,
             
+            // Connection Settings
+            networkTimeout: parseInt(process.env.NETWORK_TIMEOUT) || 10000,
+            maxRetries: parseInt(process.env.MAX_RETRIES) || 3,
+            retryDelay: parseInt(process.env.RETRY_DELAY) || 1000,
+            
             // Data Storage
-            dataDirectory: path.join(os.homedir(), 'TOPAY-Validator', 'data'),
+            dataDirectory: process.env.STORAGE_PATH || path.join(os.homedir(), 'TOPAY-Validator', 'data'),
             blockchainDataPath: path.resolve(__dirname, '../../../blockchain/data/blockchain.json'),
             statsPath: path.join(os.homedir(), 'TOPAY-Validator', 'data', 'validation-stats.json'),
-            logsPath: path.join(os.homedir(), 'TOPAY-Validator', 'logs'),
+            logsPath: process.env.LOG_FILE ? path.dirname(process.env.LOG_FILE) : path.join(os.homedir(), 'TOPAY-Validator', 'logs'),
+            
+            // Backup Settings
+            backupEnabled: process.env.BACKUP_ENABLED !== 'false',
+            backupInterval: parseInt(process.env.BACKUP_INTERVAL) || 3600000, // 1 hour
+            maxBackups: parseInt(process.env.MAX_BACKUPS) || 10,
             
             // Performance Settings
             maxMemoryUsage: 1024 * 1024 * 1024, // 1GB
@@ -48,7 +61,11 @@ class ValidatorConfig {
             enableTLS: false,
             tlsCertPath: null,
             tlsKeyPath: null,
-            allowedOrigins: ['http://localhost:3000', 'http://localhost:8547'],
+            allowedOrigins: process.env.ALLOWED_ORIGINS ? 
+                process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) : 
+                ['http://localhost:3000', 'http://localhost:8547'],
+            enableCors: process.env.ENABLE_CORS !== 'false',
+            apiRateLimit: parseInt(process.env.API_RATE_LIMIT) || 100,
             
             // UI Settings
             theme: 'dark',
@@ -65,9 +82,17 @@ class ValidatorConfig {
             updateChannel: 'stable', // stable, beta, alpha
             
             // Logging Settings
-            logLevel: 'info', // debug, info, warn, error
+            logLevel: process.env.LOG_LEVEL || 'info', // debug, info, warn, error
             maxLogSize: 10 * 1024 * 1024, // 10MB
             maxLogFiles: 5,
+            enableFileLogging: process.env.ENABLE_FILE_LOGGING !== 'false',
+            
+            // Metrics Settings
+            enableMetrics: process.env.ENABLE_METRICS !== 'false',
+            metricsPort: parseInt(process.env.METRICS_PORT) || 9090,
+            
+            // Development Settings
+            debugMode: process.env.DEBUG_MODE === 'true',
             
             // Advanced Settings
             experimental: {
@@ -104,6 +129,9 @@ class ValidatorConfig {
                 }
             }
 
+            // Display environment configuration
+            this.displayEnvironmentConfig();
+
             // Ensure data directories exist
             await this.ensureDirectories();
             
@@ -115,6 +143,16 @@ class ValidatorConfig {
             this.loaded = false;
             throw error;
         }
+    }
+
+    displayEnvironmentConfig() {
+        console.log('🔧 Environment Configuration:');
+        console.log(`   BLOCKCHAIN_RPC_URL: ${process.env.BLOCKCHAIN_RPC_URL || 'Not set (using default)'}`);
+        console.log(`   VALIDATOR_API_PORT: ${process.env.VALIDATOR_API_PORT || 'Not set (using default)'}`);
+        console.log(`   NETWORK_TIMEOUT: ${process.env.NETWORK_TIMEOUT || 'Not set (using default)'}`);
+        console.log(`   LOG_LEVEL: ${process.env.LOG_LEVEL || 'Not set (using default)'}`);
+        console.log(`   DEBUG_MODE: ${process.env.DEBUG_MODE || 'Not set (using default)'}`);
+        console.log(`   BACKUP_ENABLED: ${process.env.BACKUP_ENABLED || 'Not set (using default)'}`);
     }
 
     async save() {

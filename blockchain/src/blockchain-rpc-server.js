@@ -14,6 +14,8 @@ class BlockchainRPCServer {
     this.port = port;
     this.blockchain = new Blockchain();
     this.persistence = new PersistenceManager();
+    this.isMining = false;
+    this.coinbaseAddress = null;
     this.setupMiddleware();
     this.setupRoutes();
   }
@@ -89,17 +91,34 @@ class BlockchainRPCServer {
     this.app.get('/api/rpc/methods', (req, res) => {
       res.json({
         methods: [
+          // Standard blockchain RPC methods
           'topay_getBlockNumber',
           'topay_getBalance',
           'topay_getBlock',
+          'topay_getBlockByHash',
+          'topay_getBlockByNumber',
           'topay_getTransaction',
+          'topay_getTransactionByHash',
           'topay_sendTransaction',
+          'topay_sendRawTransaction',
           'topay_getMempool',
           'topay_mine',
           'topay_getChainInfo',
           'topay_validateChain',
           'topay_getTransactionHistory',
           'topay_getNetworkStats',
+          'topay_getPeerCount',
+          'topay_getGasPrice',
+          'topay_estimateGas',
+          'topay_getTransactionCount',
+          'topay_getCode',
+          'topay_call',
+          // Network and node management
+          'topay_syncing',
+          'topay_mining',
+          'topay_hashrate',
+          'topay_coinbase',
+          // Development and testing methods
           'topay_addTestData',
           'topay_resetChain'
         ]
@@ -217,16 +236,23 @@ class BlockchainRPCServer {
         }
         
         console.log(`🚀 Mining block for ${minerAddress}...`);
-        const minedBlock = await this.blockchain.minePendingTransactions(minerAddress);
-        await this.persistence.saveBlockchain(this.blockchain);
+        this.isMining = true;
+        this.coinbaseAddress = minerAddress;
         
-        return {
-          blockIndex: minedBlock.index,
-          blockHash: minedBlock.hash,
-          transactions: minedBlock.transactions.length,
-          reward: this.blockchain.miningReward,
-          difficulty: minedBlock.difficulty
-        };
+        try {
+          const minedBlock = await this.blockchain.minePendingTransactions(minerAddress);
+          await this.persistence.saveBlockchain(this.blockchain);
+          
+          return {
+            blockIndex: minedBlock.index,
+            blockHash: minedBlock.hash,
+            transactions: minedBlock.transactions.length,
+            reward: this.blockchain.miningReward,
+            difficulty: minedBlock.difficulty
+          };
+        } finally {
+          this.isMining = false;
+        }
 
       case 'topay_getChainInfo':
         const totalTransactions = this.blockchain.chain.reduce(
@@ -278,6 +304,116 @@ class BlockchainRPCServer {
 
       case 'topay_addTestData':
         return await this.addTestData();
+
+      case 'topay_getBlockByHash':
+        const blockHash = params[0];
+        if (!blockHash) throw new Error('Block hash required');
+        
+        const blockByHash = this.blockchain.getBlockByHash(blockHash);
+        if (!blockByHash) throw new Error('Block not found');
+        
+        return {
+          index: blockByHash.index,
+          hash: blockByHash.hash,
+          previousHash: blockByHash.previousHash,
+          timestamp: blockByHash.timestamp,
+          transactions: blockByHash.transactions.map(tx => tx.toJSON()),
+          difficulty: blockByHash.difficulty,
+          nonce: blockByHash.nonce,
+          merkleRoot: blockByHash.merkleRoot
+        };
+
+      case 'topay_getBlockByNumber':
+        const blockNumber = params[0];
+        if (blockNumber === undefined) throw new Error('Block number required');
+        
+        const blockByNumber = this.blockchain.getBlock(blockNumber);
+        if (!blockByNumber) throw new Error('Block not found');
+        
+        return {
+          index: blockByNumber.index,
+          hash: blockByNumber.hash,
+          previousHash: blockByNumber.previousHash,
+          timestamp: blockByNumber.timestamp,
+          transactions: blockByNumber.transactions.map(tx => tx.toJSON()),
+          difficulty: blockByNumber.difficulty,
+          nonce: blockByNumber.nonce,
+          merkleRoot: blockByNumber.merkleRoot
+        };
+
+      case 'topay_getTransactionByHash':
+        return await this.handleRPCMethod('topay_getTransaction', params);
+
+      case 'topay_sendRawTransaction':
+        const rawTx = params[0];
+        if (!rawTx) throw new Error('Raw transaction data required');
+        
+        // Parse raw transaction (simplified for demo)
+        try {
+          const txData = JSON.parse(rawTx);
+          return await this.handleRPCMethod('topay_sendTransaction', [txData]);
+        } catch (error) {
+          throw new Error('Invalid raw transaction format');
+        }
+
+      case 'topay_getPeerCount':
+        return this.blockchain.networkNodes.size;
+
+      case 'topay_getGasPrice':
+        // Return a fixed gas price for now (in wei equivalent)
+        return '0x3b9aca00'; // 1 Gwei in hex
+
+      case 'topay_estimateGas':
+        // Return estimated gas for transaction
+        return '0x5208'; // 21000 gas in hex (standard transfer)
+
+      case 'topay_getTransactionCount':
+        const accountAddress = params[0];
+        if (!accountAddress) throw new Error('Address required');
+        
+        // Count transactions from this address
+        let txCount = 0;
+        for (const block of this.blockchain.chain) {
+          for (const tx of block.transactions) {
+            if (tx.from === accountAddress) txCount++;
+          }
+        }
+        
+        // Add pending transactions
+        for (const tx of this.blockchain.mempool) {
+          if (tx.from === accountAddress) txCount++;
+        }
+        
+        return `0x${txCount.toString(16)}`;
+
+      case 'topay_getCode':
+        // Return empty code for now (no smart contracts yet)
+        return '0x';
+
+      case 'topay_call':
+        // Simulate contract call (return empty for now)
+        return '0x';
+
+      case 'topay_syncing':
+        // Return syncing status
+        return {
+          syncing: false,
+          currentBlock: this.blockchain.chain.length - 1,
+          highestBlock: this.blockchain.chain.length - 1,
+          startingBlock: 0
+        };
+
+      case 'topay_mining':
+        // Return mining status
+        return this.isMining || false;
+
+      case 'topay_hashrate':
+        // Return estimated hashrate
+        return this.estimateHashRate();
+
+      case 'topay_coinbase':
+        // Return coinbase address (miner address)
+        return this.coinbaseAddress || '0x0000000000000000000000000000000000000000';
 
       case 'topay_resetChain':
         this.blockchain = new Blockchain();

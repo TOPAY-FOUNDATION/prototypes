@@ -5,18 +5,15 @@
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node src/network-node.js",
+    "start:miner": "node src/network-node.js --miner TOPAYminer234567890abcdef1234567890abcdef12345678 --auto-mine",
+    "start:port": "node src/network-node.js --port",
+    "demo": "node src/index.js",
     "test": "node src/test/blockchain.test.js",
-    "demo": "node src/demo/demo.js",
-    "wallet": "node src/wallet-prototype.js",
-    "manage": "node src/blockchain-manager.js",
-    "api": "node src/blockchain-api.js",
-    "wallet-server": "node src/wallet-api-server.js",
-    "rpc:server": "node rpc-launcher.js server",
-    "rpc:test": "node rpc-launcher.js test",
-    "rpc:demo": "node rpc-launcher.js demo",
-    "rpc:help": "node rpc-launcher.js help",
-    "dev": "node --watch src/index.js"
+    "test:remote": "node test-remote-storage.js",
+    "example:env": "node example-env-config.js",
+    "example:validators": "node example-validator-codes.js",
+    "dev": "node --watch src/network-node.js"
   },
   "keywords": [
     "blockchain",

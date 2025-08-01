@@ -3,6 +3,9 @@
  * Handles blockchain validation, network communication, and consensus
  */
 
+// Load environment variables
+require('dotenv').config();
+
 const EventEmitter = require('events');
 const express = require('express');
 const WebSocket = require('ws');
@@ -299,6 +302,134 @@ class ValidatorService extends EventEmitter {
             }
         });
 
+        // Remote Storage Endpoints
+        
+        // Store blockchain data
+        app.post('/api/storage/blockchain', async (req, res) => {
+            try {
+                const blockchainData = req.body;
+                await this.storeData('blockchain', blockchainData);
+                res.json({ 
+                    success: true, 
+                    message: 'Blockchain data stored successfully',
+                    validatorId: this.validatorId,
+                    timestamp: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error('❌ Failed to store blockchain data:', error);
+                res.status(500).json({ error: 'Failed to store blockchain data' });
+            }
+        });
+
+        // Retrieve blockchain data
+        app.get('/api/storage/blockchain', async (req, res) => {
+            try {
+                const data = await this.retrieveData('blockchain');
+                if (data) {
+                    res.json(data);
+                } else {
+                    res.status(404).json({ error: 'Blockchain data not found' });
+                }
+            } catch (error) {
+                console.error('❌ Failed to retrieve blockchain data:', error);
+                res.status(500).json({ error: 'Failed to retrieve blockchain data' });
+            }
+        });
+
+        // Store wallets data
+        app.post('/api/storage/wallets', async (req, res) => {
+            try {
+                const walletsData = req.body;
+                await this.storeData('wallets', walletsData);
+                res.json({ 
+                    success: true, 
+                    message: 'Wallets data stored successfully',
+                    validatorId: this.validatorId,
+                    timestamp: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error('❌ Failed to store wallets data:', error);
+                res.status(500).json({ error: 'Failed to store wallets data' });
+            }
+        });
+
+        // Retrieve wallets data
+        app.get('/api/storage/wallets', async (req, res) => {
+            try {
+                const data = await this.retrieveData('wallets');
+                if (data) {
+                    res.json(data);
+                } else {
+                    res.status(404).json({ error: 'Wallets data not found' });
+                }
+            } catch (error) {
+                console.error('❌ Failed to retrieve wallets data:', error);
+                res.status(500).json({ error: 'Failed to retrieve wallets data' });
+            }
+        });
+
+        // Store configuration data
+        app.post('/api/storage/config', async (req, res) => {
+            try {
+                const configData = req.body;
+                await this.storeData('config', configData);
+                res.json({ 
+                    success: true, 
+                    message: 'Configuration data stored successfully',
+                    validatorId: this.validatorId,
+                    timestamp: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error('❌ Failed to store configuration data:', error);
+                res.status(500).json({ error: 'Failed to store configuration data' });
+            }
+        });
+
+        // Retrieve configuration data
+        app.get('/api/storage/config', async (req, res) => {
+            try {
+                const data = await this.retrieveData('config');
+                if (data) {
+                    res.json(data);
+                } else {
+                    res.status(404).json({ error: 'Configuration data not found' });
+                }
+            } catch (error) {
+                console.error('❌ Failed to retrieve configuration data:', error);
+                res.status(500).json({ error: 'Failed to retrieve configuration data' });
+            }
+        });
+
+        // Create backup
+        app.post('/api/storage/backup', async (req, res) => {
+            try {
+                const { backupId, timestamp } = req.body;
+                const backupPath = await this.createStorageBackup(backupId, timestamp);
+                res.json({ 
+                    success: true, 
+                    message: 'Backup created successfully',
+                    backupId,
+                    backupPath,
+                    validatorId: this.validatorId,
+                    timestamp: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error('❌ Failed to create backup:', error);
+                res.status(500).json({ error: 'Failed to create backup' });
+            }
+        });
+
+        // Get storage statistics
+        app.get('/api/storage/stats', async (req, res) => {
+            try {
+                const stats = await this.getStorageStats();
+                res.json(stats);
+            } catch (error) {
+                console.error('❌ Failed to get storage stats:', error);
+                res.status(500).json({ error: 'Failed to get storage stats' });
+            }
+        });
+
         this.server = app.listen(apiPort, () => {
             console.log(`✅ API Server started on port ${apiPort}`);
         });
@@ -584,6 +715,186 @@ class ValidatorService extends EventEmitter {
         ].join('\\n');
         
         return logs;
+    }
+
+    // Remote Storage Methods
+    async saveBlockchainData(data) {
+        try {
+            const dataPath = path.join(this.config.get('dataPath', './data'), 'blockchain.json');
+            const dataDir = path.dirname(dataPath);
+            
+            // Ensure directory exists
+            await fs.mkdir(dataDir, { recursive: true });
+            
+            // Save blockchain data
+            await fs.writeFile(dataPath, JSON.stringify(data, null, 2));
+            
+            console.log(`💾 Blockchain data saved to validator: ${dataPath}`);
+            return { success: true, path: dataPath };
+        } catch (error) {
+            console.error('❌ Failed to save blockchain data:', error);
+            throw error;
+        }
+    }
+
+    async loadBlockchainData() {
+        try {
+            const dataPath = path.join(this.config.get('dataPath', './data'), 'blockchain.json');
+            const data = await fs.readFile(dataPath, 'utf8');
+            return JSON.parse(data);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                return null; // File doesn't exist
+            }
+            console.error('❌ Failed to load blockchain data:', error);
+            throw error;
+        }
+    }
+
+    async saveWalletsData(data) {
+        try {
+            const dataPath = path.join(this.config.get('dataPath', './data'), 'wallets.json');
+            const dataDir = path.dirname(dataPath);
+            
+            // Ensure directory exists
+            await fs.mkdir(dataDir, { recursive: true });
+            
+            // Save wallets data
+            await fs.writeFile(dataPath, JSON.stringify(data, null, 2));
+            
+            console.log(`💾 Wallets data saved to validator: ${dataPath}`);
+            return { success: true, path: dataPath };
+        } catch (error) {
+            console.error('❌ Failed to save wallets data:', error);
+            throw error;
+        }
+    }
+
+    async loadWalletsData() {
+        try {
+            const dataPath = path.join(this.config.get('dataPath', './data'), 'wallets.json');
+            const data = await fs.readFile(dataPath, 'utf8');
+            return JSON.parse(data);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                return null; // File doesn't exist
+            }
+            console.error('❌ Failed to load wallets data:', error);
+            throw error;
+        }
+    }
+
+    async saveConfigData(data) {
+        try {
+            const dataPath = path.join(this.config.get('dataPath', './data'), 'config.json');
+            const dataDir = path.dirname(dataPath);
+            
+            // Ensure directory exists
+            await fs.mkdir(dataDir, { recursive: true });
+            
+            // Save config data
+            await fs.writeFile(dataPath, JSON.stringify(data, null, 2));
+            
+            console.log(`💾 Config data saved to validator: ${dataPath}`);
+            return { success: true, path: dataPath };
+        } catch (error) {
+            console.error('❌ Failed to save config data:', error);
+            throw error;
+        }
+    }
+
+    async loadConfigData() {
+        try {
+            const dataPath = path.join(this.config.get('dataPath', './data'), 'config.json');
+            const data = await fs.readFile(dataPath, 'utf8');
+            return JSON.parse(data);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                return null; // File doesn't exist
+            }
+            console.error('❌ Failed to load config data:', error);
+            throw error;
+        }
+    }
+
+    async createBackup(type) {
+        try {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const backupDir = path.join(this.config.get('dataPath', './data'), 'backups');
+            
+            // Ensure backup directory exists
+            await fs.mkdir(backupDir, { recursive: true });
+            
+            let sourceFile, backupFile;
+            
+            switch (type) {
+                case 'blockchain':
+                    sourceFile = path.join(this.config.get('dataPath', './data'), 'blockchain.json');
+                    backupFile = path.join(backupDir, `blockchain-${timestamp}.json`);
+                    break;
+                case 'wallets':
+                    sourceFile = path.join(this.config.get('dataPath', './data'), 'wallets.json');
+                    backupFile = path.join(backupDir, `wallets-${timestamp}.json`);
+                    break;
+                case 'config':
+                    sourceFile = path.join(this.config.get('dataPath', './data'), 'config.json');
+                    backupFile = path.join(backupDir, `config-${timestamp}.json`);
+                    break;
+                default:
+                    throw new Error(`Unknown backup type: ${type}`);
+            }
+            
+            // Copy file to backup location
+            await fs.copyFile(sourceFile, backupFile);
+            
+            console.log(`📦 Backup created: ${backupFile}`);
+            return { success: true, backupPath: backupFile, timestamp };
+        } catch (error) {
+            console.error('❌ Failed to create backup:', error);
+            throw error;
+        }
+    }
+
+    async getStorageStats() {
+        try {
+            const dataPath = this.config.get('dataPath', './data');
+            const stats = {
+                dataPath,
+                files: {},
+                totalSize: 0,
+                lastModified: null
+            };
+            
+            const files = ['blockchain.json', 'wallets.json', 'config.json'];
+            
+            for (const file of files) {
+                try {
+                    const filePath = path.join(dataPath, file);
+                    const fileStat = await fs.stat(filePath);
+                    stats.files[file] = {
+                        size: fileStat.size,
+                        modified: fileStat.mtime,
+                        exists: true
+                    };
+                    stats.totalSize += fileStat.size;
+                    
+                    if (!stats.lastModified || fileStat.mtime > stats.lastModified) {
+                        stats.lastModified = fileStat.mtime;
+                    }
+                } catch (error) {
+                    stats.files[file] = {
+                        size: 0,
+                        modified: null,
+                        exists: false
+                    };
+                }
+            }
+            
+            return stats;
+        } catch (error) {
+            console.error('❌ Failed to get storage stats:', error);
+            throw error;
+        }
     }
 
     getStatus() {
