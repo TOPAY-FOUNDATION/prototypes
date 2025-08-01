@@ -1,0 +1,128 @@
+{
+  "name": "topay-validator-client",
+  "version": "1.0.0",
+  "description": "TOPAY Foundation Quantum-Safe Blockchain Validator Client for Windows",
+  "main": "src/main.js",
+  "type": "commonjs",
+  "homepage": "./",
+  "author": {
+    "name": "TOPAY Foundation",
+    "email": "support@topay.foundation",
+    "url": "https://topay.foundation"
+  },
+  "license": "MIT",
+  "keywords": [
+    "blockchain",
+    "validator",
+    "quantum-safe",
+    "topay",
+    "windows",
+    "electron"
+  ],
+  "scripts": {
+    "start": "node src/validator-service.js",
+    "dev": "electron src/main.js",
+    "build": "npm run build:icon && electron-builder",
+    "build:win": "npm run build:icon && electron-builder --win",
+    "build:msi": "npm run build:icon && electron-builder --win msi --x64 --publish=never",
+    "build:exe": "npm run build:icon && electron-builder --win nsis --x64 --publish=never",
+    "build:icon": "node scripts/create-icon.js",
+    "build:installer": "npm run build:icon && electron-builder --win --x64 --publish=never",
+    "pack": "electron-builder --dir",
+    "dist": "npm run build:installer",
+    "postinstall": "electron-builder install-app-deps",
+    "test": "jest",
+    "lint": "eslint src/",
+    "service:install": "node scripts/install-service.js",
+    "service:uninstall": "node scripts/uninstall-service.js",
+    "installer:create": "npm run build:installer",
+    "desktop:icon": "node scripts/add-desktop-icon.js"
+  },
+  "dependencies": {
+    "@topayfoundation/topayz512": "^0.1.2",
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "electron-log": "^4.4.8",
+    "electron-updater": "^6.1.4",
+    "express": "^4.18.2",
+    "inquirer": "^9.2.12",
+    "node-fetch": "^3.3.2",
+    "node-machine-id": "^1.1.12",
+    "node-windows": "^1.0.0-beta.8",
+    "ora": "^7.0.1",
+    "systeminformation": "^5.21.15",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4",
+    "eslint": "^8.52.0",
+    "jest": "^29.7.0",
+    "sharp": "^0.34.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "build": {
+    "appId": "com.topay.validator",
+    "productName": "TOPAY Validator",
+    "directories": {
+      "output": "installers"
+    },
+    "files": [
+      "src/**/*",
+      "renderer/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "msi",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "publisherName": "TOPAY Foundation"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TOPAY Validator",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "displayLanguageSelector": false,
+      "runAfterFinish": true,
+      "menuCategory": "TOPAY Foundation"
+    },
+    "msi": {
+      "oneClick": false,
+      "upgradeCode": "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TOPAY Validator",
+      "runAfterFinish": true
+    },
+    "compression": "normal",
+    "forceCodeSigning": false,
+    "electronDist": "node_modules/electron/dist",
+    "electronVersion": "27.3.11"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/topay-foundation/validator-client.git"
+  },
+  "bugs": {
+    "url": "https://github.com/topay-foundation/validator-client/issues"
+  }
+}

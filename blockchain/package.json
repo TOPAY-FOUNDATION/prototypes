@@ -1,0 +1,40 @@
+{
+  "name": "topay-prototype",
+  "version": "1.0.0",
+  "description": "TOPAY Foundation Quantum-Safe Blockchain Prototype",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node src/test/blockchain.test.js",
+    "demo": "node src/demo/demo.js",
+    "wallet": "node src/wallet-prototype.js",
+    "manage": "node src/blockchain-manager.js",
+    "api": "node src/blockchain-api.js",
+    "wallet-server": "node src/wallet-api-server.js",
+    "rpc:server": "node rpc-launcher.js server",
+    "rpc:test": "node rpc-launcher.js test",
+    "rpc:demo": "node rpc-launcher.js demo",
+    "rpc:help": "node rpc-launcher.js help",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": [
+    "blockchain",
+    "quantum-safe",
+    "cryptocurrency",
+    "topay",
+    "z512"
+  ],
+  "author": "TOPAY Foundation",
+  "license": "MIT",
+  "dependencies": {
+    "@topayfoundation/topayz512": "^0.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

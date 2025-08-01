@@ -1,0 +1,436 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(0, 255, 0, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(0, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 4rem;
+  animation: fadeInDown 0.8s ease-out;
+  position: relative;
+  z-index: 1;
+}
+
+.iconContainer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.2), rgba(0, 255, 255, 0.2));
+  border-radius: 50%;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(0, 255, 0, 0.3);
+  position: relative;
+  animation: walletPulse 3s ease-in-out infinite;
+}
+
+.iconContainer::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, rgba(0, 255, 0, 0.5), rgba(0, 255, 255, 0.5));
+  border-radius: 50%;
+  z-index: -1;
+  animation: rotate 4s linear infinite;
+}
+
+.heroIcon {
+  color: #00ff00;
+  filter: drop-shadow(0 4px 8px rgba(0, 255, 0, 0.3));
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #00ff00, #00ffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: 'JetBrains Mono', monospace;
+  text-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: rgba(0, 255, 0, 0.8);
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+  position: relative;
+  z-index: 1;
+}
+
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.8s ease-out;
+  animation-fill-mode: both;
+}
+
+.feature:nth-child(1) { animation-delay: 0.1s; }
+.feature:nth-child(2) { animation-delay: 0.2s; }
+.feature:nth-child(3) { animation-delay: 0.3s; }
+.feature:nth-child(4) { animation-delay: 0.4s; }
+
+.feature:hover {
+  transform: translateY(-4px);
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(0, 255, 0, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 255, 0, 0.2);
+}
+
+.featureIcon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.8), rgba(0, 255, 255, 0.8));
+  border-radius: 8px;
+  color: #000000;
+  font-weight: 700;
+}
+
+.featureContent h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.featureContent p {
+  font-size: 0.9rem;
+  color: rgba(0, 255, 0, 0.7);
+  line-height: 1.5;
+}
+
+.setupInfo {
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  position: relative;
+  z-index: 1;
+}
+
+.setupInfo h3 {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', monospace;
+  text-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+}
+
+.walletOptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.walletOption {
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 2px solid rgba(0, 255, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.walletOption::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.walletOption:hover::before {
+  left: 100%;
+}
+
+.walletOption:hover {
+  transform: translateY(-4px);
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(0, 255, 0, 0.5);
+  box-shadow: 0 12px 40px rgba(0, 255, 0, 0.3);
+}
+
+.optionIcon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.8), rgba(0, 255, 255, 0.8));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  color: #000000;
+  font-weight: 700;
+  animation: walletPulse 3s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+
+.walletOption:hover .optionIcon {
+  transform: scale(1.1);
+}
+
+.walletOption h4 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', monospace;
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+.walletOption p {
+  font-size: 1rem;
+  color: rgba(0, 255, 0, 0.8);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.optionFeatures {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+  text-align: left;
+}
+
+.optionFeatures li {
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  color: rgba(0, 255, 0, 0.8);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.optionButton {
+  width: 100%;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.8), rgba(0, 255, 255, 0.8));
+  color: #000000;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.optionButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.optionButton:hover::before {
+  left: 100%;
+}
+
+.optionButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 0, 0.4);
+}
+
+.optionButton:active {
+  transform: translateY(0);
+}
+
+.disclaimer {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
+}
+
+.disclaimer p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #fbbf24;
+}
+
+.disclaimer strong {
+  color: #f59e0b;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .feature {
+    padding: 1rem;
+  }
+
+  .featureIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .walletOptions {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .walletOption {
+    padding: 1.5rem;
+  }
+
+  .optionIcon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .setupInfo {
+    padding: 1.5rem;
+  }
+
+  .setupInfo h3 {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0.5rem;
+  }
+  
+  .iconContainer {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .heroIcon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .title {
+    font-size: 1.8rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .feature {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .featureIcon {
+    margin: 0 auto 1rem;
+  }
+
+  .walletOption {
+    padding: 1rem;
+  }
+
+  .optionIcon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .optionButton {
+    padding: 0.8rem 1.5rem;
+    font-size: 0.9rem;
+  }
+}

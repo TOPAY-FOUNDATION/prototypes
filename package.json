@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "create-desktop-shortcuts": "^1.11.1"
+  }
+}

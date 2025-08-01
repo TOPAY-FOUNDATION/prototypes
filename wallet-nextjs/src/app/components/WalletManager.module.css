@@ -1,0 +1,426 @@
+/* WalletManager Component - Futuristic Wallet Interface Styling */
+
+.walletContainer {
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(25px);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(0, 255, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.walletContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.8), rgba(0, 255, 255, 0.8), transparent);
+  animation: walletScan 3s ease-in-out infinite;
+}
+
+.walletContainer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.05), transparent);
+  transition: left 0.8s ease;
+}
+
+.walletContainer:hover::after {
+  left: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.walletIcon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.9), rgba(0, 255, 255, 0.9));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  font-weight: 900;
+  font-size: 1.2rem;
+  animation: walletPulse 3s ease-in-out infinite;
+  box-shadow: 
+    0 0 30px rgba(0, 255, 0, 0.5),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3);
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: 'JetBrains Mono', monospace;
+  text-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+  margin: 0;
+  background: linear-gradient(135deg, #00ff00, #00ffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 0.75rem;
+  color: rgba(0, 255, 0, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-family: 'JetBrains Mono', monospace;
+  margin: var(--spacing-xs) 0 0 0;
+}
+
+.walletActions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.actionButton {
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.8), rgba(0, 255, 255, 0.8));
+  border: none;
+  color: #000000;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'JetBrains Mono', monospace;
+  position: relative;
+  overflow: hidden;
+}
+
+.actionButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.actionButton:hover::before {
+  left: 100%;
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+}
+
+.balanceSection {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.balanceSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.6), transparent);
+}
+
+.balanceHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.balanceIcon {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.8), rgba(0, 255, 255, 0.8));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.balanceTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'JetBrains Mono', monospace;
+  margin: 0;
+}
+
+.totalBalance {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', monospace;
+  text-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+  margin-bottom: var(--spacing-sm);
+}
+
+.balanceChange {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.changePositive {
+  color: #00ff00;
+  text-shadow: 0 0 5px #00ff00;
+}
+
+.changeNegative {
+  color: #ff0000;
+  text-shadow: 0 0 5px #ff0000;
+}
+
+.tokensGrid {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.tokenRow {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.tokenRow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.4), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tokenRow:hover {
+  border-color: rgba(0, 255, 0, 0.5);
+  box-shadow: 0 0 25px rgba(0, 255, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.tokenRow:hover::before {
+  opacity: 1;
+}
+
+.tokenRow:active {
+  transform: translateY(0);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.1);
+}
+
+.tokenInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.tokenIcon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.8), rgba(0, 255, 255, 0.8));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+}
+
+.tokenDetails {
+  flex: 1;
+}
+
+.tokenName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 var(--spacing-xs) 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.tokenSymbol {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'JetBrains Mono', monospace;
+  margin: 0;
+}
+
+.tokenBalance {
+  text-align: right;
+}
+
+.tokenAmount {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', monospace;
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.tokenValue {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'JetBrains Mono', monospace;
+  margin: 0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.emptyIcon {
+  width: 64px;
+  height: 64px;
+  background: rgba(0, 255, 0, 0.1);
+  border: 2px dashed rgba(0, 255, 0, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--spacing-md);
+  font-size: 1.5rem;
+  color: rgba(0, 255, 0, 0.5);
+}
+
+.emptyTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 var(--spacing-sm) 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.emptyDescription {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes walletScan {
+  0%, 100% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+}
+
+@keyframes walletPulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 0 40px rgba(0, 255, 0, 0.8);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .walletContainer {
+    padding: var(--spacing-lg);
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  
+  .walletActions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .tokenInfo {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--spacing-sm);
+  }
+  
+  .tokenBalance {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.25rem;
+  }
+  
+  .totalBalance {
+    font-size: 1.5rem;
+  }
+  
+  .walletContainer {
+    padding: var(--spacing-md);
+  }
+}

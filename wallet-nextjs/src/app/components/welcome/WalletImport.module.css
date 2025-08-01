@@ -1,0 +1,458 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 80%, rgba(0, 255, 0, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(0, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container > * {
+  position: relative;
+  z-index: 1;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+  animation: fadeInDown 0.8s ease-out;
+}
+
+.iconContainer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(0, 255, 0, 0.3);
+  box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
+  animation: walletPulse 2s ease-in-out infinite;
+}
+
+.icon {
+  color: #00ff00;
+  filter: drop-shadow(0 4px 8px rgba(0, 255, 0, 0.3));
+  animation: rotate 20s linear infinite;
+}
+
+.title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #00ff00, #00ffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: 'JetBrains Mono', monospace;
+  text-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+  letter-spacing: -0.02em;
+  animation: titleGlow 2s ease-in-out infinite alternate;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: rgba(0, 255, 0, 0.8);
+  line-height: 1.6;
+  max-width: 500px;
+  margin: 0 auto;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+.form {
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.inputGroup {
+  margin-bottom: 2rem;
+}
+
+.label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.toggleButton {
+  background: none;
+  border: none;
+  color: #00ffff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.toggleButton:hover {
+  color: #00ff00;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(0, 255, 0, 0.3);
+  border-radius: 12px;
+  color: #00ff00;
+  font-size: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  resize: vertical;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(20px);
+  line-height: 1.5;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+}
+
+.textarea::placeholder {
+  color: rgba(0, 255, 0, 0.5);
+  font-family: inherit;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #00ffff;
+  background: rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+  color: #00ffff;
+}
+
+.textarea.error {
+  border-color: #ff0040;
+  background: rgba(255, 0, 64, 0.1);
+  color: #ff6b9d;
+}
+
+.textarea.error:focus {
+  border-color: #ff0040;
+  box-shadow: 0 0 30px rgba(255, 0, 64, 0.3);
+}
+
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ff6b9d;
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: rgba(255, 0, 64, 0.1);
+  border: 1px solid rgba(255, 0, 64, 0.3);
+  border-radius: 12px;
+  backdrop-filter: blur(20px);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.errorMessage svg {
+  color: #ff0040;
+  flex-shrink: 0;
+}
+
+.warning {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 0 20px rgba(255, 193, 7, 0.1);
+}
+
+.warning svg {
+  color: #fbbf24;
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+}
+
+.warning h4 {
+  color: #f59e0b;
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.warning p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #fbbf24;
+  line-height: 1.5;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.backButton {
+  padding: 1rem 2rem;
+  background: rgba(0, 0, 0, 0.6);
+  color: #00ffff;
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(20px);
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: relative;
+  overflow: hidden;
+}
+
+.backButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.backButton:hover::before {
+  left: 100%;
+}
+
+.backButton:hover {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(0, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 255, 0.3);
+  color: #00ff00;
+}
+
+.backButton:active {
+  transform: translateY(0);
+}
+
+.importButton {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #00ff00, #00ffff);
+  color: #000000;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 255, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 140px;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.importButton:disabled {
+  background: rgba(0, 0, 0, 0.4);
+  color: rgba(0, 255, 0, 0.3);
+  cursor: not-allowed;
+  box-shadow: none;
+  border: 2px solid rgba(0, 255, 0, 0.2);
+}
+
+.importButton:not(:disabled)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.importButton:not(:disabled):hover::before {
+  left: 100%;
+}
+
+.importButton:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(0, 255, 0, 0.4);
+  background: linear-gradient(135deg, #00ffff, #00ff00);
+}
+
+.importButton:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 255, 0, 0.3);
+  border-top: 2px solid #00ff00;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes walletPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.6);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes titleGlow {
+  from {
+    text-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+  }
+  to {
+    text-shadow: 0 0 40px rgba(0, 255, 0, 0.8), 0 0 60px rgba(0, 255, 255, 0.3);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .title {
+    font-size: 1.8rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+  }
+  
+  .warning {
+    padding: 1rem;
+  }
+  
+  .actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .backButton,
+  .importButton {
+    width: 100%;
+    padding: 1rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0.5rem;
+  }
+  
+  .iconContainer {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .title {
+    font-size: 1.6rem;
+  }
+  
+  .textarea {
+    min-height: 100px;
+    font-size: 0.9rem;
+  }
+  
+  .label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
