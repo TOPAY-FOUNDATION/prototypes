@@ -28,7 +28,7 @@ class ValidatorConfig {
             syncInterval: 60000, // 60 seconds
             
             // Network Settings
-            rpcUrl: 'http://localhost:8545',
+            rpcUrl: 'http://localhost:3001/rpc',
             apiPort: 8547,
             wsPort: 8548,
             maxPeers: 50,

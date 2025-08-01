@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server.js';
 
 // Fallback wallet generation using Web Crypto API
 async function generateWalletFallback() {

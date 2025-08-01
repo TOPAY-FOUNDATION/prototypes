@@ -1,156 +1,166 @@
 /**
- * TOPAY Foundation Quantum-Safe Blockchain Prototype
- * Main Entry Point
+ * TOPAY Foundation Quantum-Safe Blockchain Network
+ * Main Entry Point - Production Network Mode
  * 
- * Demonstrates the quantum-safe blockchain functionality
+ * Starts the blockchain network with RPC server for production use
  */
 
-import { Blockchain } from './blockchain/blockchain.js';
-import { Transaction } from './blockchain/transaction.js';
+import { BlockchainRPCServer } from './blockchain-rpc-server.js';
+import { PersistenceManager } from './storage/persistence.js';
 
-async function main() {
-  console.log('🚀 TOPAY Foundation Quantum-Safe Blockchain Prototype');
+/**
+ * Initialize and start the TOPAY Blockchain Network
+ */
+async function startBlockchainNetwork() {
+  console.log('🚀 TOPAY Foundation Quantum-Safe Blockchain Network');
   console.log('=' .repeat(60));
+  console.log('🌐 Starting Production Blockchain Network...');
   
   try {
-    // Initialize blockchain
-    console.log('\n📊 Initializing blockchain...');
-    const blockchain = new Blockchain();
+    // Get configuration from environment variables
+    const PORT = process.env.BLOCKCHAIN_PORT || process.env.PORT || 8545;
+    const NODE_ENV = process.env.NODE_ENV || 'development';
+    const NETWORK_ID = process.env.NETWORK_ID || 'topay-mainnet';
     
-    // Use predefined addresses (wallets should be created externally)
-    console.log('\n👛 Using predefined test addresses...');
-    const address1 = 'TOPAYtest1234567890abcdef1234567890abcdef12345678';
-    const address2 = 'TOPAYtest2234567890abcdef1234567890abcdef12345678';
-    const minerAddress = 'TOPAYminer234567890abcdef1234567890abcdef12345678';
+    console.log(`\n⚙️  Network Configuration:`);
+    console.log(`   Environment: ${NODE_ENV}`);
+    console.log(`   Network ID: ${NETWORK_ID}`);
+    console.log(`   RPC Port: ${PORT}`);
+    console.log(`   Data Directory: ${process.env.DATA_DIR || './data'}`);
     
-    console.log(`\nAddress 1: ${address1}`);
-    console.log(`Address 2: ${address2}`);
-    console.log(`Miner: ${minerAddress}`);
-    console.log('⚠️  Note: In production, wallets should be created using external wallet applications');
+    // Initialize persistence layer
+    console.log('\n💾 Initializing data persistence...');
+    const persistence = new PersistenceManager();
+    await persistence.initialize();
     
-    // Add some network nodes
-    blockchain.addNetworkNode('node-1');
-    blockchain.addNetworkNode('node-2');
-    blockchain.addNetworkNode('node-3');
+    // Create and start RPC server
+    console.log('\n🔧 Initializing RPC server...');
+    const server = new BlockchainRPCServer(PORT);
     
-    // Create and broadcast transactions
-    console.log('\n💸 Creating transactions...');
+    // Start the blockchain network
+    console.log('\n🚀 Starting blockchain network...');
+    await server.start();
     
-    // Give address1 some initial funds by mining
-    console.log('\n⛏️ Mining initial block for address1...');
-    await blockchain.minePendingTransactions(address1);
+    // Setup graceful shutdown
+    setupGracefulShutdown(server);
     
-    // Create transactions and sign them properly
-    const tx1 = new Transaction(address1, address2, 50, {
-      message: 'First quantum-safe transaction!',
-      metadata: { type: 'payment', category: 'test' }
-    });
-    // Sign transaction with placeholder key for demo
-    await tx1.signTransaction('demo_private_key_1');
+    // Network status monitoring
+    startNetworkMonitoring(server);
     
-    const tx2 = new Transaction(address1, address2, 25, {
-      message: 'Second transaction with encryption',
-      confidential: true
-    });
-    await tx2.signTransaction('demo_private_key_1');
+    console.log('\n✅ TOPAY Blockchain Network is now running!');
+    console.log('\n📡 Network Endpoints:');
+    console.log(`   RPC: http://localhost:${PORT}/rpc`);
+    console.log(`   Health: http://localhost:${PORT}/health`);
+    console.log(`   Methods: http://localhost:${PORT}/api/rpc/methods`);
     
-    // Broadcast transactions
-    await blockchain.broadcastTransaction(tx1);
-    await blockchain.broadcastTransaction(tx2);
+    console.log('\n🔗 JSON-RPC 2.0 Compatible Methods:');
+    console.log('   • topay_getBlockNumber - Get latest block number');
+    console.log('   • topay_getBalance(address) - Get address balance');
+    console.log('   • topay_getBlock(blockId) - Get block by number/hash');
+    console.log('   • topay_getTransaction(hash) - Get transaction details');
+    console.log('   • topay_sendTransaction(txData) - Submit transaction');
+    console.log('   • topay_getMempool() - Get pending transactions');
+    console.log('   • topay_mine(minerAddress) - Mine pending transactions');
+    console.log('   • topay_getChainInfo() - Get blockchain information');
+    console.log('   • topay_validateChain() - Validate blockchain integrity');
+    console.log('   • topay_getTransactionHistory(address) - Get tx history');
+    console.log('   • topay_getNetworkStats() - Get network statistics');
     
-    // Mine transactions
-    console.log('\n⛏️ Mining transactions...');
-    await blockchain.minePendingTransactions(minerAddress);
+    console.log('\n🛠️  Development Methods:');
+    console.log('   • topay_addTestData() - Add test transactions');
+    console.log('   • topay_resetChain() - Reset blockchain (dev only)');
     
-    // Create more transactions for demonstration
-    const tx3 = new Transaction(address2, address1, 10);
-    await tx3.signTransaction('demo_private_key_2');
-    await blockchain.broadcastTransaction(tx3);
+    console.log('\n💡 Usage Examples:');
+    console.log('   curl -X POST http://localhost:' + PORT + '/rpc \\');
+    console.log('     -H "Content-Type: application/json" \\');
+    console.log('     -d \'{"jsonrpc":"2.0","method":"topay_getBlockNumber","id":1}\'');
     
-    const tx4 = new Transaction(address1, minerAddress, 15);
-    await tx4.signTransaction('demo_private_key_1');
-    await blockchain.broadcastTransaction(tx4);
+    console.log('\n🔐 Security Notes:');
+    console.log('   • Quantum-safe cryptography enabled');
+    console.log('   • All transactions require valid signatures');
+    console.log('   • Blockchain integrity continuously validated');
+    console.log('   • Persistent storage with auto-backup');
     
-    // Mine another block
-    await blockchain.minePendingTransactions(minerAddress);
-    
-    // Display blockchain statistics
-    console.log('\n📈 Blockchain Statistics:');
-    console.log('=' .repeat(40));
-    const stats = blockchain.getStats();
-    console.log(`Blocks: ${stats.blockCount}`);
-    console.log(`Total Transactions: ${stats.totalTransactions}`);
-    console.log(`Total Size: ${stats.totalSize} bytes`);
-    console.log(`Average Block Size: ${stats.averageBlockSize} bytes`);
-    console.log(`Current Difficulty: ${stats.difficulty}`);
-    console.log(`Mining Reward: ${stats.miningReward} TOPAY`);
-    console.log(`Mempool Size: ${stats.mempoolSize}`);
-    console.log(`Fragmented Blocks: ${stats.fragmentedBlocks}`);
-    console.log(`Network Nodes: ${stats.networkNodes}`);
-    
-    // Display wallet balances
-    console.log('\n💰 Address Balances:');
-    console.log('=' .repeat(40));
-    console.log(`Address 1: ${blockchain.getBalance(address1)} TOPAY`);
-    console.log(`Address 2: ${blockchain.getBalance(address2)} TOPAY`);
-    console.log(`Miner: ${blockchain.getBalance(minerAddress)} TOPAY`);
-    
-    // Display transaction history
-    console.log('\n📋 Transaction History (Address 1):');
-    console.log('=' .repeat(40));
-    const history = blockchain.getTransactionHistory(address1);
-    history.slice(0, 5).forEach((tx, index) => {
-      const fromAddr = tx.from ? tx.from.substring(0, 10) : 'MINING';
-      const toAddr = tx.to ? tx.to.substring(0, 10) : 'UNKNOWN';
-      console.log(`${index + 1}. ${tx.amount} TOPAY ${tx.from === address1 ? 'to' : 'from'} ${tx.from === address1 ? toAddr : fromAddr}...`);
-      console.log(`   Block: #${tx.blockIndex}, Time: ${new Date(tx.blockTimestamp).toLocaleTimeString()}`);
-    });
-    
-    // Validate blockchain
-    console.log('\n🔍 Validating blockchain...');
-    const isValid = await blockchain.isChainValid();
-    console.log(`Blockchain valid: ${isValid ? '✅ Yes' : '❌ No'}`);
-    
-    // Demonstrate fragmentation
-    console.log('\n📦 Fragmentation Demo:');
-    console.log('=' .repeat(40));
-    const latestBlock = blockchain.getLatestBlock();
-    console.log(`Latest block size: ${latestBlock.getSize()} bytes`);
-    
-    if (latestBlock.getSize() > 1024) {
-      const fragResult = await latestBlock.fragmentBlock();
-      if (fragResult.isFragmented) {
-        console.log(`Block fragmented into ${fragResult.fragments.length} pieces`);
-        
-        // Demonstrate reconstruction
-        const reconstructed = await blockchain.reconstructBlock(latestBlock.index);
-        console.log(`Block reconstructed successfully: ${reconstructed.hash === latestBlock.hash}`);
-      }
-    }
-    
-    // Display block details
-    console.log('\n🧱 Latest Block Details:');
-    console.log('=' .repeat(40));
-    const blockStats = latestBlock.getStats();
-    console.log(`Index: ${blockStats.index}`);
-    console.log(`Hash: ${blockStats.hash.substring(0, 20)}...`);
-    console.log(`Previous Hash: ${latestBlock.previousHash.substring(0, 20)}...`);
-    console.log(`Merkle Root: ${blockStats.merkleRoot.substring(0, 20)}...`);
-    console.log(`Transactions: ${blockStats.transactionCount}`);
-    console.log(`Size: ${blockStats.size} bytes`);
-    console.log(`Nonce: ${blockStats.nonce}`);
-    console.log(`Difficulty: ${blockStats.difficulty}`);
-    console.log(`Timestamp: ${new Date(latestBlock.timestamp).toLocaleString()}`);
-    
-    console.log('\n🎉 Blockchain prototype demonstration completed!');
-    console.log('✨ All quantum-safe features working correctly!');
-    console.log('⚠️  Note: Wallet creation and transaction signing should be handled by external wallet applications');
+    console.log('\n🌐 Network is ready for connections!');
     
   } catch (error) {
-    console.error('❌ Error in blockchain demonstration:', error);
+    console.error('❌ Failed to start blockchain network:', error);
+    console.error('Stack trace:', error.stack);
     process.exit(1);
   }
 }
 
-// Run the demonstration
-main().catch(console.error);
+/**
+ * Setup graceful shutdown handlers
+ */
+function setupGracefulShutdown(server) {
+  const shutdown = async (signal) => {
+    console.log(`\n🛑 Received ${signal}, shutting down gracefully...`);
+    
+    try {
+      // Save blockchain state
+      if (server && server.persistence) {
+        console.log('💾 Saving blockchain state...');
+        await server.persistence.saveBlockchain(server.blockchain);
+      }
+      
+      console.log('✅ Blockchain network shutdown complete');
+      process.exit(0);
+    } catch (error) {
+      console.error('❌ Error during shutdown:', error);
+      process.exit(1);
+    }
+  };
+  
+  // Handle different shutdown signals
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGUSR2', () => shutdown('SIGUSR2')); // nodemon restart
+  
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error) => {
+    console.error('❌ Uncaught Exception:', error);
+    shutdown('uncaughtException');
+  });
+  
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+    shutdown('unhandledRejection');
+  });
+}
+
+/**
+ * Start network monitoring and periodic status updates
+ */
+function startNetworkMonitoring(server) {
+  // Log network status every 5 minutes
+  setInterval(() => {
+    if (server && server.blockchain) {
+      const stats = {
+        blocks: server.blockchain.chain.length,
+        mempool: server.blockchain.mempool.length,
+        difficulty: server.blockchain.difficulty,
+        uptime: Math.floor(process.uptime())
+      };
+      
+      console.log(`\n📊 Network Status (${new Date().toLocaleTimeString()}):`);
+      console.log(`   Blocks: ${stats.blocks} | Mempool: ${stats.mempool} | Difficulty: ${stats.difficulty} | Uptime: ${stats.uptime}s`);
+    }
+  }, 5 * 60 * 1000); // 5 minutes
+  
+  // Memory usage monitoring
+  setInterval(() => {
+    const memUsage = process.memoryUsage();
+    const memMB = Math.round(memUsage.rss / 1024 / 1024);
+    
+    if (memMB > 500) { // Alert if memory usage > 500MB
+      console.log(`⚠️  High memory usage: ${memMB}MB`);
+    }
+  }, 2 * 60 * 1000); // 2 minutes
+}
+
+// Start the blockchain network
+startBlockchainNetwork().catch((error) => {
+  console.error('❌ Critical error starting blockchain network:', error);
+  process.exit(1);
+});

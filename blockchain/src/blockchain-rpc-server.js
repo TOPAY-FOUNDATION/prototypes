@@ -9,7 +9,7 @@ import { PersistenceManager } from './storage/persistence.js';
  * Provides JSON-RPC 2.0 compatible interface for blockchain interaction
  */
 class BlockchainRPCServer {
-  constructor(port = 8545) {
+  constructor(port = process.env.BLOCKCHAIN_PORT || 3001) {
     this.app = express();
     this.port = port;
     this.blockchain = new Blockchain();

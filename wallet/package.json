@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p ${WALLET_PORT:-3000}",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p ${WALLET_PORT:-3000}",
     "lint": "next lint",
     "workspace": "node start-workspace.js",
     "blockchain": "node ../src/blockchain-rpc-server.js"

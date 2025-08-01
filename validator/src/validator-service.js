@@ -225,6 +225,8 @@ class ValidatorService extends EventEmitter {
         const app = express();
         app.use(express.json());
         app.use(require('cors')());
+        
+        const apiPort = process.env.VALIDATOR_PORT || this.config.get('apiPort', 8547);
 
         // Validator status endpoint
         app.get('/api/status', (req, res) => {
@@ -297,15 +299,14 @@ class ValidatorService extends EventEmitter {
             }
         });
 
-        const port = this.config.get('apiPort', 8547);
-        this.server = app.listen(port, () => {
-            console.log(`✅ API Server started on port ${port}`);
+        this.server = app.listen(apiPort, () => {
+            console.log(`✅ API Server started on port ${apiPort}`);
         });
     }
 
     async startWebSocketServer() {
-        const port = this.config.get('wsPort', 8548);
-        this.wsServer = new WebSocket.Server({ port });
+        const wsPort = process.env.VALIDATOR_WS_PORT || this.config.get('wsPort', 8548);
+        this.wsServer = new WebSocket.Server({ port: wsPort });
 
         this.wsServer.on('connection', (ws) => {
             console.log('🔌 New WebSocket connection');
@@ -338,7 +339,7 @@ class ValidatorService extends EventEmitter {
             }));
         });
 
-        console.log(`✅ WebSocket Server started on port ${port}`);
+        console.log(`✅ WebSocket Server started on port ${wsPort}`);
     }
 
     async handleWebSocketMessage(ws, message) {

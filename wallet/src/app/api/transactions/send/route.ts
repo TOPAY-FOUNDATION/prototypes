@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server.js';
 import { blockchainClient } from '../../../../lib/blockchain-client.js';
 import { Transaction } from '../../../../lib/transaction.js';
 
