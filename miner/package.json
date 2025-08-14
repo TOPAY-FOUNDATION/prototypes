@@ -1,17 +1,18 @@
 {
-  "name": "topay-validator-desktop",
+  "name": "topay-miner-desktop",
   "version": "1.0.0",
-  "description": "TOPAY Validator Desktop Application - Blockchain validation node with modern UI",
+  "description": "TOPAY Miner Desktop Application - Blockchain mining node with modern UI",
   "main": "src/main.js",
   "author": {
     "name": "TOPAY Foundation",
-    "email": "support@topay.foundation",
-    "url": "https://topay.foundation"
+    "email": "support@topayfoundation.com",
+    "url": "https://topayfoundation.com"
   },
   "license": "MIT",
   "keywords": [
     "blockchain",
-    "validator",
+    "miner",
+    "mining",
     "quantum-safe",
     "topay",
     "desktop",
@@ -20,7 +21,7 @@
   "scripts": {
     "start": "electron . --disable-gpu --disable-software-rasterizer",
     "dev": "electron . --dev --disable-gpu --disable-software-rasterizer",
-    "service": "node src/validator-service.js",
+    "service": "node src/miner-service.js",
     "build": "electron-builder",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",

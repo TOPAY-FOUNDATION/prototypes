@@ -21,6 +21,10 @@ class BlockchainRPCServer {
     });
     this.isMining = false;
     this.coinbaseAddress = null;
+    this.autoMining = false;
+    this.miningTimer = null;
+    this.miningInterval = 10000; // 10 seconds
+    this.defaultMinerAddress = 'TOPAYminer234567890abcdef1234567890abcdef12345678';
     this.setupMiddleware();
     this.setupRoutes();
     this.setupValidatorRoutes();
@@ -124,6 +128,10 @@ class BlockchainRPCServer {
           'topay_mining',
           'topay_hashrate',
           'topay_coinbase',
+          // Auto-mining methods
+          'topay_startAutoMining',
+          'topay_stopAutoMining',
+          'topay_getAutoMiningStatus',
           // Development and testing methods
           'topay_addTestData',
           'topay_resetChain'
@@ -149,6 +157,11 @@ class BlockchainRPCServer {
   }
 
   async handleRPCMethod(method, params) {
+    import('fs').then(fs => {
+      const methodLogData = `\n[${new Date().toISOString()}] RPC Method Called: ${method} with params: ${JSON.stringify(params)}`;
+      fs.appendFileSync('C:\\Users\\RealShahriya\\Desktop\\TOPAY FOUNDATION\\Projects\\topay-prototype\\blockchain\\method.log', methodLogData);
+    }).catch(() => {});
+    
     switch (method) {
       case 'topay_getBlockNumber':
         return this.blockchain.chain.length - 1;
@@ -217,17 +230,45 @@ class BlockchainRPCServer {
         throw new Error('Transaction not found');
 
       case 'topay_sendTransaction':
-        const { from, to, amount, memo, signature, publicKey } = params[0] || {};
+        import('fs').then(fs => {
+          const rpcLogData = `\n[${new Date().toISOString()}] RPC topay_sendTransaction: ${JSON.stringify(params)}`;
+          fs.appendFileSync('C:\\Users\\RealShahriya\\Desktop\\TOPAY FOUNDATION\\Projects\\topay-prototype\\blockchain\\rpc.log', rpcLogData);
+        }).catch(() => {});
+        
+        console.log('🔍 Received sendTransaction RPC call with params:', params[0]);
+        const { from, to, amount, memo, data, signature, publicKey } = params[0] || {};
         if (!from || !to || amount === undefined) {
+          console.log('❌ Missing required transaction parameters:', { from, to, amount });
           throw new Error('Missing required transaction parameters');
         }
         
-        const transaction = new Transaction(from, to, amount, memo);
-        if (signature) transaction.signature = signature;
+        // Use data field if provided, otherwise fall back to memo
+        const transactionData = data || memo;
+        console.log('🔍 Creating transaction with:', {
+          from,
+          to,
+          amount,
+          transactionData,
+          signature,
+          publicKey
+        });
+        const transaction = new Transaction(from, to, amount, transactionData);
+        if (signature) {
+          transaction.signature = signature;
+        } else {
+          // Auto-sign transaction for testing purposes
+          await transaction.signTransaction('dummy_private_key');
+        }
         if (publicKey) transaction.publicKey = publicKey;
         
         await this.blockchain.addTransaction(transaction);
         await this.persistence.saveBlockchain(this.blockchain);
+        
+        // Trigger auto-mining if enabled and this is the first transaction in mempool
+        if (this.autoMining && this.blockchain.mempool.length === 1) {
+          console.log('🚀 Auto-mining triggered by new transaction');
+          this.triggerMining();
+        }
         
         return {
           transactionHash: transaction.hash,
@@ -437,6 +478,21 @@ class BlockchainRPCServer {
           blocks: this.blockchain.chain.length
         };
 
+      case 'topay_startAutoMining':
+        const autoMinerAddress = params[0] || this.defaultMinerAddress;
+        return this.startAutoMining(autoMinerAddress);
+
+      case 'topay_stopAutoMining':
+        return this.stopAutoMining();
+
+      case 'topay_getAutoMiningStatus':
+        return {
+          autoMining: this.autoMining,
+          minerAddress: this.coinbaseAddress,
+          miningInterval: this.miningInterval,
+          mempoolSize: this.blockchain.mempool.length
+        };
+
       default:
         throw new Error(`Method '${method}' not found`);
     }
@@ -531,6 +587,80 @@ class BlockchainRPCServer {
 
   estimateHashRate() {
     return Math.pow(2, this.blockchain.difficulty) / 10;
+  }
+
+  startAutoMining(minerAddress) {
+    if (this.autoMining) {
+      return {
+        success: false,
+        message: 'Auto-mining is already running',
+        minerAddress: this.coinbaseAddress
+      };
+    }
+
+    this.autoMining = true;
+    this.coinbaseAddress = minerAddress;
+    
+    console.log(`🤖 Auto-mining started for ${minerAddress}`);
+    
+    // Start mining timer
+    this.miningTimer = setInterval(async () => {
+      if (this.blockchain.mempool.length > 0 && !this.isMining) {
+        try {
+          console.log(`⛏️  Auto-mining block with ${this.blockchain.mempool.length} transactions...`);
+          await this.blockchain.minePendingTransactions(this.coinbaseAddress);
+          await this.persistence.saveBlockchain(this.blockchain);
+          console.log(`✅ Auto-mined block ${this.blockchain.chain.length - 1}`);
+        } catch (error) {
+          console.error('❌ Auto-mining error:', error);
+        }
+      }
+    }, this.miningInterval);
+
+    return {
+      success: true,
+      message: 'Auto-mining started successfully',
+      minerAddress: this.coinbaseAddress,
+      interval: this.miningInterval
+    };
+  }
+
+  stopAutoMining() {
+    if (!this.autoMining) {
+      return {
+        success: false,
+        message: 'Auto-mining is not running'
+      };
+    }
+
+    this.autoMining = false;
+    
+    if (this.miningTimer) {
+      clearInterval(this.miningTimer);
+      this.miningTimer = null;
+    }
+
+    console.log('🛑 Auto-mining stopped');
+
+    return {
+      success: true,
+      message: 'Auto-mining stopped successfully'
+    };
+  }
+
+  triggerMining() {
+    if (this.autoMining && !this.isMining && this.blockchain.mempool.length > 0) {
+      setTimeout(async () => {
+        try {
+          console.log(`⚡ Triggered mining for ${this.blockchain.mempool.length} transactions`);
+          await this.blockchain.minePendingTransactions(this.coinbaseAddress);
+          await this.persistence.saveBlockchain(this.blockchain);
+          console.log(`✅ Triggered block ${this.blockchain.chain.length - 1} mined`);
+        } catch (error) {
+          console.error('❌ Triggered mining error:', error);
+        }
+      }, 1000); // Small delay to allow transaction to be fully processed
+    }
   }
 
   async initialize() {

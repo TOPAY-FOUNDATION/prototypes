@@ -77,8 +77,16 @@ export default function WalletCreation({ onWalletCreated }: WalletCreationProps)
         address: walletData.address,
         privateKey: walletData.privateKey,
         publicKey: walletData.publicKey,
-        seedPhrase: seedPhrase
+        seedPhrase: seedPhrase,
+        blockchainRegistration: walletData.blockchainRegistration
       };
+
+      // Log registration status
+      if (walletData.blockchainRegistration?.registered) {
+        console.log(`✅ Wallet registered on blockchain with transaction hash: ${walletData.blockchainRegistration.transactionHash}`);
+      } else {
+        console.log('⚠️ Wallet created but not registered on blockchain');
+      }
 
       onWalletCreated(completeWalletData);
     } catch (err) {

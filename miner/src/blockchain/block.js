@@ -5,8 +5,8 @@
  * Implements quantum-safe block structure with TOPAY-Z512 hashing
  */
 
-import { computeHash, computeMerkleRoot, fragmentData, reconstructData } from '@topayfoundation/topayz512';
-import { Transaction } from './transaction.js';
+const { computeHash, computeMerkleRoot, fragmentData, reconstructData } = require('@topayfoundation/topayz512');
+const { Transaction } = require('./transaction.js');
 
 class Block {
   constructor(timestamp, transactions, previousHash = '') {
@@ -261,4 +261,4 @@ class Block {
   }
 }
 
-export { Block };
+module.exports = { Block };

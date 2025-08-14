@@ -398,6 +398,13 @@ export default function Account({ walletAddress }: AccountProps) {
 
       const walletData = await response.json();
       
+      // Log blockchain registration status
+      if (walletData.blockchainRegistration?.registered) {
+        console.log(`✅ New wallet registered on blockchain with transaction hash: ${walletData.blockchainRegistration.transactionHash}`);
+      } else {
+        console.log('⚠️ New wallet created but not registered on blockchain');
+      }
+      
       // Set new wallet as active
       localStorage.setItem('walletAddress', walletData.address);
       localStorage.setItem('walletPrivateKey', walletData.privateKey);

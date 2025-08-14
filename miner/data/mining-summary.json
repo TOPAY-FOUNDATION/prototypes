@@ -1,0 +1,42 @@
+{
+  "totalBlocksMined": 2,
+  "totalRewards": 200,
+  "averageHashRate": 1000,
+  "firstBlockMined": 1755195862975,
+  "lastBlockMined": 1755201451318,
+  "minerAddress": "MINER_ADDRESS_001",
+  "blocks": [
+    {
+      "index": 1,
+      "hash": "00fa71474b34b52c6b0aa42e41c174ffa2a1e1726b806f21dec78a00c9f3c47ec7df23930f7b80b5d54e7714510e7753cc7b8986a0b3a19d527ca6be667b9a31",
+      "timestamp": 1755195862967,
+      "transactionCount": 1,
+      "nonce": 99,
+      "difficulty": 2
+    },
+    {
+      "index": 2,
+      "hash": "068779d5d14b340048c5405a3cca8b15b9f2fabc638c53a9bacabd284cd43ebbf6fc5fd41d89df79219b0be0310fe67b54f524c98adea35bbb077dbf520b025e",
+      "timestamp": 1755195912760,
+      "transactionCount": 1,
+      "nonce": 3,
+      "difficulty": 1
+    },
+    {
+      "index": 1,
+      "hash": "00fb1cad27c7ef00557aab3d57e5c17bdd9b955f0e7425b92cbdb91ba7df16f399d68d954c303d16bc6cfbcc7f55073908ea2fda0d322449ef4bde1642769ce2",
+      "timestamp": 1755201417166,
+      "transactionCount": 1,
+      "nonce": 19,
+      "difficulty": 2
+    },
+    {
+      "index": 2,
+      "hash": "062d620c3ac8eabad428f4987677c7aa8e67e31e943f1f7e467b2f4bc0b8b985e099a598ec68ad53fe25caa63e6ea198713276663ece169ea728190809eead20",
+      "timestamp": 1755201451316,
+      "transactionCount": 1,
+      "nonce": 1,
+      "difficulty": 1
+    }
+  ]
+}

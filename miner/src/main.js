@@ -1,6 +1,6 @@
 /**
- * TOPAY Validator Desktop Application
- * Main Electron process for the validator UI
+ * TOPAY Miner Desktop Application
+ * Main Electron process for the miner UI
  */
 
 const { app, BrowserWindow, Menu, Tray, ipcMain, dialog, shell, nativeImage } = require('electron');
@@ -12,11 +12,11 @@ app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-software-rasterizer');
 
-class ValidatorApp {
+class MinerApp {
     constructor() {
         this.mainWindow = null;
         this.tray = null;
-        this.validatorService = null;
+        this.minerService = null;
         this.config = null;
         this.isQuitting = false;
     }
@@ -75,7 +75,7 @@ class ValidatorApp {
                 backgroundThrottling: false
             },
             icon: this.getAppIcon(),
-            title: 'TOPAY Validator',
+            title: 'TOPAY Miner',
             show: false,
             frame: false,
             titleBarStyle: 'hidden'
@@ -96,14 +96,14 @@ class ValidatorApp {
                 this.mainWindow.webContents.openDevTools();
             }
             
-            // Initialize validator service for UI (non-blocking)
-            this.initializeValidatorService().then(() => {
-                // Restore validator state after service is initialized
-                this.restoreValidatorState();
+            // Initialize miner service for UI (non-blocking)
+            this.initializeMinerService().then(() => {
+                // Restore miner state after service is initialized
+                this.restoreMinerState();
             }).catch(error => {
-                console.error('Failed to initialize validator service:', error);
+                console.error('Failed to initialize miner service:', error);
                 // Still restore state even if initialization fails
-                this.restoreValidatorState();
+                this.restoreMinerState();
             });
         });
 
@@ -121,7 +121,7 @@ class ValidatorApp {
         this.tray = new Tray(trayIcon);
         
         this.updateTrayMenu(false);
-        this.tray.setToolTip('TOPAY Validator');
+        this.tray.setToolTip('TOPAY Miner');
         
         this.tray.on('double-click', () => {
             this.mainWindow.show();
@@ -154,22 +154,22 @@ class ValidatorApp {
                 ]
             },
             {
-                label: 'Validator',
+                label: 'Miner',
                 submenu: [
                     {
                         label: 'Start',
                         accelerator: 'CmdOrCtrl+S',
-                        click: () => this.startValidator()
+                        click: () => this.startMiner()
                     },
                     {
                         label: 'Stop',
                         accelerator: 'CmdOrCtrl+T',
-                        click: () => this.stopValidator()
+                        click: () => this.stopMiner()
                     },
                     {
                         label: 'Restart',
                         accelerator: 'CmdOrCtrl+R',
-                        click: () => this.restartValidator()
+                        click: () => this.restartMiner()
                     }
                 ]
             }
@@ -179,73 +179,179 @@ class ValidatorApp {
         Menu.setApplicationMenu(menu);
     }
 
-    async initializeValidatorService() {
-        // Initialize the real ValidatorService
-        console.log('🔧 Initializing validator service...');
+    async initializeMinerService() {
+        // Initialize the real MinerService
+        console.log('🔧 Initializing miner service...');
         
         try {
-            // Load ValidatorService class
-            const { ValidatorService } = await import('./validator-service.js');
+            // Clear require cache to avoid __dirname conflicts
+            delete require.cache[require.resolve('./miner-service.js')];
+            delete require.cache[require.resolve('./rpc/validator-client.js')];
+            delete require.cache[require.resolve('./config/validator-config-cjs.js')];
             
-            // Create real validator service instance
-            this.validatorService = new ValidatorService(this.config);
+            // Load MinerService class
+            const MinerService = require('./miner-service.js');
             
-            console.log('✅ Validator service initialized successfully');
+            // Create real miner service instance
+            this.minerService = new MinerService(this.config);
+            
+            console.log('✅ Miner service initialized successfully');
         } catch (error) {
-            console.warn('⚠️ Could not load ValidatorService, using mock service:', error.message);
+            console.warn('⚠️ Could not load MinerService, using mock service:', error.message);
             
             // Fallback to mock service for development
-            this.validatorService = {
+            this.minerService = {
                 isRunning: false,
                 startTime: null,
-                validatorId: 'DEV-VALIDATOR-' + Math.random().toString(36).substr(2, 8).toUpperCase(),
+                minerId: 'DEV-MINER-' + Math.random().toString(36).substr(2, 8).toUpperCase(),
                 rpcConnected: false,
                 wsConnected: false,
-                validationStats: {
-                    blocksValidated: 0,
-                    transactionsValidated: 0,
-                    validationErrors: 0,
-                    lastValidation: null,
+                miningStats: {
+                    blocksMined: 0,
+                    transactionsProcessed: 0,
+                    miningErrors: 0,
+                    lastMining: null,
                     uptime: 0
                 },
-                start: function() {
-                    console.log('🚀 Starting development validator...');
+                start: async function() {
+                    console.log('🚀 Starting development miner...');
                     this.isRunning = true;
                     this.startTime = Date.now();
                     this.rpcConnected = true;
                     this.wsConnected = true;
+                    
+                    // Start mock API server
+                    this.startMockApiServer();
+                    
+                    // Enable auto-mining on blockchain when miner starts
+                    try {
+                        const blockchainUrl = process.env.BLOCKCHAIN_RPC_URL || 'http://localhost:8545';
+                        console.log('🤖 Enabling auto-mining on blockchain...');
+                        
+                        const response = await fetch(`${blockchainUrl}/rpc`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                jsonrpc: '2.0',
+                                method: 'topay_startAutoMining',
+                                params: [this.minerId],
+                                id: 1
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        if (result.result && result.result.success) {
+                            console.log('✅ Auto-mining enabled on blockchain');
+                        } else {
+                            console.warn('⚠️ Failed to enable auto-mining:', result.error?.message || 'Unknown error');
+                        }
+                    } catch (error) {
+                        console.warn('⚠️ Could not enable auto-mining:', error.message);
+                    }
+                    
                     // Simulate some activity
                     setTimeout(() => {
-                        this.validationStats.blocksValidated += Math.floor(Math.random() * 5);
-                        this.validationStats.transactionsValidated += Math.floor(Math.random() * 20);
-                        this.validationStats.lastValidation = new Date().toISOString();
+                        this.miningStats.blocksMined += Math.floor(Math.random() * 5);
+                        this.miningStats.transactionsProcessed += Math.floor(Math.random() * 20);
+                        this.miningStats.lastMining = new Date().toISOString();
                     }, 2000);
                     return Promise.resolve();
                 },
-                stop: function() {
-                    console.log('🛑 Stopping development validator...');
+                stop: async function() {
+                    console.log('🛑 Stopping development miner...');
                     this.isRunning = false;
                     this.startTime = null;
                     this.rpcConnected = false;
                     this.wsConnected = false;
-                    return Promise.resolve();
+                    
+                    // Disable auto-mining on blockchain when miner stops
+                    try {
+                        const blockchainUrl = process.env.BLOCKCHAIN_RPC_URL || 'http://localhost:8545';
+                        console.log('🤖 Disabling auto-mining on blockchain...');
+                        
+                        const response = await fetch(`${blockchainUrl}/rpc`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                jsonrpc: '2.0',
+                                method: 'topay_stopAutoMining',
+                                params: [],
+                                id: 1
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        if (result.result && result.result.success) {
+                            console.log('✅ Auto-mining disabled on blockchain');
+                        } else {
+                            console.warn('⚠️ Failed to disable auto-mining:', result.error?.message || 'Unknown error');
+                        }
+                    } catch (error) {
+                        console.warn('⚠️ Could not disable auto-mining:', error.message);
+                    }
+                    
+                    this.stopMockApiServer();
+                     
+                     console.log('✅ Development miner service stopped');
+                     return { success: true, message: 'Development miner stopped' };
                 },
                 restart: function() {
-                    console.log('🔄 Restarting development validator...');
+                    console.log('🔄 Restarting development miner...');
                     this.stop();
                     return this.start();
                 },
                 getStatus: function() {
                     return {
-                        validatorId: this.validatorId,
+                        minerId: this.minerId,
                         isRunning: this.isRunning,
                         uptime: this.startTime ? Date.now() - this.startTime : 0,
                         rpcConnected: this.rpcConnected,
                         wsConnected: this.wsConnected,
                         blockchain: { height: Math.floor(Math.random() * 10000) },
                         peers: { connected: Math.floor(Math.random() * 10), total: 50 },
-                        validationStats: this.validationStats
+                        miningStats: this.miningStats
                     };
+                },
+                startMockApiServer: function() {
+                    if (this.apiServer) return; // Already running
+                    
+                    const http = require('http');
+                    const url = require('url');
+                    
+                    this.apiServer = http.createServer((req, res) => {
+                        // Enable CORS
+                        res.setHeader('Access-Control-Allow-Origin', '*');
+                        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+                        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+                        res.setHeader('Content-Type', 'application/json');
+                        
+                        if (req.method === 'OPTIONS') {
+                            res.writeHead(200);
+                            res.end();
+                            return;
+                        }
+                        
+                        const parsedUrl = url.parse(req.url, true);
+                        
+                        if (parsedUrl.pathname === '/api/status') {
+                            res.writeHead(200);
+                            res.end(JSON.stringify(this.getStatus()));
+                        } else {
+                            res.writeHead(404);
+                            res.end(JSON.stringify({ error: 'Not found' }));
+                        }
+                    });
+                    
+                    this.apiServer.listen(8547, () => {
+                        console.log('🌐 Mock miner API server running on port 8547');
+                    });
+                },
+                stopMockApiServer: function() {
+                    if (this.apiServer) {
+                        this.apiServer.close();
+                        this.apiServer = null;
+                        console.log('🛑 Mock miner API server stopped');
+                    }
                 },
                 on: () => {},
                 emit: () => {}
@@ -254,29 +360,29 @@ class ValidatorApp {
     }
 
     setupIpcHandlers() {
-        // Validator control
-        ipcMain.handle('validator:start', async () => {
-            return await this.startValidator();
+        // Miner control
+        ipcMain.handle('miner:start', async () => {
+            return await this.startMiner();
         });
 
-        ipcMain.handle('validator:stop', async () => {
-            return await this.stopValidator();
+        ipcMain.handle('miner:stop', async () => {
+            return await this.stopMiner();
         });
 
-        ipcMain.handle('validator:restart', async () => {
-            return await this.restartValidator();
+        ipcMain.handle('miner:restart', async () => {
+            return await this.restartMiner();
         });
 
-        ipcMain.handle('validator:status', async () => {
-            return await this.getValidatorStatus();
+        ipcMain.handle('miner:status', async () => {
+            return await this.getMinerStatus();
         });
 
         // Configuration
         ipcMain.handle('config:get', async () => {
             if (!this.config) {
                 try {
-                    const ValidatorConfig = require('./config/validator-config-cjs.js');
-                    this.config = new ValidatorConfig();
+                    const MinerConfig = require('./config/miner-config-cjs.js');
+                    this.config = new MinerConfig();
                     await this.config.load();
                 } catch (configError) {
                     console.warn('⚠️ Could not load config in IPC handler, using fallback:', configError.message);
@@ -286,7 +392,7 @@ class ValidatorApp {
                         save: () => Promise.resolve(),
                         load: () => Promise.resolve(),
                         getAll: () => ({
-                            validatorId: 'DEV-CONFIG',
+                            minerId: 'DEV-CONFIG',
                             rpcPort: 8545,
                             wsPort: 8546,
                             networkId: 'development',
@@ -306,19 +412,19 @@ class ValidatorApp {
             return true;
         });
 
-        // Auto-start validator setting
+        // Auto-start miner setting
         ipcMain.handle('config:get-autostart', async () => {
             if (this.config) {
-                return this.config.get('autoStartValidator', false);
+                return this.config.get('autoStartMiner', false);
             }
             return false;
         });
 
         ipcMain.handle('config:set-autostart', async (event, enabled) => {
             if (this.config) {
-                this.config.set('autoStartValidator', enabled);
+                this.config.set('autoStartMiner', enabled);
                 await this.config.save();
-                console.log(`🔧 Auto-start validator ${enabled ? 'enabled' : 'disabled'}`);
+                console.log(`🔧 Auto-start miner ${enabled ? 'enabled' : 'disabled'}`);
             }
             return true;
         });
@@ -341,23 +447,23 @@ class ValidatorApp {
         });
     }
 
-    async startValidator() {
+    async startMiner() {
         try {
-            // Initialize validator service if not already done
-            if (!this.validatorService) {
-                await this.initializeValidatorService();
+            // Initialize miner service if not already done
+            if (!this.minerService) {
+                await this.initializeMinerService();
             }
 
-            // Check if validator is actually running
-            if (this.validatorService && this.validatorService.isRunning) {
-                console.log('⚠️ Validator is already running');
-                return { success: false, message: 'Validator is already running' };
+            // Check if miner is actually running
+            if (this.minerService && this.minerService.isRunning) {
+                console.log('⚠️ Miner is already running');
+                return { success: false, message: 'Miner is already running' };
             }
 
             if (!this.config) {
                 try {
-                    const ValidatorConfig = require('./config/validator-config-cjs.js');
-                    this.config = new ValidatorConfig();
+                    const MinerConfig = require('./config/miner-config-cjs.js');
+                    this.config = new MinerConfig();
                     await this.config.load();
                     console.log('✅ Configuration loaded successfully');
                 } catch (configError) {
@@ -372,94 +478,94 @@ class ValidatorApp {
                 }
             }
 
-            console.log('🚀 Starting validator service...');
-            await this.validatorService.start();
-            await this.saveValidatorState(true);
+            console.log('🚀 Starting miner service...');
+            await this.minerService.start();
+            await this.saveMinerState(true);
             
             // Notify UI of status change
             this.updateTrayMenu(true);
             if (this.mainWindow && !this.mainWindow.isDestroyed()) {
-                this.mainWindow.webContents.send('validator:status-changed', { 
+                this.mainWindow.webContents.send('miner:status-changed', { 
                     isRunning: true, 
                     running: true 
                 });
             }
             
-            console.log('✅ Validator started successfully');
-            return { success: true, message: 'Validator started successfully' };
+            console.log('✅ Miner started successfully');
+            return { success: true, message: 'Miner started successfully' };
         } catch (error) {
-            console.error('Failed to start validator:', error);
+            console.error('Failed to start miner:', error);
             return { success: false, message: error.message };
         }
     }
 
-    async stopValidator() {
+    async stopMiner() {
         try {
-            if (!this.validatorService || !this.validatorService.isRunning) {
-                console.log('⚠️ Validator is not running');
-                return { success: false, message: 'Validator is not running' };
+            if (!this.minerService || !this.minerService.isRunning) {
+                console.log('⚠️ Miner is not running');
+                return { success: false, message: 'Miner is not running' };
             }
 
-            console.log('🛑 Stopping validator service...');
-            await this.validatorService.stop();
-            await this.saveValidatorState(false);
+            console.log('🛑 Stopping miner service...');
+            await this.minerService.stop();
+            await this.saveMinerState(false);
             
             // Notify UI of status change
             this.updateTrayMenu(false);
             if (this.mainWindow && !this.mainWindow.isDestroyed()) {
-                this.mainWindow.webContents.send('validator:status-changed', { 
+                this.mainWindow.webContents.send('miner:status-changed', { 
                     isRunning: false, 
                     running: false 
                 });
             }
             
-            console.log('✅ Validator stopped successfully');
-            return { success: true, message: 'Validator stopped successfully' };
+            console.log('✅ Miner stopped successfully');
+            return { success: true, message: 'Miner stopped successfully' };
         } catch (error) {
-            console.error('Failed to stop validator:', error);
+            console.error('Failed to stop miner:', error);
             return { success: false, message: error.message };
         }
     }
 
-    async restartValidator() {
+    async restartMiner() {
         try {
-            await this.stopValidator();
+            await this.stopMiner();
             await new Promise(resolve => setTimeout(resolve, 1000));
-            return await this.startValidator();
+            return await this.startMiner();
         } catch (error) {
-            console.error('Failed to restart validator:', error);
+            console.error('Failed to restart miner:', error);
             return { success: false, message: error.message };
         }
     }
 
-    async getValidatorStatus() {
-        if (!this.validatorService) {
+    async getMinerStatus() {
+        if (!this.minerService) {
             return {
                 isRunning: false,
                 running: false,
                 uptime: 0,
                 stats: null,
-                validatorId: null,
+                minerId: null,
                 rpcConnected: false,
                 wsConnected: false
             };
         }
 
         return {
-            isRunning: this.validatorService.isRunning,
-            running: this.validatorService.isRunning, // Keep both for compatibility
-            uptime: this.validatorService.startTime ? Date.now() - this.validatorService.startTime : 0,
-            stats: this.validatorService.validationStats,
-            validatorId: this.validatorService.validatorId,
-            rpcConnected: this.validatorService.rpcConnected,
-            wsConnected: this.validatorService.wsConnected
+            isRunning: this.minerService.isRunning,
+            running: this.minerService.isRunning, // Keep both for compatibility
+            uptime: this.minerService.startTime ? Date.now() - this.minerService.startTime : 0,
+            stats: this.minerService.miningStats,
+            minerId: this.minerService.minerId,
+            rpcConnected: this.minerService.rpcConnected,
+            wsConnected: this.minerService.wsConnected
         };
     }
 
-    updateTrayMenu(validatorRunning) {
+    updateTrayMenu(minerRunning) {
         const contextMenu = Menu.buildFromTemplate([
             {
-                label: 'Show TOPAY Validator',
+                label: 'Show TOPAY Miner',
                 click: () => {
                     this.mainWindow.show();
                     this.mainWindow.focus();
@@ -467,14 +573,14 @@ class ValidatorApp {
             },
             { type: 'separator' },
             {
-                label: 'Start Validator',
-                click: () => this.startValidator(),
-                enabled: !validatorRunning
+                label: 'Start Miner',
+                click: () => this.startMiner(),
+                enabled: !minerRunning
             },
             {
-                label: 'Stop Validator',
-                click: () => this.stopValidator(),
-                enabled: validatorRunning
+                label: 'Stop Miner',
+                click: () => this.stopMiner(),
+                enabled: minerRunning
             },
             { type: 'separator' },
             {
@@ -492,59 +598,59 @@ class ValidatorApp {
 
     async gracefulShutdown() {
         try {
-            if (this.validatorService && this.validatorService.isRunning) {
-                console.log('Stopping validator service...');
-                await this.saveValidatorState(true);
-                await this.validatorService.stop();
+            if (this.minerService && this.minerService.isRunning) {
+                console.log('Stopping miner service...');
+                await this.saveMinerState(true);
+                await this.minerService.stop();
             } else {
-                await this.saveValidatorState(false);
+                await this.saveMinerState(false);
             }
         } catch (error) {
             console.error('Error during graceful shutdown:', error);
         }
     }
 
-    async saveValidatorState(wasRunning) {
+    async saveMinerState(wasRunning) {
         try {
             if (this.config) {
-                this.config.set('lastValidatorState.wasRunning', wasRunning);
-                this.config.set('lastValidatorState.lastStopTime', new Date().toISOString());
-                if (wasRunning && this.validatorService && this.validatorService.startTime) {
-                    this.config.set('lastValidatorState.lastStartTime', new Date(this.validatorService.startTime).toISOString());
+                this.config.set('lastMinerState.wasRunning', wasRunning);
+                this.config.set('lastMinerState.lastStopTime', new Date().toISOString());
+                if (wasRunning && this.minerService && this.minerService.startTime) {
+                    this.config.set('lastMinerState.lastStartTime', new Date(this.minerService.startTime).toISOString());
                 }
                 await this.config.save();
-                console.log(`💾 Validator state saved: ${wasRunning ? 'was running' : 'was stopped'}`);
+                console.log(`💾 Miner state saved: ${wasRunning ? 'was running' : 'was stopped'}`);
             }
         } catch (error) {
-            console.error('Error saving validator state:', error);
+            console.error('Error saving miner state:', error);
         }
     }
 
-    async restoreValidatorState() {
+    async restoreMinerState() {
         try {
             if (!this.config) return;
             
-            const autoStart = this.config.get('autoStartValidator', false);
-            const lastState = this.config.get('lastValidatorState', {});
+            const autoStart = this.config.get('autoStartMiner', false);
+            const lastState = this.config.get('lastMinerState', {});
             
-            console.log(`🔄 Checking validator state: autoStart=${autoStart}, wasRunning=${lastState.wasRunning}`);
+            console.log(`🔄 Checking miner state: autoStart=${autoStart}, wasRunning=${lastState.wasRunning}`);
             
             if (autoStart && lastState.wasRunning) {
-                console.log('🚀 Auto-starting validator based on previous state...');
+                console.log('🚀 Auto-starting miner based on previous state...');
                 setTimeout(async () => {
-                    const result = await this.startValidator();
+                    const result = await this.startMiner();
                     if (result.success) {
-                        console.log('✅ Validator auto-started successfully');
+                        console.log('✅ Miner auto-started successfully');
                         if (this.mainWindow && !this.mainWindow.isDestroyed()) {
-                            this.mainWindow.webContents.send('validator:auto-started');
+                            this.mainWindow.webContents.send('miner:auto-started');
                         }
                     } else {
-                        console.warn('⚠️ Failed to auto-start validator:', result.message);
+                        console.warn('⚠️ Failed to auto-start miner:', result.message);
                     }
                 }, 2000);
             }
         } catch (error) {
-            console.error('Error restoring validator state:', error);
+            console.error('Error restoring miner state:', error);
         }
     }
 
@@ -629,5 +735,5 @@ class ValidatorApp {
     }
 }
 
-const validatorApp = new ValidatorApp();
-validatorApp.initialize().catch(console.error);
+const minerApp = new MinerApp();
+minerApp.initialize().catch(console.error);

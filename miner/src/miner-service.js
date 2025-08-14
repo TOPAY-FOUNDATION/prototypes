@@ -1,31 +1,30 @@
 /**
- * TOPAY Validator Service - Core Validation Engine
- * Handles blockchain validation, network communication, and consensus
+ * TOPAY Miner Service - Core Mining Engine
+ * Handles blockchain mining, network communication, and consensus
  */
 
 // Load environment variables
-import dotenv from 'dotenv';
+const dotenv = require('dotenv');
 dotenv.config();
 
-import EventEmitter from 'events';
-import express from 'express';
-import { WebSocketServer } from 'ws';
-import { promises as fs } from 'fs';
-import path from 'path';
-import crypto from 'crypto';
-import pkg from 'node-machine-id';
-const { machineId } = pkg;
-import si from 'systeminformation';
+const EventEmitter = require('events');
+const express = require('express');
+const { WebSocketServer } = require('ws');
+const { promises: fs } = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const { machineId } = require('node-machine-id');
+const si = require('systeminformation');
 
 // Import ValidatorClient for RPC registration
-import { ValidatorClient } from './rpc/validator-client.js';
+const { ValidatorClient } = require('./rpc/validator-client.js');
 
 
 
 // Dynamic import for ES modules
 let fetch;
 
-class ValidatorService extends EventEmitter {
+class MinerService extends EventEmitter {
     constructor(config) {
         super();
         this.config = config;
@@ -40,6 +39,20 @@ class ValidatorService extends EventEmitter {
             uptime: 0,
             lastValidation: null
         };
+        
+        // Mining-specific properties
+        this.isMining = false;
+        this.miningStats = {
+            blocksMinedTotal: 0,
+            blocksMinedSession: 0,
+            hashRate: 0,
+            lastBlockMined: null,
+            miningRewards: 0
+        };
+        this.miningInterval = null;
+        this.minerAddress = null;
+        this.autoMining = false;
+        this.miningDifficulty = 2;
         this.server = null;
         this.wsServer = null;
         this.syncInterval = null;
@@ -71,10 +84,9 @@ class ValidatorService extends EventEmitter {
         this.startTime = Date.now();
 
         try {
-            // Initialize fetch for ES module compatibility
+            // Initialize fetch for CommonJS compatibility
             if (!fetch) {
-                const fetchModule = await import('node-fetch');
-                fetch = fetchModule.default;
+                fetch = require('node-fetch');
             }
             
             // Initialize validator ID
@@ -200,10 +212,10 @@ class ValidatorService extends EventEmitter {
 
     async loadBlockchainClasses() {
         try {
-            // Use local blockchain files with ES module imports
-            const { Blockchain } = await import('./blockchain/blockchain.js');
-            const { Transaction } = await import('./blockchain/transaction.js');
-            const { Block } = await import('./blockchain/block.js');
+            // Use local blockchain files with CommonJS require
+            const { Blockchain } = require('./blockchain/blockchain.js');
+            const { Transaction } = require('./blockchain/transaction.js');
+            const { Block } = require('./blockchain/block.js');
 
             this.Blockchain = Blockchain;
             this.Transaction = Transaction;
@@ -262,9 +274,9 @@ class ValidatorService extends EventEmitter {
         const app = express();
         app.use(express.json());
         
-        // Import cors dynamically
-        const cors = await import('cors');
-        app.use(cors.default());
+        // Import cors
+        const cors = require('cors');
+        app.use(cors());
         
         const apiPort = process.env.VALIDATOR_PORT || this.config.get('apiPort', 8547);
 
@@ -485,7 +497,94 @@ class ValidatorService extends EventEmitter {
             }
         });
 
+        // Mining endpoints
+        app.post('/api/mine/start', async (req, res) => {
+            try {
+                const { minerAddress } = req.body;
+                if (!minerAddress) {
+                    return res.status(400).json({ error: 'Miner address required' });
+                }
+                
+                const result = await this.startMining(minerAddress);
+                res.json(result);
+            } catch (error) {
+                res.status(500).json({ error: error.message });
+            }
+        });
 
+        app.post('/api/mine/stop', async (req, res) => {
+            try {
+                const result = await this.stopMining();
+                res.json(result);
+            } catch (error) {
+                res.status(500).json({ error: error.message });
+            }
+        });
+
+        app.post('/api/mine/auto/start', async (req, res) => {
+            try {
+                const { minerAddress, interval } = req.body;
+                if (!minerAddress) {
+                    return res.status(400).json({ error: 'Miner address required' });
+                }
+                
+                const result = await this.startAutoMining(minerAddress, interval);
+                res.json(result);
+            } catch (error) {
+                res.status(500).json({ error: error.message });
+            }
+        });
+
+        app.post('/api/mine/auto/stop', async (req, res) => {
+            try {
+                const result = await this.stopAutoMining();
+                res.json(result);
+            } catch (error) {
+                res.status(500).json({ error: error.message });
+            }
+        });
+
+        app.post('/api/mine/block', async (req, res) => {
+            try {
+                const result = await this.mineBlock();
+                res.json(result);
+            } catch (error) {
+                res.status(500).json({ error: error.message });
+            }
+        });
+
+        app.get('/api/mine/status', (req, res) => {
+            try {
+                const status = this.getMiningStatus();
+                res.json(status);
+            } catch (error) {
+                res.status(500).json({ error: error.message });
+            }
+        });
+
+        app.get('/api/mine/summary', async (req, res) => {
+            try {
+                const baseDataDir = this.config.get('dataPath', path.join(__dirname, '..', 'data'));
+                const summaryFile = path.join(baseDataDir, 'mining-summary.json');
+                const data = await fs.readFile(summaryFile, 'utf8');
+                const summary = JSON.parse(data);
+                res.json(summary);
+            } catch (error) {
+                res.status(404).json({ error: 'Mining summary not found' });
+            }
+        });
+
+        app.get('/api/blockchain/state', async (req, res) => {
+            try {
+                const baseDataDir = this.config.get('dataPath', path.join(__dirname, '..', 'data'));
+                const stateFile = path.join(baseDataDir, 'blockchain-state.json');
+                const data = await fs.readFile(stateFile, 'utf8');
+                const state = JSON.parse(data);
+                res.json(state);
+            } catch (error) {
+                res.status(404).json({ error: 'Blockchain state not found' });
+            }
+        });
 
         this.server = app.listen(apiPort, () => {
             console.log(`✅ API Server started on port ${apiPort}`);
@@ -1126,41 +1225,360 @@ class ValidatorService extends EventEmitter {
             // Implement selective restart logic here
         }
     }
+
+    // ==================== MINING METHODS ====================
+
+    /**
+     * Start mining process
+     */
+    async startMining(minerAddress) {
+        if (this.isMining) {
+            console.log('⚠️ Mining is already active');
+            return { success: false, message: 'Mining already active' };
+        }
+
+        if (!this.blockchain) {
+            console.log('❌ Blockchain not initialized');
+            return { success: false, message: 'Blockchain not initialized' };
+        }
+
+        this.minerAddress = minerAddress;
+        this.isMining = true;
+        this.miningStats.blocksMinedSession = 0;
+        
+        console.log(`🚀 Starting mining with address: ${minerAddress}`);
+        
+        // Start mining loop
+        this.startMiningLoop();
+        
+        this.emit('miningStarted', { minerAddress, timestamp: Date.now() });
+        return { success: true, message: 'Mining started successfully' };
+    }
+
+    /**
+     * Stop mining process
+     */
+    async stopMining() {
+        if (!this.isMining) {
+            console.log('⚠️ Mining is not active');
+            return { success: false, message: 'Mining not active' };
+        }
+
+        this.isMining = false;
+        
+        if (this.miningInterval) {
+            clearInterval(this.miningInterval);
+            this.miningInterval = null;
+        }
+        
+        console.log('🛑 Mining stopped');
+        this.emit('miningStopped', { timestamp: Date.now() });
+        return { success: true, message: 'Mining stopped successfully' };
+    }
+
+    /**
+     * Start auto-mining with interval
+     */
+    async startAutoMining(minerAddress, interval = 30000) {
+        this.autoMining = true;
+        this.minerAddress = minerAddress;
+        
+        console.log(`🔄 Starting auto-mining every ${interval}ms`);
+        
+        this.miningInterval = setInterval(async () => {
+            if (this.blockchain && this.blockchain.mempool.length > 0) {
+                await this.mineBlock();
+            }
+        }, interval);
+        
+        return { success: true, message: 'Auto-mining started' };
+    }
+
+    /**
+     * Stop auto-mining
+     */
+    async stopAutoMining() {
+        this.autoMining = false;
+        
+        if (this.miningInterval) {
+            clearInterval(this.miningInterval);
+            this.miningInterval = null;
+        }
+        
+        console.log('🛑 Auto-mining stopped');
+        return { success: true, message: 'Auto-mining stopped' };
+    }
+
+    /**
+     * Mine a single block
+     */
+    async mineBlock() {
+        if (!this.blockchain || !this.minerAddress) {
+            console.log('❌ Cannot mine: blockchain or miner address not set');
+            return { success: false, message: 'Blockchain or miner address not set' };
+        }
+
+        try {
+            const startTime = Date.now();
+            console.log('\n⛏️ Mining new block...');
+            
+            // Mine pending transactions
+            await this.blockchain.minePendingTransactions(this.minerAddress);
+            
+            const miningTime = Date.now() - startTime;
+            const latestBlock = this.blockchain.getLatestBlock();
+            
+            // Update mining stats
+            this.miningStats.blocksMinedTotal++;
+            this.miningStats.blocksMinedSession++;
+            this.miningStats.lastBlockMined = Date.now();
+            this.miningStats.miningRewards += this.blockchain.miningReward;
+            this.miningStats.hashRate = latestBlock.nonce / (miningTime / 1000);
+            
+            // Save blockchain data
+            await this.saveMinedBlockData(latestBlock);
+            
+            console.log(`✅ Block #${latestBlock.index} mined successfully!`);
+            console.log(`   Mining time: ${miningTime}ms`);
+            console.log(`   Hash rate: ${this.miningStats.hashRate.toFixed(2)} H/s`);
+            console.log(`   Total blocks mined: ${this.miningStats.blocksMinedTotal}`);
+            
+            this.emit('blockMined', {
+                block: latestBlock,
+                miningTime,
+                hashRate: this.miningStats.hashRate,
+                minerAddress: this.minerAddress
+            });
+            
+            return {
+                success: true,
+                block: latestBlock,
+                miningTime,
+                hashRate: this.miningStats.hashRate
+            };
+            
+        } catch (error) {
+            console.error('❌ Mining failed:', error.message);
+            return { success: false, message: error.message };
+        }
+    }
+
+    /**
+     * Start continuous mining loop
+     */
+    startMiningLoop() {
+        const mineNext = async () => {
+            if (!this.isMining) return;
+            
+            if (this.blockchain && this.blockchain.mempool.length > 0) {
+                await this.mineBlock();
+            }
+            
+            // Schedule next mining attempt
+            if (this.isMining) {
+                setTimeout(mineNext, 1000); // Check every second
+            }
+        };
+        
+        mineNext();
+    }
+
+    /**
+     * Save mined block data to persistent storage
+     */
+    async saveMinedBlockData(block) {
+        try {
+            const baseDataDir = this.config.get('dataPath', path.join(__dirname, '..', 'data'));
+            const dataDir = path.join(baseDataDir, 'mined-blocks');
+            await fs.mkdir(dataDir, { recursive: true });
+            
+            // Save individual block file
+            const blockFile = path.join(dataDir, `block-${block.index}.json`);
+            const blockData = {
+                ...block.toJSON(),
+                minedAt: Date.now(),
+                minerAddress: this.minerAddress,
+                miningStats: { ...this.miningStats }
+            };
+            
+            await fs.writeFile(blockFile, JSON.stringify(blockData, null, 2));
+            
+            // Update mining summary
+            await this.updateMiningSummary(block);
+            
+            // Save full blockchain state
+            await this.saveBlockchainState();
+            
+            console.log(`💾 Block data saved: ${blockFile}`);
+            
+        } catch (error) {
+            console.error('❌ Failed to save block data:', error.message);
+        }
+    }
+
+    /**
+     * Update mining summary statistics
+     */
+    async updateMiningSummary(block) {
+        try {
+            const baseDataDir = this.config.get('dataPath', path.join(__dirname, '..', 'data'));
+            const summaryFile = path.join(baseDataDir, 'mining-summary.json');
+            
+            let summary = {
+                totalBlocksMined: 0,
+                totalRewards: 0,
+                averageHashRate: 0,
+                firstBlockMined: null,
+                lastBlockMined: null,
+                minerAddress: this.minerAddress,
+                blocks: []
+            };
+            
+            // Load existing summary if it exists
+            try {
+                const existingData = await fs.readFile(summaryFile, 'utf8');
+                summary = JSON.parse(existingData);
+            } catch (error) {
+                // File doesn't exist, use default summary
+            }
+            
+            // Update summary
+            summary.totalBlocksMined = this.miningStats.blocksMinedTotal;
+            summary.totalRewards = this.miningStats.miningRewards;
+            summary.averageHashRate = this.miningStats.hashRate;
+            summary.lastBlockMined = Date.now();
+            summary.minerAddress = this.minerAddress;
+            
+            if (!summary.firstBlockMined) {
+                summary.firstBlockMined = Date.now();
+            }
+            
+            // Add block info
+            summary.blocks.push({
+                index: block.index,
+                hash: block.hash,
+                timestamp: block.timestamp,
+                transactionCount: block.transactions.length,
+                nonce: block.nonce,
+                difficulty: block.difficulty
+            });
+            
+            await fs.writeFile(summaryFile, JSON.stringify(summary, null, 2));
+            
+        } catch (error) {
+            console.error('❌ Failed to update mining summary:', error.message);
+        }
+    }
+
+    /**
+     * Save complete blockchain state
+     */
+    async saveBlockchainState() {
+        try {
+            const baseDataDir = this.config.get('dataPath', path.join(__dirname, '..', 'data'));
+            const stateFile = path.join(baseDataDir, 'blockchain-state.json');
+            const blockchainData = {
+                chain: this.blockchain.chain.map(block => block.toJSON()),
+                mempool: this.blockchain.mempool.map(tx => tx.toJSON()),
+                difficulty: this.blockchain.difficulty,
+                miningReward: this.blockchain.miningReward,
+                lastUpdated: Date.now()
+            };
+            
+            await fs.writeFile(stateFile, JSON.stringify(blockchainData, null, 2));
+            console.log('💾 Blockchain state saved');
+            
+        } catch (error) {
+            console.error('❌ Failed to save blockchain state:', error.message);
+        }
+    }
+
+    /**
+     * Load blockchain state from storage
+     */
+    async loadBlockchainState() {
+        try {
+            const baseDataDir = this.config.get('dataPath', path.join(__dirname, '..', 'data'));
+            const stateFile = path.join(baseDataDir, 'blockchain-state.json');
+            const data = await fs.readFile(stateFile, 'utf8');
+            const blockchainData = JSON.parse(data);
+            
+            if (this.blockchain && blockchainData.chain) {
+                // Restore blockchain state
+                this.blockchain.chain = blockchainData.chain.map(blockData => {
+                    const block = this.Block.fromJSON(blockData);
+                    return block;
+                });
+                
+                this.blockchain.mempool = blockchainData.mempool.map(txData => {
+                    return this.Transaction.fromJSON(txData);
+                });
+                
+                this.blockchain.difficulty = blockchainData.difficulty || 2;
+                this.blockchain.miningReward = blockchainData.miningReward || 100;
+                
+                console.log(`📚 Blockchain state loaded: ${this.blockchain.chain.length} blocks`);
+            }
+            
+        } catch (error) {
+            console.log('ℹ️ No existing blockchain state found, starting fresh');
+        }
+    }
+
+    /**
+     * Get mining status and statistics
+     */
+    getMiningStatus() {
+        return {
+            isMining: this.isMining,
+            autoMining: this.autoMining,
+            minerAddress: this.minerAddress,
+            difficulty: this.miningDifficulty,
+            stats: { ...this.miningStats },
+            blockchain: this.blockchain ? {
+                blockCount: this.blockchain.chain.length,
+                mempoolSize: this.blockchain.mempool.length,
+                difficulty: this.blockchain.difficulty,
+                miningReward: this.blockchain.miningReward
+            } : null
+        };
+    }
+
 }
 
-export default ValidatorService;
+module.exports = MinerService;
 
-// Main execution - start validator when file is run directly
-async function startValidator() {
+// Main execution - start miner when file is run directly
+async function startMiner() {
     try {
         // Import and initialize config
-        const { default: ValidatorConfig } = await import('./config/validator-config.js');
+        const ValidatorConfig = require('./config/validator-config-cjs.js');
         const config = new ValidatorConfig();
         await config.load();
         
-        // Create validator with config
-        const validator = new ValidatorService(config);
+        // Create miner with config
+        const miner = new MinerService(config);
 
         // Handle graceful shutdown
         process.on('SIGINT', async () => {
-            console.log('\n🛑 Shutting down validator...');
-            await validator.stop();
+            console.log('\n🛑 Shutting down miner...');
+            await miner.stop();
             process.exit(0);
         });
 
         process.on('SIGTERM', async () => {
-            console.log('\n🛑 Shutting down validator...');
-            await validator.stop();
+            console.log('\n🛑 Shutting down miner...');
+            await miner.stop();
             process.exit(0);
         });
 
-        // Start the validator
-        await validator.start();
+        // Start the miner
+        await miner.start();
     } catch (error) {
-        console.error('❌ Failed to start validator:', error);
+        console.error('❌ Failed to start miner:', error);
         process.exit(1);
     }
 }
 
-// Start the validator
-startValidator();
+// Start the miner
+startMiner();

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOPAY Validator</title>
+    <title>TOPAY Miner</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="styles/manual-connection.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -13,8 +13,8 @@
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <i class="fas fa-shield-alt"></i>
-                <h1>TOPAY Validator</h1>
+                <i class="fas fa-pickaxe"></i>
+                <h1>TOPAY Miner</h1>
             </div>
             <div class="window-controls">
                 <button id="minimize-btn" class="window-btn">
@@ -37,9 +37,9 @@
                 <i class="fas fa-tachometer-alt"></i>
                 <span>Dashboard</span>
             </li>
-            <li class="nav-item" data-page="validator">
+            <li class="nav-item" data-page="miner">
                 <i class="fas fa-cog"></i>
-                <span>Validator Control</span>
+                <span>Miner Control</span>
             </li>
             <li class="nav-item" data-page="network">
                 <i class="fas fa-network-wired"></i>
@@ -63,16 +63,16 @@
             <div class="page-header">
                 <h2>Dashboard</h2>
                 <div class="status-indicator">
-                    <span id="validator-status" class="status-badge stopped">Stopped</span>
+                    <span id="miner-status" class="status-badge stopped">Stopped</span>
                 </div>
             </div>
 
             <div class="dashboard-grid">
-                <!-- Validator Status Card -->
+                <!-- Miner Status Card -->
                 <div class="card">
                     <div class="card-header">
-                        <h3>Validator Status</h3>
-                        <i class="fas fa-shield-alt"></i>
+                        <h3>Miner Status</h3>
+                        <i class="fas fa-pickaxe"></i>
                     </div>
                     <div class="card-content">
                         <div class="stat-item">
@@ -84,8 +84,8 @@
                             <span id="uptime-text" class="stat-value">0s</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Validator ID:</span>
-                            <span id="validator-id" class="stat-value">Not Set</span>
+                            <span class="stat-label">Miner ID:</span>
+                            <span id="miner-id" class="stat-value">Not Set</span>
                         </div>
                     </div>
                 </div>
@@ -116,16 +116,16 @@
                     </div>
                     <div class="card-content">
                         <div class="stat-item">
-                            <span class="stat-label">Blocks Validated:</span>
-                            <span id="blocks-validated" class="stat-value">0</span>
+                            <span class="stat-label">Blocks Mined:</span>
+                            <span id="blocks-mined" class="stat-value">0</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Transactions Validated:</span>
-                            <span id="transactions-validated" class="stat-value">0</span>
+                            <span class="stat-label">Transactions Processed:</span>
+                            <span id="transactions-processed" class="stat-value">0</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Validation Errors:</span>
-                            <span id="validation-errors" class="stat-value">0</span>
+                            <span class="stat-label">Mining Errors:</span>
+                            <span id="mining-errors" class="stat-value">0</span>
                         </div>
                     </div>
                 </div>
@@ -140,15 +140,15 @@
                     </div>
                     <div class="card-content">
                         <div class="action-buttons">
-                            <button id="start-validator-btn" class="btn btn-primary">
+                            <button id="start-miner-btn" class="btn btn-primary">
                                 <i class="fas fa-play"></i>
-                                Start Validator
+                                Start Miner
                             </button>
-                            <button id="stop-validator-btn" class="btn btn-danger" disabled>
+                            <button id="stop-miner-btn" class="btn btn-danger" disabled>
                                 <i class="fas fa-stop"></i>
-                                Stop Validator
+                                Stop Miner
                             </button>
-                            <button id="restart-validator-btn" class="btn btn-warning" disabled>
+                            <button id="restart-miner-btn" class="btn btn-warning" disabled>
                                 <i class="fas fa-redo"></i>
                                 Restart
                             </button>
@@ -158,16 +158,16 @@
             </div>
         </div>
 
-        <!-- Validator Control Page -->
-        <div id="validator" class="page">
+        <!-- Miner Control Page -->
+        <div id="miner" class="page">
             <div class="page-header">
-                <h2>Validator Control</h2>
+                <h2>Miner Control</h2>
             </div>
 
             <div class="control-panel">
                 <div class="card">
                     <div class="card-header">
-                        <h3>Validator Management</h3>
+                        <h3>Miner Management</h3>
                     </div>
                     <div class="card-content">
                         <div class="control-section">
@@ -175,15 +175,15 @@
                             <div class="control-buttons">
                                 <button id="start-btn" class="btn btn-primary">
                                     <i class="fas fa-play"></i>
-                                    Start Validator
+                                    Start Miner
                                 </button>
                                 <button id="stop-btn" class="btn btn-danger">
                                     <i class="fas fa-stop"></i>
-                                    Stop Validator
+                                    Stop Miner
                                 </button>
                                 <button id="restart-btn" class="btn btn-warning">
                                     <i class="fas fa-redo"></i>
-                                    Restart Validator
+                                    Restart Miner
                                 </button>
                             </div>
                         </div>
@@ -200,8 +200,8 @@
                                     <span id="control-uptime" class="status-value">0s</span>
                                 </div>
                                 <div class="status-item">
-                                    <label>Validator ID:</label>
-                                    <span id="control-validator-id" class="status-value">Not Set</span>
+                                    <label>Miner ID:</label>
+                                    <span id="control-miner-id" class="status-value">Not Set</span>
                                 </div>
                             </div>
                         </div>
@@ -273,7 +273,7 @@
                             <div class="log-entry info">
                                 <span class="log-time">[2024-01-01 00:00:00]</span>
                                 <span class="log-level">INFO</span>
-                                <span class="log-message">TOPAY Validator UI initialized</span>
+                                <span class="log-message">TOPAY Miner UI initialized</span>
                             </div>
                         </div>
                     </div>
@@ -290,7 +290,7 @@
             <div class="settings-grid">
                 <div class="card">
                     <div class="card-header">
-                        <h3>Validator Configuration</h3>
+                        <h3>Miner Configuration</h3>
                     </div>
                     <div class="card-content">
                         <div class="setting-item">
@@ -302,18 +302,18 @@
                             <input type="number" id="api-port" class="setting-input" placeholder="8547">
                         </div>
                         <div class="setting-item">
-                            <label for="validation-interval">Validation Interval (ms):</label>
-                            <input type="number" id="validation-interval" class="setting-input" placeholder="5000">
+                            <label for="mining-interval">Mining Interval (ms):</label>
+                            <input type="number" id="mining-interval" class="setting-input" placeholder="5000">
                         </div>
 
                         <div class="setting-item">
-                            <label for="auto-start-validator">Auto-start Validator:</label>
+                            <label for="auto-start-miner">Auto-start Miner:</label>
                             <div class="toggle-switch">
-                                <input type="checkbox" id="auto-start-validator" class="toggle-input">
-                                <label for="auto-start-validator" class="toggle-label">
+                                <input type="checkbox" id="auto-start-miner" class="toggle-input">
+                                <label for="auto-start-miner" class="toggle-label">
                                     <span class="toggle-slider"></span>
                                 </label>
-                                <span class="toggle-text">Automatically start validator when app opens</span>
+                                <span class="toggle-text">Automatically start miner when app opens</span>
                             </div>
                         </div>
                         <div class="setting-actions">

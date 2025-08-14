@@ -1,18 +1,18 @@
 /**
- * TOPAY Validator Desktop Application
+ * TOPAY Miner Desktop Application
  * Renderer process JavaScript for UI interactions
  */
 
 // Import the ManualConnection component
 import ManualConnection from './components/ManualConnection.js';
 
-class ValidatorUI {
+class MinerUI {
     constructor() {
         this.currentPage = 'dashboard';
-        this.validatorStatus = {
+        this.minerStatus = {
             running: false,
             uptime: 0,
-            validatorId: null,
+            minerId: null,
             rpcConnected: false,
             wsConnected: false,
             stats: null
@@ -27,12 +27,12 @@ class ValidatorUI {
         this.setupEventListeners();
         this.setupNavigation();
         this.setupWindowControls();
-        this.setupValidatorControls();
+        this.setupMinerControls();
         this.setupSettings();
         
         // Load initial data
         await this.loadConfig();
-        await this.updateValidatorStatus();
+        await this.updateMinerStatus();
         
         // Start status updates
         this.startStatusUpdates();
@@ -43,20 +43,20 @@ class ValidatorUI {
         // Initialize the manual connection component
         this.initializeManualConnection();
         
-        this.addLog('info', 'TOPAY Validator UI initialized');
+        this.addLog('info', 'TOPAY Miner UI initialized');
     }
     
     initializeManualConnection() {
         const container = document.getElementById('manual-connection-container');
         if (container) {
-            // Pass the validator service reference through the window.electronAPI
+            // Pass the miner service reference through the window.electronAPI
             this.manualConnection = new ManualConnection(container, {
-                getStatus: () => this.validatorStatus
+                getStatus: () => this.minerStatus
             });
             
             // Listen for refresh-status event
             window.addEventListener('refresh-status', () => {
-                this.updateValidatorStatus();
+                this.updateMinerStatus();
             });
         }
     }
@@ -92,33 +92,33 @@ class ValidatorUI {
         });
     }
 
-    setupValidatorControls() {
+    setupMinerControls() {
         // Dashboard controls
-        document.getElementById('start-validator-btn').addEventListener('click', () => {
-            this.startValidator();
+        document.getElementById('start-miner-btn').addEventListener('click', () => {
+            this.startMiner();
         });
 
-        document.getElementById('stop-validator-btn').addEventListener('click', () => {
-            this.stopValidator();
+        document.getElementById('stop-miner-btn').addEventListener('click', () => {
+            this.stopMiner();
         });
 
-        document.getElementById('restart-validator-btn').addEventListener('click', () => {
-            this.restartValidator();
+        document.getElementById('restart-miner-btn').addEventListener('click', () => {
+            this.restartMiner();
         });
 
 
 
         // Control page controls
         document.getElementById('start-btn').addEventListener('click', () => {
-            this.startValidator();
+            this.startMiner();
         });
 
         document.getElementById('stop-btn').addEventListener('click', () => {
-            this.stopValidator();
+            this.stopMiner();
         });
 
         document.getElementById('restart-btn').addEventListener('click', () => {
-            this.restartValidator();
+            this.restartMiner();
         });
 
         // Logs controls
@@ -138,15 +138,15 @@ class ValidatorUI {
     }
 
     setupIpcListeners() {
-        // Validator status changes
-        window.electronAPI.validator.onStatusChanged((event, status) => {
-            this.validatorStatus = { ...this.validatorStatus, ...status };
+        // Miner status changes
+        window.electronAPI.miner.onStatusChanged((event, status) => {
+            this.minerStatus = { ...this.minerStatus, ...status };
             this.updateUI();
         });
 
-        // Validator errors
-        window.electronAPI.validator.onError((event, error) => {
-            this.showNotification('Validator Error', error, 'error');
+        // Miner errors
+        window.electronAPI.miner.onError((event, error) => {
+            this.showNotification('Miner Error', error, 'error');
             this.addLog('error', error);
         });
 
@@ -177,64 +177,64 @@ class ValidatorUI {
         }
     }
 
-    async startValidator() {
+    async startMiner() {
         this.showLoading(true);
         try {
-            const result = await window.electronAPI.validator.start();
+            const result = await window.electronAPI.miner.start();
             if (result.success) {
                 this.showNotification('Success', result.message, 'success');
-                this.addLog('info', 'Validator started successfully');
+                this.addLog('info', 'Miner started successfully');
                 // Update status after successful start
-                await this.updateValidatorStatus();
+                await this.updateMinerStatus();
             } else {
                 this.showNotification('Error', result.message, 'error');
-                this.addLog('error', `Failed to start validator: ${result.message}`);
+                this.addLog('error', `Failed to start miner: ${result.message}`);
             }
         } catch (error) {
-            this.showNotification('Error', 'Failed to start validator', 'error');
-            this.addLog('error', `Failed to start validator: ${error.message}`);
+            this.showNotification('Error', 'Failed to start miner', 'error');
+            this.addLog('error', `Failed to start miner: ${error.message}`);
         } finally {
             this.showLoading(false);
         }
     }
 
-    async stopValidator() {
+    async stopMiner() {
         this.showLoading(true);
         try {
-            const result = await window.electronAPI.validator.stop();
+            const result = await window.electronAPI.miner.stop();
             if (result.success) {
                 this.showNotification('Success', result.message, 'success');
-                this.addLog('info', 'Validator stopped successfully');
+                this.addLog('info', 'Miner stopped successfully');
                 // Update status after successful stop
-                await this.updateValidatorStatus();
+                await this.updateMinerStatus();
             } else {
                 this.showNotification('Error', result.message, 'error');
-                this.addLog('error', `Failed to stop validator: ${result.message}`);
+                this.addLog('error', `Failed to stop miner: ${result.message}`);
             }
         } catch (error) {
-            this.showNotification('Error', 'Failed to stop validator', 'error');
-            this.addLog('error', `Failed to stop validator: ${error.message}`);
+            this.showNotification('Error', 'Failed to stop miner', 'error');
+            this.addLog('error', `Failed to stop miner: ${error.message}`);
         } finally {
             this.showLoading(false);
         }
     }
 
-    async restartValidator() {
+    async restartMiner() {
         this.showLoading(true);
         try {
-            const result = await window.electronAPI.validator.restart();
+            const result = await window.electronAPI.miner.restart();
             if (result.success) {
                 this.showNotification('Success', result.message, 'success');
-                this.addLog('info', 'Validator restarted successfully');
+                this.addLog('info', 'Miner restarted successfully');
                 // Update status after successful restart
-                await this.updateValidatorStatus();
+                await this.updateMinerStatus();
             } else {
                 this.showNotification('Error', result.message, 'error');
-                this.addLog('error', `Failed to restart validator: ${result.message}`);
+                this.addLog('error', `Failed to restart miner: ${result.message}`);
             }
         } catch (error) {
-            this.showNotification('Error', 'Failed to restart validator', 'error');
-            this.addLog('error', `Failed to restart validator: ${error.message}`);
+            this.showNotification('Error', 'Failed to restart miner', 'error');
+            this.addLog('error', `Failed to restart miner: ${error.message}`);
         } finally {
             this.showLoading(false);
         }
@@ -242,19 +242,19 @@ class ValidatorUI {
 
 
 
-    async updateValidatorStatus() {
+    async updateMinerStatus() {
         try {
-            const status = await window.electronAPI.validator.getStatus();
+            const status = await window.electronAPI.miner.getStatus();
             
-            this.validatorStatus = {
-                ...this.validatorStatus,
+            this.minerStatus = {
+                ...this.minerStatus,
                 ...status
             };
             
             this.updateUI();
         } catch (error) {
-            console.error('Error fetching validator status:', error);
-            this.addLog('error', `Error fetching validator status: ${error.message}`);
+            console.error('Error fetching miner status:', error);
+            this.addLog('error', `Error fetching miner status: ${error.message}`);
         }
     }
 
@@ -262,12 +262,12 @@ class ValidatorUI {
         const { 
             isRunning: running, 
             uptime, 
-            validatorId, 
+            minerId, 
             rpcConnected, 
             wsConnected, 
-            validationStats: stats,
+            miningStats: stats,
             connection
-        } = this.validatorStatus;
+        } = this.minerStatus;
         
         // Extract connection information
         const blockchainUrl = connection ? connection.blockchainUrl : null;
@@ -275,7 +275,7 @@ class ValidatorUI {
         const connectionStatus = connection ? connection.connectionStatus : 'disconnected';
 
         // Update status badges
-        const statusBadges = document.querySelectorAll('#validator-status');
+        const statusBadges = document.querySelectorAll('#miner-status');
         statusBadges.forEach(badge => {
             badge.textContent = running ? 'Running' : 'Stopped';
             badge.className = `status-badge ${running ? 'running' : 'stopped'}`;
@@ -293,10 +293,10 @@ class ValidatorUI {
             text.textContent = this.formatUptime(uptime);
         });
 
-        // Update validator ID
-        const validatorIdTexts = document.querySelectorAll('#validator-id, #control-validator-id');
-        validatorIdTexts.forEach(text => {
-            text.textContent = validatorId || 'Not Set';
+        // Update miner ID
+        const minerIdTexts = document.querySelectorAll('#miner-id, #control-miner-id');
+        minerIdTexts.forEach(text => {
+            text.textContent = minerId || 'Not Set';
         });
 
         // Update connection status
@@ -334,14 +334,14 @@ class ValidatorUI {
 
         // Update performance stats with real data
         if (stats) {
-            document.getElementById('blocks-validated').textContent = stats.blocksValidated || 0;
-            document.getElementById('transactions-validated').textContent = stats.transactionsValidated || 0;
-            document.getElementById('validation-errors').textContent = stats.validationErrors || 0;
+            document.getElementById('blocks-mined').textContent = stats.blocksMined || 0;
+            document.getElementById('transactions-processed').textContent = stats.transactionsProcessed || 0;
+            document.getElementById('mining-errors').textContent = stats.miningErrors || 0;
         } else {
             // Show zeros when no stats available
-            document.getElementById('blocks-validated').textContent = '0';
-            document.getElementById('transactions-validated').textContent = '0';
-            document.getElementById('validation-errors').textContent = '0';
+            document.getElementById('blocks-mined').textContent = '0';
+            document.getElementById('transactions-processed').textContent = '0';
+            document.getElementById('mining-errors').textContent = '0';
         }
 
         // Update button states
@@ -353,9 +353,9 @@ class ValidatorUI {
 
     updateButtonStates(running) {
         // Dashboard buttons
-        document.getElementById('start-validator-btn').disabled = running;
-        document.getElementById('stop-validator-btn').disabled = !running;
-        document.getElementById('restart-validator-btn').disabled = !running;
+        document.getElementById('start-miner-btn').disabled = running;
+        document.getElementById('stop-miner-btn').disabled = !running;
+        document.getElementById('restart-miner-btn').disabled = !running;
 
         // Control page buttons
         document.getElementById('start-btn').disabled = running;
@@ -388,12 +388,12 @@ class ValidatorUI {
     async loadSettingsUI() {
         document.getElementById('rpc-url').value = this.config.rpcUrl || '';
         document.getElementById('api-port').value = this.config.apiPort || '';
-        document.getElementById('validation-interval').value = this.config.validationInterval || '';
+        document.getElementById('mining-interval').value = this.config.miningInterval || '';
         
         // Load auto-start setting
         try {
             const autoStart = await window.electronAPI.config.getAutoStart();
-            document.getElementById('auto-start-validator').checked = autoStart;
+            document.getElementById('auto-start-miner').checked = autoStart;
         } catch (error) {
             console.error('Failed to load auto-start setting:', error);
         }
@@ -403,17 +403,17 @@ class ValidatorUI {
         try {
             const rpcUrl = document.getElementById('rpc-url').value;
             const apiPort = parseInt(document.getElementById('api-port').value);
-            const validationInterval = parseInt(document.getElementById('validation-interval').value);
-            const autoStartValidator = document.getElementById('auto-start-validator').checked;
+            const miningInterval = parseInt(document.getElementById('mining-interval').value);
+            const autoStartMiner = document.getElementById('auto-start-miner').checked;
 
             await window.electronAPI.config.set('rpcUrl', rpcUrl);
             await window.electronAPI.config.set('apiPort', apiPort);
-            await window.electronAPI.config.set('validationInterval', validationInterval);
-            await window.electronAPI.config.setAutoStart(autoStartValidator);
+            await window.electronAPI.config.set('miningInterval', miningInterval);
+            await window.electronAPI.config.setAutoStart(autoStartMiner);
 
             this.config.rpcUrl = rpcUrl;
             this.config.apiPort = apiPort;
-            this.config.validationInterval = validationInterval;
+            this.config.miningInterval = miningInterval;
 
             this.showNotification('Success', 'Settings saved successfully', 'success');
             this.addLog('info', 'Settings saved');
@@ -428,7 +428,7 @@ class ValidatorUI {
             // Reset to default values
             document.getElementById('rpc-url').value = 'http://localhost:3001';
             document.getElementById('api-port').value = '8547';
-            document.getElementById('validation-interval').value = '5000';
+            document.getElementById('mining-interval').value = '5000';
 
             this.showNotification('Success', 'Settings reset to defaults', 'success');
         } catch (error) {
@@ -438,7 +438,7 @@ class ValidatorUI {
 
     startStatusUpdates() {
         this.statusUpdateInterval = setInterval(() => {
-            this.updateValidatorStatus();
+            this.updateMinerStatus();
         }, 2000);
     }
 
@@ -515,5 +515,5 @@ class ValidatorUI {
 
 // Initialize the UI when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new ValidatorUI();
+    new MinerUI();
 });

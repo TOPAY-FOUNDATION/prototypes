@@ -16,6 +16,7 @@
     "example:rooturl": "node example-root-url-system.js",
     "example:rpc": "node example-rpc-validator-system.js",
     "blockchain:rpc": "node example-rpc-validator-system.js",
+    "activity:test": "node blockchain-activity-generator.js",
     "dev": "node --watch src/network-node.js"
   },
   "keywords": [

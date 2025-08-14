@@ -48,8 +48,8 @@ export class Blockchain {
       throw new Error('Invalid transaction');
     }
 
-    // Skip balance check for mining reward transactions (from: null)
-    if (transaction.from !== null) {
+    // Skip balance check for mining reward transactions (from: null) and system transactions
+    if (transaction.from !== null && transaction.from !== 'SYSTEM') {
       // Check if sender has sufficient balance (simplified)
       const senderBalance = this.getBalance(transaction.from);
       if (senderBalance < transaction.amount) {

@@ -1,5 +1,5 @@
 /**
- * TOPAY Validator Desktop Application
+ * TOPAY Miner Desktop Application
  * Preload script for secure renderer-main communication
  */
 
@@ -8,23 +8,23 @@ const { contextBridge, ipcRenderer } = require('electron');
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
-    // Validator control
-    validator: {
-        start: () => ipcRenderer.invoke('validator:start'),
-        stop: () => ipcRenderer.invoke('validator:stop'),
-        restart: () => ipcRenderer.invoke('validator:restart'),
-        getStatus: () => ipcRenderer.invoke('validator:status'),
+    // Miner control
+    miner: {
+        start: () => ipcRenderer.invoke('miner:start'),
+        stop: () => ipcRenderer.invoke('miner:stop'),
+        restart: () => ipcRenderer.invoke('miner:restart'),
+        getStatus: () => ipcRenderer.invoke('miner:status'),
         
 
         
         // Event listeners
         onStatusChanged: (callback) => {
-            ipcRenderer.on('validator:status-changed', callback);
-            return () => ipcRenderer.removeListener('validator:status-changed', callback);
+            ipcRenderer.on('miner:status-changed', callback);
+            return () => ipcRenderer.removeListener('miner:status-changed', callback);
         },
         onError: (callback) => {
-            ipcRenderer.on('validator:error', callback);
-            return () => ipcRenderer.removeListener('validator:error', callback);
+            ipcRenderer.on('miner:error', callback);
+            return () => ipcRenderer.removeListener('miner:error', callback);
         }
     },
 

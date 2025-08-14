@@ -5,9 +5,9 @@
  * Implements the core blockchain with quantum-safe features
  */
 
-import { computeHash, fragmentData, reconstructData } from '@topayfoundation/topayz512';
-import { Block } from './block.js';
-import { Transaction } from './transaction.js';
+const { computeHash, fragmentData, reconstructData } = require('@topayfoundation/topayz512');
+const { Block } = require('./block.js');
+const { Transaction } = require('./transaction.js');
 
 class Blockchain {
   constructor() {
@@ -382,4 +382,4 @@ class Blockchain {
   }
 }
 
-export { Blockchain };
+module.exports = { Blockchain };

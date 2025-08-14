@@ -120,15 +120,59 @@ export class Transaction {
    * Validate transaction
    */
   async isValid() {
-    if (!this.signature) return false;
-    if (this.amount <= 0) return false;
+    import('fs').then(fs => {
+      const logData = `\n[${new Date().toISOString()}] Starting validation: from=${this.from}, to=${this.to}, amount=${this.amount}, signature=${this.signature ? this.signature.substring(0, 20) + '...' : 'null'}`;
+      fs.appendFileSync('C:\\Users\\RealShahriya\\Desktop\\TOPAY FOUNDATION\\Projects\\topay-prototype\\blockchain\\validation.log', logData);
+    }).catch(() => {});
+    
+    console.log('🔍 Starting transaction validation for:', {
+      from: this.from,
+      to: this.to,
+      amount: this.amount,
+      signature: this.signature,
+      data: this.data
+    });
+    
+    if (!this.signature) {
+      console.log('❌ Validation failed: No signature');
+      return false;
+    }
+    
+    // Allow system wallet registration transactions
+    if (this.from === 'SYSTEM' && this.data && this.data.type === 'WALLET_REGISTRATION') {
+      const signatureValid = this.signature && this.signature.startsWith('system_signature_');
+      const amountValid = this.amount > 0;
+      const isValid = signatureValid && amountValid;
+      console.log('🔍 System wallet registration validation:', {
+        signature: this.signature,
+        signatureValid,
+        amount: this.amount,
+        amountValid,
+        dataType: this.data ? this.data.type : 'undefined',
+        overall: isValid
+      });
+      return isValid;
+    }
+    
+    if (this.amount <= 0) {
+      console.log('❌ Validation failed: Invalid amount');
+      return false;
+    }
     
     // Validate from address (allow null for mining rewards)
-    if (this.from !== null && (!this.from || this.from.trim() === '')) return false;
-    if (!this.to || this.to.trim() === '') return false;
+    if (this.from !== null && (!this.from || this.from.trim() === '')) {
+      console.log('❌ Validation failed: Invalid from address');
+      return false;
+    }
+    if (!this.to || this.to.trim() === '') {
+      console.log('❌ Validation failed: Invalid to address');
+      return false;
+    }
     
     const hash = await this.calculateHash();
-    return this.signature === hash; // Simplified validation
+    const isValid = this.signature === hash;
+    console.log('🔍 Standard transaction validation:', { isValid });
+    return isValid; // Simplified validation
   }
 
   /**

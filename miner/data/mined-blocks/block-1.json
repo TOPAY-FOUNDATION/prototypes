@@ -1,0 +1,33 @@
+{
+  "index": 1,
+  "timestamp": 1755201417166,
+  "transactions": [
+    {
+      "id": "ab00f6739ea017a157a394048708f872c720f84142c1db3c169fa505b01c79f3958c6476285a3c02fcfdf27f176ff82a04a477acb32ab71abae6a947158edbf3",
+      "from": null,
+      "to": "MINER_ADDRESS_001",
+      "amount": 100,
+      "data": null,
+      "timestamp": 1755201417166,
+      "signature": "ab00f6739ea017a157a394048708f872c720f84142c1db3c169fa505b01c79f3958c6476285a3c02fcfdf27f176ff82a04a477acb32ab71abae6a947158edbf3",
+      "encryptedData": null,
+      "kemCiphertext": null
+    }
+  ],
+  "previousHash": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+  "nonce": 19,
+  "hash": "00fb1cad27c7ef00557aab3d57e5c17bdd9b955f0e7425b92cbdb91ba7df16f399d68d954c303d16bc6cfbcc7f55073908ea2fda0d322449ef4bde1642769ce2",
+  "merkleRoot": "0c66e3958cc1425869dd0e7403a361c7269e027e646225068e9a7c81b4643ba18fb922f21d515dbc336d7f9fafb13d4bd1ecabcefd7b72765ecc05d8d0fb5b7c",
+  "difficulty": 2,
+  "validator": null,
+  "fragmentedData": null,
+  "minedAt": 1755201417169,
+  "minerAddress": "MINER_ADDRESS_001",
+  "miningStats": {
+    "blocksMinedTotal": 1,
+    "blocksMinedSession": 1,
+    "hashRate": 6333.333333333333,
+    "lastBlockMined": 1755201417168,
+    "miningRewards": 100
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "code": "TOPAY-VAL-8547-MEBQ5T5S-TWJ64D",
+  "name": "TOPAY-VAL-24E765E33B20E2A0",
+  "port": 8547,
+  "region": "local",
+  "tier": "primary",
+  "capabilities": [
+    "storage",
+    "validation"
+  ],
+  "isRegistered": true,
+  "registrationInfo": {
+    "code": "TOPAY-VAL-8547-MEBQ5T5S-TWJ64D",
+    "name": "TOPAY-VAL-24E765E33B20E2A0",
+    "url": "http://::1:8547/code/TOPAY-VAL-8547-MEBQ5T5S-TWJ64D",
+    "status": "active",
+    "registeredAt": "2025-08-14T18:20:31.848Z"
+  },
+  "lastUpdated": "2025-08-14T18:20:31.851Z"
+}

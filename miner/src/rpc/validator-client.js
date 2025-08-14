@@ -3,23 +3,21 @@
  * Generates codes and registers with blockchain via RPC calls
  */
 
-import fetch from 'node-fetch';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const fetch = require('node-fetch');
+const fs = require('fs');
+const path = require('path');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const currentDir = path.dirname(require.main.filename);
 
-export class ValidatorClient {
+class ValidatorClient {
     constructor(options = {}) {
-        this.blockchainUrl = options.blockchainUrl || 'http://localhost:3000';
+        this.blockchainUrl = options.blockchainUrl || 'http://localhost:8545';
         this.validatorPort = options.validatorPort || 8547;
         this.validatorName = options.validatorName || `Validator-${Date.now()}`;
         this.region = options.region || 'local';
         this.tier = options.tier || 'secondary';
         this.capabilities = options.capabilities || ['storage', 'validation'];
-        this.registryFile = options.registryFile || path.join(__dirname, '../../validator-info.json');
+        this.registryFile = options.registryFile || path.join(currentDir, '../../validator-info.json');
         
         this.validatorCode = null;
         this.isRegistered = false;
@@ -346,3 +344,5 @@ export class ValidatorClient {
         console.log('✅ Validator Client shutdown complete');
     }
 }
+
+module.exports = { ValidatorClient };
