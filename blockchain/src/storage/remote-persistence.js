@@ -52,6 +52,11 @@ export class RemotePersistenceManager {
   async initialize() {
     console.log('🔄 Initializing remote persistence...');
     
+    if (this.validatorCodes.length === 0) {
+      console.log('⚠️  No validator codes configured, running in standalone mode');
+      return;
+    }
+    
     // Connect to validators using codes
     const connectionResults = await this.validatorRegistry.connectToValidators(this.validatorCodes);
     
@@ -66,10 +71,12 @@ export class RemotePersistenceManager {
     });
     
     if (this.activeNodes.size === 0) {
-      throw new Error('No validator nodes are available');
+      console.warn('⚠️  No validator nodes are available, running in standalone mode');
+      console.log('🔄 Will retry validator connections periodically...');
+      this.startValidatorRetryTimer();
+    } else {
+      console.log(`✅ Remote persistence initialized with ${this.activeNodes.size}/${this.validatorCodes.length} validators`);
     }
-    
-    console.log(`✅ Remote persistence initialized with ${this.activeNodes.size}/${this.validatorCodes.length} validators`);
   }
 
   /**
@@ -160,59 +167,21 @@ export class RemotePersistenceManager {
   }
 
   /**
-   * Save wallets data to remote validators
+   * Save wallets data to remote validators - REMOVED
+   * This functionality has been removed as part of wallet integration removal
    */
   async saveWallets(wallets) {
-    console.log('👛 Saving wallets to remote validators...');
-    
-    const walletsData = {
-      wallets: Array.from(wallets.entries()).map(([address, wallet]) => ({
-        address,
-        publicData: wallet.exportPublicData(),
-        backup: wallet.createBackup()
-      })),
-      savedAt: new Date().toISOString(),
-      version: '1.0',
-      nodeId: this.getNodeId()
-    };
-
-    const results = await this.replicateData('wallets', walletsData);
-    
-    if (results.successful.length === 0) {
-      throw new Error('Failed to save wallets to any validator node');
-    }
-
-    console.log(`✅ Wallets saved to ${results.successful.length}/${this.activeNodes.size} validators`);
-    console.log(`   Count: ${walletsData.wallets.length}`);
-    
-    return results.successful.length > 0;
+    console.log('⚠️ Wallet functionality has been removed');
+    return false;
   }
 
   /**
-   * Load wallets data from remote validators
+   * Load wallets data from remote validators - REMOVED
+   * This functionality has been removed as part of wallet integration removal
    */
   async loadWallets() {
-    console.log('👛 Loading wallets from remote validators...');
-    
-    const results = await this.fetchFromValidators('wallets');
-    
-    if (results.length === 0) {
-      console.log('👛 No wallet data found on validators, starting fresh');
-      return null;
-    }
-
-    // Use the most recent wallet data
-    const latestData = results.reduce((latest, current) => {
-      const currentTime = new Date(current.data.savedAt).getTime();
-      const latestTime = new Date(latest.data.savedAt).getTime();
-      return currentTime > latestTime ? current : latest;
-    });
-
-    console.log(`👛 Wallets loaded from validator: ${latestData.nodeUrl}`);
-    console.log(`   Count: ${latestData.data.wallets.length}`);
-    console.log(`   Saved: ${latestData.data.savedAt}`);
-    
-    return latestData.data;
+    console.log('⚠️ Wallet functionality has been removed');
+    return null;
   }
 
   /**
@@ -265,62 +234,21 @@ export class RemotePersistenceManager {
   }
 
   /**
-   * Save individual wallet to remote validators
+   * Save individual wallet to remote validators - REMOVED
+   * This functionality has been removed as part of wallet integration removal
    */
   async saveWallet(walletData) {
-    console.log('💾 Saving wallet to remote storage...');
-    
-    const data = {
-      ...walletData,
-      timestamp: new Date().toISOString(),
-      version: '1.0'
-    };
-
-    // Get best validators for saving
-    const bestValidators = this.validatorRegistry.getBestValidators(this.options.replicationFactor);
-    const validatorCodes = bestValidators.map(v => v.code);
-
-    if (validatorCodes.length === 0) {
-      throw new Error('No active validators available for saving wallet');
-    }
-
-    const results = await this.validatorRegistry.saveToValidators(
-      validatorCodes, 
-      '/api/wallet', 
-      data
-    );
-
-    const successCount = results.filter(r => r.success).length;
-    if (successCount === 0) {
-      throw new Error('Failed to save wallet to any validator node');
-    }
-
-    console.log(`📊 Wallet saved to ${successCount}/${validatorCodes.length} validators`);
-    return results;
+    console.log('⚠️ Wallet functionality has been removed');
+    return { successful: [], failed: [] };
   }
 
   /**
-   * Load individual wallet from remote validators
+   * Load individual wallet from remote validators - REMOVED
+   * This functionality has been removed as part of wallet integration removal
    */
   async loadWallet(address) {
-    console.log(`📥 Loading wallet ${address} from remote storage...`);
-    
-    // Get active validator codes
-    const activeValidators = this.validatorRegistry.getActiveValidators();
-    const validatorCodes = activeValidators.map(v => v.code);
-    
-    if (validatorCodes.length === 0) {
-      throw new Error('No active validators available for loading wallet');
-    }
-
-    try {
-      const data = await this.validatorRegistry.loadFromValidators(validatorCodes, `/api/wallet/${address}`);
-      console.log(`✅ Wallet ${address} loaded from validator`);
-      return data;
-    } catch (error) {
-      console.log(`📭 Wallet ${address} not found on any validator`);
-      return null;
-    }
+    console.log('⚠️ Wallet functionality has been removed');
+    return null;
   }
 
   /**
@@ -362,6 +290,10 @@ export class RemotePersistenceManager {
    * Cleanup resources
    */
   destroy() {
+    if (this.retryTimer) {
+      clearInterval(this.retryTimer);
+      this.retryTimer = null;
+    }
     if (this.validatorRegistry) {
       this.validatorRegistry.destroy();
     }
@@ -379,9 +311,7 @@ export class RemotePersistenceManager {
     setInterval(async () => {
       try {
         await this.saveBlockchain(blockchain);
-        if (blockchain.wallets) {
-          await this.saveWallets(blockchain.wallets);
-        }
+        // Wallet saving removed as part of wallet integration removal
         console.log('🔄 Remote auto-save completed');
       } catch (error) {
         console.error('❌ Remote auto-save failed:', error);
@@ -517,5 +447,39 @@ export class RemotePersistenceManager {
    */
   getFailedNodes() {
     return Array.from(this.failedNodes);
+  }
+
+  /**
+   * Start validator retry timer to periodically attempt reconnection
+   */
+  startValidatorRetryTimer() {
+    if (this.retryTimer) {
+      clearInterval(this.retryTimer);
+    }
+    
+    this.retryTimer = setInterval(async () => {
+      if (this.activeNodes.size === 0 && this.validatorCodes.length > 0) {
+        console.log('🔄 Retrying validator connections...');
+        try {
+          const connectionResults = await this.validatorRegistry.connectToValidators(this.validatorCodes);
+          
+          connectionResults.forEach(result => {
+            if (result.success) {
+              this.activeNodes.add(result.code);
+              this.failedNodes.delete(result.code);
+              console.log(`✅ Reconnected to validator: ${result.code}`);
+            }
+          });
+          
+          if (this.activeNodes.size > 0) {
+            console.log(`✅ Successfully connected to ${this.activeNodes.size} validators`);
+            clearInterval(this.retryTimer);
+            this.retryTimer = null;
+          }
+        } catch (error) {
+          console.log('🔄 Validator retry failed, will try again in 30 seconds...');
+        }
+      }
+    }, 30000); // Retry every 30 seconds
   }
 }

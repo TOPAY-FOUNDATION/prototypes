@@ -90,7 +90,7 @@ export default function ConnectionStatus({ className }: ConnectionStatusProps) {
         <div className={styles.errorDetails}>
           <p className={styles.errorMessage}>{error}</p>
           <p className={styles.suggestion}>
-            Start the blockchain server: <code>node src/blockchain-rpc-server.js</code>
+            Please Check your internet connection and try again.
           </p>
           <button 
             className={styles.retryButton}

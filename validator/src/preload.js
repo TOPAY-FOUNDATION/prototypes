@@ -1,6 +1,6 @@
 /**
- * Electron Preload Script
- * Provides secure API bridge between renderer and main process
+ * TOPAY Validator Desktop Application
+ * Preload script for secure renderer-main communication
  */
 
 const { contextBridge, ipcRenderer } = require('electron');
@@ -8,58 +8,54 @@ const { contextBridge, ipcRenderer } = require('electron');
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
-    // Validator operations
-    getValidatorStatus: () => ipcRenderer.invoke('get-validator-status'),
-    restartValidator: () => ipcRenderer.invoke('restart-validator'),
-    
+    // Validator control
+    validator: {
+        start: () => ipcRenderer.invoke('validator:start'),
+        stop: () => ipcRenderer.invoke('validator:stop'),
+        restart: () => ipcRenderer.invoke('validator:restart'),
+        getStatus: () => ipcRenderer.invoke('validator:status'),
+        
+
+        
+        // Event listeners
+        onStatusChanged: (callback) => {
+            ipcRenderer.on('validator:status-changed', callback);
+            return () => ipcRenderer.removeListener('validator:status-changed', callback);
+        },
+        onError: (callback) => {
+            ipcRenderer.on('validator:error', callback);
+            return () => ipcRenderer.removeListener('validator:error', callback);
+        }
+    },
+
     // Configuration management
-    getConfig: () => ipcRenderer.invoke('get-config'),
-    updateConfig: (config) => ipcRenderer.invoke('update-config', config),
-    
-    // File operations
-    exportLogs: () => ipcRenderer.invoke('export-logs'),
-    
+    config: {
+        get: () => ipcRenderer.invoke('config:get'),
+        set: (key, value) => ipcRenderer.invoke('config:set', key, value),
+        getAutoStart: () => ipcRenderer.invoke('config:get-autostart'),
+        setAutoStart: (enabled) => ipcRenderer.invoke('config:set-autostart', enabled)
+    },
+
     // Window operations
-    minimizeWindow: () => ipcRenderer.invoke('minimize-window'),
-    closeWindow: () => ipcRenderer.invoke('close-window'),
-    
-    // Event listeners
-    onValidationUpdate: (callback) => {
-        ipcRenderer.on('validation-update', callback);
-        return () => ipcRenderer.removeListener('validation-update', callback);
+    window: {
+        minimize: () => ipcRenderer.invoke('window:minimize'),
+        close: () => ipcRenderer.invoke('window:close'),
+        maximize: () => ipcRenderer.invoke('window:maximize')
     },
-    
-    onConfigUpdate: (callback) => {
-        ipcRenderer.on('config-update', callback);
-        return () => ipcRenderer.removeListener('config-update', callback);
-    },
-    
-    onNetworkUpdate: (callback) => {
-        ipcRenderer.on('network-update', callback);
-        return () => ipcRenderer.removeListener('network-update', callback);
-    },
-    
+
     // Navigation
-    navigateTo: (route) => ipcRenderer.send('navigate-to', route),
-    
-    // System info
-    getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
-    
+    navigation: {
+        onNavigate: (callback) => {
+            ipcRenderer.on('navigate-to', callback);
+            return () => ipcRenderer.removeListener('navigate-to', callback);
+        }
+    },
+
     // Notifications
-    showNotification: (title, body) => ipcRenderer.invoke('show-notification', title, body)
-});
-
-// Version info
-contextBridge.exposeInMainWorld('versions', {
-    node: () => process.versions.node,
-    chrome: () => process.versions.chrome,
-    electron: () => process.versions.electron,
-    app: () => ipcRenderer.invoke('get-app-version')
-});
-
-// Platform info
-contextBridge.exposeInMainWorld('platform', {
-    isWindows: process.platform === 'win32',
-    isMac: process.platform === 'darwin',
-    isLinux: process.platform === 'linux'
+    notifications: {
+        onNotification: (callback) => {
+            ipcRenderer.on('notification', callback);
+            return () => ipcRenderer.removeListener('notification', callback);
+        }
+    }
 });

@@ -9,7 +9,7 @@ export async function GET() {
     if (!isServerRunning) {
       return NextResponse.json(
         { 
-          error: 'Main blockchain server is not running. Please start the blockchain workspace.',
+          error: 'Cant connect to mainnet',
           suggestion: 'Run: node src/blockchain-rpc-server.js in the main project directory'
         },
         { status: 503 }

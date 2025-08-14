@@ -4,11 +4,16 @@
  */
 
 // Load environment variables
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const fs = require('fs').promises;
-const path = require('path');
-const os = require('os');
+import { promises as fs } from 'fs';
+import path from 'path';
+import os from 'os';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class ValidatorConfig {
     constructor(configPath = null) {
@@ -31,10 +36,12 @@ class ValidatorConfig {
             syncInterval: 60000, // 60 seconds
             
             // Network Settings
-            rpcUrl: process.env.BLOCKCHAIN_RPC_URL || 'http://localhost:3001/rpc',
+            rpcUrl: process.env.BLOCKCHAIN_RPC_URL || 'http://localhost:8545/rpc',
             apiPort: parseInt(process.env.VALIDATOR_API_PORT) || 8547,
             wsPort: 8548,
             maxPeers: 50,
+            
+
             
             // Connection Settings
             networkTimeout: parseInt(process.env.NETWORK_TIMEOUT) || 10000,
@@ -150,6 +157,8 @@ class ValidatorConfig {
         console.log(`   BLOCKCHAIN_RPC_URL: ${process.env.BLOCKCHAIN_RPC_URL || 'Not set (using default)'}`);
         console.log(`   VALIDATOR_API_PORT: ${process.env.VALIDATOR_API_PORT || 'Not set (using default)'}`);
         console.log(`   NETWORK_TIMEOUT: ${process.env.NETWORK_TIMEOUT || 'Not set (using default)'}`);
+        
+
         console.log(`   LOG_LEVEL: ${process.env.LOG_LEVEL || 'Not set (using default)'}`);
         console.log(`   DEBUG_MODE: ${process.env.DEBUG_MODE || 'Not set (using default)'}`);
         console.log(`   BACKUP_ENABLED: ${process.env.BACKUP_ENABLED || 'Not set (using default)'}`);
@@ -429,4 +438,4 @@ class ValidatorConfig {
     }
 }
 
-module.exports = ValidatorConfig;
+export default ValidatorConfig;

@@ -9,7 +9,7 @@ dotenv.config();
 
 import EventEmitter from 'events';
 import express from 'express';
-import WebSocket from 'ws';
+import { WebSocketServer } from 'ws';
 import { promises as fs } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -19,6 +19,8 @@ import si from 'systeminformation';
 
 // Import ValidatorClient for RPC registration
 import { ValidatorClient } from './rpc/validator-client.js';
+
+
 
 // Dynamic import for ES modules
 let fetch;
@@ -50,6 +52,8 @@ class ValidatorService extends EventEmitter {
         
         // RPC Client for blockchain registration
         this.validatorClient = null;
+        
+
 
         // Blockchain classes (loaded dynamically)
         this.Blockchain = null;
@@ -88,8 +92,15 @@ class ValidatorService extends EventEmitter {
             // Start WebSocket server
             await this.startWebSocketServer();
             
-            // Initialize and register with blockchain via RPC
-            await this.initializeRPCClient();
+            // Initialize and register with blockchain via RPC (optional)
+            try {
+                await this.initializeRPCClient();
+            } catch (error) {
+                console.warn('⚠️ Could not connect to blockchain, running in standalone mode:', error.message);
+                this.validatorClient = null;
+            }
+            
+
             
             // Connect to blockchain network
             await this.connectToNetwork();
@@ -143,12 +154,14 @@ class ValidatorService extends EventEmitter {
             // Unregister from blockchain
             if (this.validatorClient) {
                 try {
-                    await this.validatorClient.unregister();
+                    await this.validatorClient.shutdown();
                     console.log('✅ Unregistered from blockchain');
                 } catch (error) {
                     console.warn('⚠️ Failed to unregister from blockchain:', error.message);
                 }
             }
+            
+
 
             // Disconnect from peers
             this.peers.clear();
@@ -292,6 +305,54 @@ class ValidatorService extends EventEmitter {
             });
         });
 
+        // Manual connection endpoint
+        app.post('/api/connect', async (req, res) => {
+            try {
+                const { blockchainUrl } = req.body;
+                
+                if (!blockchainUrl) {
+                    return res.status(400).json({ 
+                        success: false, 
+                        message: 'Blockchain URL is required' 
+                    });
+                }
+                
+                console.log(`🔄 Manual connection request to: ${blockchainUrl}`);
+                
+                // Attempt to connect to the specified blockchain URL
+                const result = await this.connectToNetwork(blockchainUrl);
+                
+                if (result.success) {
+                    // If connection successful, reinitialize the RPC client with the new URL
+                    try {
+                        await this.initializeRPCClient();
+                        res.json({
+                            success: true,
+                            message: 'Successfully connected to blockchain and reinitialized validator client',
+                            blockchainUrl
+                        });
+                    } catch (clientError) {
+                        res.status(500).json({
+                            success: false,
+                            message: `Connected to blockchain but failed to initialize validator client: ${clientError.message}`,
+                            blockchainUrl
+                        });
+                    }
+                } else {
+                    res.status(400).json({
+                        success: false,
+                        message: result.message,
+                        blockchainUrl
+                    });
+                }
+            } catch (error) {
+                res.status(500).json({ 
+                    success: false, 
+                    message: `Connection error: ${error.message}` 
+                });
+            }
+        });
+        
         // System info endpoint
         app.get('/api/system', async (req, res) => {
             try {
@@ -360,37 +421,7 @@ class ValidatorService extends EventEmitter {
             }
         });
 
-        // Store wallets data
-        app.post('/api/storage/wallets', async (req, res) => {
-            try {
-                const walletsData = req.body;
-                await this.storeData('wallets', walletsData);
-                res.json({ 
-                    success: true, 
-                    message: 'Wallets data stored successfully',
-                    validatorId: this.validatorId,
-                    timestamp: new Date().toISOString()
-                });
-            } catch (error) {
-                console.error('❌ Failed to store wallets data:', error);
-                res.status(500).json({ error: 'Failed to store wallets data' });
-            }
-        });
 
-        // Retrieve wallets data
-        app.get('/api/storage/wallets', async (req, res) => {
-            try {
-                const data = await this.retrieveData('wallets');
-                if (data) {
-                    res.json(data);
-                } else {
-                    res.status(404).json({ error: 'Wallets data not found' });
-                }
-            } catch (error) {
-                console.error('❌ Failed to retrieve wallets data:', error);
-                res.status(500).json({ error: 'Failed to retrieve wallets data' });
-            }
-        });
 
         // Store configuration data
         app.post('/api/storage/config', async (req, res) => {
@@ -454,6 +485,8 @@ class ValidatorService extends EventEmitter {
             }
         });
 
+
+
         this.server = app.listen(apiPort, () => {
             console.log(`✅ API Server started on port ${apiPort}`);
         });
@@ -461,7 +494,7 @@ class ValidatorService extends EventEmitter {
 
     async startWebSocketServer() {
         const wsPort = process.env.VALIDATOR_WS_PORT || this.config.get('wsPort', 8548);
-        this.wsServer = new WebSocket.Server({ port: wsPort });
+        this.wsServer = new WebSocketServer({ port: wsPort });
 
         this.wsServer.on('connection', (ws) => {
             console.log('🔌 New WebSocket connection');
@@ -532,11 +565,17 @@ class ValidatorService extends EventEmitter {
         }
     }
 
-    async connectToNetwork() {
-        const rpcUrl = this.config.get('rpcUrl', 'http://localhost:8545');
+    async connectToNetwork(customRpcUrl = null) {
+        // Use custom URL if provided, otherwise use config or default
+        const rpcUrl = customRpcUrl || this.config.get('rpcUrl', 'http://localhost:8545');
         const rpcEndpoint = rpcUrl.endsWith('/rpc') ? rpcUrl : `${rpcUrl}/rpc`;
         
+        // Track connection attempt time
+        this.lastConnectionAttempt = new Date().toISOString();
+        
         try {
+            console.log(`🔌 Attempting to connect to blockchain at: ${rpcUrl}`);
+            
             // Test connection to blockchain RPC
             const response = await fetch(rpcEndpoint, {
                 method: 'POST',
@@ -550,20 +589,39 @@ class ValidatorService extends EventEmitter {
             });
 
             if (response.ok) {
+                // Parse the response to get chain info
+                const chainInfo = await response.json();
                 console.log('✅ Connected to blockchain network');
+                console.log(`📊 Chain info: ${JSON.stringify(chainInfo.result || {}, null, 2)}`);
+                
                 this.rpcConnected = true;
+                
+                // If custom URL was provided, update the config
+                if (customRpcUrl) {
+                    this.config.set('rpcUrl', customRpcUrl);
+                    console.log(`✅ Updated blockchain URL to: ${customRpcUrl}`);
+                }
+                
                 this.peers.set('rpc-server', {
                     address: rpcUrl,
                     connected: true,
                     lastSeen: Date.now()
                 });
+                
+                return { 
+                    success: true, 
+                    message: 'Connected to blockchain network',
+                    chainInfo: chainInfo.result || {}
+                };
             } else {
                 console.warn('⚠️ Could not connect to blockchain RPC server');
                 this.rpcConnected = false;
+                return { success: false, message: 'Could not connect to blockchain RPC server' };
             }
         } catch (error) {
             console.warn('⚠️ Network connection failed:', error.message);
             this.rpcConnected = false;
+            return { success: false, message: `Connection failed: ${error.message}` };
         }
     }
 
@@ -640,7 +698,7 @@ class ValidatorService extends EventEmitter {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     jsonrpc: '2.0',
-                    method: 'topay_getChain',
+                    method: 'topay_getChainInfo',
                     params: [],
                     id: 2
                 })
@@ -648,11 +706,11 @@ class ValidatorService extends EventEmitter {
 
             if (response.ok) {
                 const data = await response.json();
-                if (data.result && data.result.chain) {
+                if (data.result && data.result.blockCount) {
                     // Compare with local blockchain and sync if needed
-                    const remoteChain = data.result.chain;
-                    if (remoteChain.length > this.blockchain.chain.length) {
-                        console.log(`🔄 Syncing blockchain (${remoteChain.length - this.blockchain.chain.length} new blocks)`);
+                    const remoteBlockCount = data.result.blockCount;
+                    if (remoteBlockCount > this.blockchain.chain.length) {
+                        console.log(`🔄 Syncing blockchain (${remoteBlockCount - this.blockchain.chain.length} new blocks)`);
                         // Implement sync logic here
                     }
                 }
@@ -775,38 +833,7 @@ class ValidatorService extends EventEmitter {
         }
     }
 
-    async saveWalletsData(data) {
-        try {
-            const dataPath = path.join(this.config.get('dataPath', './data'), 'wallets.json');
-            const dataDir = path.dirname(dataPath);
-            
-            // Ensure directory exists
-            await fs.mkdir(dataDir, { recursive: true });
-            
-            // Save wallets data
-            await fs.writeFile(dataPath, JSON.stringify(data, null, 2));
-            
-            console.log(`💾 Wallets data saved to validator: ${dataPath}`);
-            return { success: true, path: dataPath };
-        } catch (error) {
-            console.error('❌ Failed to save wallets data:', error);
-            throw error;
-        }
-    }
 
-    async loadWalletsData() {
-        try {
-            const dataPath = path.join(this.config.get('dataPath', './data'), 'wallets.json');
-            const data = await fs.readFile(dataPath, 'utf8');
-            return JSON.parse(data);
-        } catch (error) {
-            if (error.code === 'ENOENT') {
-                return null; // File doesn't exist
-            }
-            console.error('❌ Failed to load wallets data:', error);
-            throw error;
-        }
-    }
 
     async saveConfigData(data) {
         try {
@@ -856,10 +883,6 @@ class ValidatorService extends EventEmitter {
                     sourceFile = path.join(this.config.get('dataPath', './data'), 'blockchain.json');
                     backupFile = path.join(backupDir, `blockchain-${timestamp}.json`);
                     break;
-                case 'wallets':
-                    sourceFile = path.join(this.config.get('dataPath', './data'), 'wallets.json');
-                    backupFile = path.join(backupDir, `wallets-${timestamp}.json`);
-                    break;
                 case 'config':
                     sourceFile = path.join(this.config.get('dataPath', './data'), 'config.json');
                     backupFile = path.join(backupDir, `config-${timestamp}.json`);
@@ -889,7 +912,7 @@ class ValidatorService extends EventEmitter {
                 lastModified: null
             };
             
-            const files = ['blockchain.json', 'wallets.json', 'config.json'];
+            const files = ['blockchain.json', 'config.json'];
             
             for (const file of files) {
                 try {
@@ -923,27 +946,49 @@ class ValidatorService extends EventEmitter {
 
     async initializeRPCClient() {
         try {
-            const blockchainUrl = process.env.BLOCKCHAIN_URL || this.config.get('blockchainUrl', 'http://localhost:3001');
+            // Use the rpcUrl from config (which may have been updated by connectToNetwork)
+            // or fall back to environment variable or default
+            const blockchainUrl = process.env.BLOCKCHAIN_RPC_URL || 
+                                 this.config.get('rpcUrl') || 
+                                 this.config.get('blockchainUrl', 'http://localhost:8545');
             const validatorPort = process.env.VALIDATOR_PORT || this.config.get('apiPort', 8547);
             
-            this.validatorClient = new ValidatorClient(blockchainUrl, {
-                validatorId: this.validatorId,
-                port: validatorPort,
-                host: 'localhost'
+            console.log(`🔄 Initializing validator client with blockchain URL: ${blockchainUrl}`);
+            
+            // If we already have a validator client, shut it down properly first
+            if (this.validatorClient) {
+                try {
+                    await this.validatorClient.shutdown();
+                    console.log('✅ Previous validator client shutdown successfully');
+                } catch (shutdownError) {
+                    console.warn('⚠️ Error shutting down previous validator client:', shutdownError.message);
+                }
+            }
+            
+            // Create new validator client with updated URL
+            this.validatorClient = new ValidatorClient({
+                blockchainUrl: blockchainUrl,
+                validatorPort: validatorPort,
+                validatorName: this.validatorId,
+                region: 'local',
+                tier: 'primary'
             });
             
-            // Register with blockchain
-            const registrationResult = await this.validatorClient.register();
+            // Initialize and register with blockchain
+            const registrationResult = await this.validatorClient.initialize();
             console.log('✅ Registered with blockchain:', registrationResult);
             
             // Start periodic status updates
             this.startStatusUpdates();
             
+            return registrationResult;
         } catch (error) {
             console.error('❌ Failed to initialize RPC client:', error);
             throw error;
         }
     }
+
+    // Wallet client initialization removed
 
     startStatusUpdates() {
         // Send status updates every 30 seconds
@@ -951,8 +996,7 @@ class ValidatorService extends EventEmitter {
             if (this.validatorClient && this.isRunning) {
                 try {
                     const status = this.getStatus();
-                    await this.validatorClient.updateStatus({
-                        status: 'active',
+                    await this.validatorClient.updateStatus('active', 100, {
                         blockHeight: status.blockchain?.blockCount || 0,
                         lastValidation: status.validationStats.lastValidation,
                         uptime: status.uptime
@@ -967,6 +1011,13 @@ class ValidatorService extends EventEmitter {
     getStatus() {
         const latestBlock = this.blockchain ? this.blockchain.getLatestBlock() : null;
         
+        // Get current blockchain URL
+        const blockchainUrl = this.validatorClient ? 
+            this.validatorClient.blockchainUrl : 
+            (process.env.BLOCKCHAIN_RPC_URL || 
+             this.config.get('rpcUrl') || 
+             this.config.get('blockchainUrl', 'http://localhost:8545'));
+        
         // Create completely serializable status object
         const status = {
             validatorId: this.validatorId,
@@ -974,6 +1025,11 @@ class ValidatorService extends EventEmitter {
             uptime: this.startTime ? Date.now() - this.startTime : 0,
             rpcConnected: this.rpcConnected,
             wsConnected: this.wsConnected,
+            connection: {
+                blockchainUrl: blockchainUrl,
+                lastConnectionAttempt: this.lastConnectionAttempt || null,
+                connectionStatus: this.rpcConnected ? 'connected' : 'disconnected'
+            },
             blockchain: this.blockchain ? {
                 blockCount: this.blockchain.chain.length,
                 mempoolSize: this.blockchain.mempool.length,
@@ -1075,23 +1131,36 @@ class ValidatorService extends EventEmitter {
 export default ValidatorService;
 
 // Main execution - start validator when file is run directly
-const validator = new ValidatorService();
+async function startValidator() {
+    try {
+        // Import and initialize config
+        const { default: ValidatorConfig } = await import('./config/validator-config.js');
+        const config = new ValidatorConfig();
+        await config.load();
+        
+        // Create validator with config
+        const validator = new ValidatorService(config);
 
-// Handle graceful shutdown
-process.on('SIGINT', async () => {
-    console.log('\n🛑 Shutting down validator...');
-    await validator.stop();
-    process.exit(0);
-});
+        // Handle graceful shutdown
+        process.on('SIGINT', async () => {
+            console.log('\n🛑 Shutting down validator...');
+            await validator.stop();
+            process.exit(0);
+        });
 
-process.on('SIGTERM', async () => {
-    console.log('\n🛑 Shutting down validator...');
-    await validator.stop();
-    process.exit(0);
-});
+        process.on('SIGTERM', async () => {
+            console.log('\n🛑 Shutting down validator...');
+            await validator.stop();
+            process.exit(0);
+        });
+
+        // Start the validator
+        await validator.start();
+    } catch (error) {
+        console.error('❌ Failed to start validator:', error);
+        process.exit(1);
+    }
+}
 
 // Start the validator
-validator.start().catch(error => {
-    console.error('❌ Failed to start validator:', error);
-    process.exit(1);
-});
+startValidator();

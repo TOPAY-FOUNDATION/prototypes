@@ -2,7 +2,7 @@
   "chain": [
     {
       "index": 0,
-      "timestamp": 1754084849369,
+      "timestamp": 1754202982223,
       "transactions": [],
       "previousHash": "0",
       "nonce": 0,
@@ -11,25 +11,49 @@
       "difficulty": 2,
       "validator": null,
       "fragmentedData": null
+    },
+    {
+      "index": 1,
+      "timestamp": 1754202982224,
+      "transactions": [
+        {
+          "id": "60aa1aaa64c48859198aa72403fb8db5be97b4c57d663c807888be9025df033d08e37f55b3fd6c19713c55bea3f2f98d571010ecafd829c5c768e2bb480d5f3e",
+          "from": null,
+          "to": "TOPAYminer234567890abcdef1234567890abcdef12345678",
+          "amount": 100,
+          "data": null,
+          "timestamp": 1754202982223,
+          "signature": "60aa1aaa64c48859198aa72403fb8db5be97b4c57d663c807888be9025df033d08e37f55b3fd6c19713c55bea3f2f98d571010ecafd829c5c768e2bb480d5f3e",
+          "encryptedData": null,
+          "kemCiphertext": null
+        }
+      ],
+      "previousHash": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "nonce": 281,
+      "hash": "002d3b025dcece1ecd09ac5abf60791752f01b9cda989ebda3bbc73783ba666e0e27ba7af7abf078f1bb7360d470ebf1d548c1ae9884beaf742282ed35c410fc",
+      "merkleRoot": "b4dfce4b51e34b3fd98577ecb8a933fc6614ca4bee91bf9da08b1fbb1101a7e9d3ab1aa020754b462df07ec23285dfcddceafc5263f0d20cab58d5923b3a3ff4",
+      "difficulty": 2,
+      "validator": null,
+      "fragmentedData": null
     }
   ],
   "mempool": [],
-  "difficulty": 2,
+  "difficulty": 3,
   "miningReward": 100,
   "stats": {
-    "blockCount": 1,
-    "totalTransactions": 0,
-    "totalSize": 421,
-    "averageBlockSize": 421,
-    "difficulty": 2,
+    "blockCount": 2,
+    "totalTransactions": 1,
+    "totalSize": 1413,
+    "averageBlockSize": 707,
+    "difficulty": 3,
     "miningReward": 100,
     "mempoolSize": 0,
     "fragmentedBlocks": 0,
     "networkNodes": 0,
-    "latestBlockHash": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "latestBlockHash": "002d3b025dcece1ecd09ac5abf60791752f01b9cda989ebda3bbc73783ba666e0e27ba7af7abf078f1bb7360d470ebf1d548c1ae9884beaf742282ed35c410fc",
     "chainValid": null
   },
-  "exportedAt": 1754085715838,
-  "savedAt": "2025-08-01T22:01:55.838Z",
+  "exportedAt": 1754203042263,
+  "savedAt": "2025-08-03T06:37:22.263Z",
   "version": "1.0"
 }

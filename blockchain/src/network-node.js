@@ -13,7 +13,10 @@ import dotenv from 'dotenv';
 import { Blockchain } from './blockchain/blockchain.js';
 import { BlockchainRPCServer } from './blockchain-rpc-server.js';
 import { RemotePersistenceManager } from './storage/remote-persistence.js';
+import { PersistenceManager } from './storage/persistence.js';
 import { Transaction } from './blockchain/transaction.js';
+import os from 'os';
+import path from 'path';
 
 // Load environment variables
 dotenv.config();
@@ -27,17 +30,17 @@ class TOPAYNetworkNode {
     this.autoMining = options.autoMining || process.env.AUTO_MINING === 'true' || false;
     this.miningInterval = options.miningInterval || parseInt(process.env.MINING_INTERVAL) || 30000;
     
-    // Configure validator nodes from environment variables
-    let validatorNodes;
-    if (options.validatorNodes) {
+    // Configure validator codes from environment variables
+    let validatorCodes;
+    if (options.validatorCodes) {
       // Command line argument takes precedence
-      validatorNodes = options.validatorNodes;
-    } else if (process.env.VALIDATOR_NODES) {
-      // Parse comma-separated URLs from environment
-      validatorNodes = process.env.VALIDATOR_NODES.split(',').map(url => url.trim());
+      validatorCodes = options.validatorCodes;
+    } else if (process.env.VALIDATOR_CODES) {
+      // Parse comma-separated codes from environment
+      validatorCodes = process.env.VALIDATOR_CODES.split(',').map(code => code.trim());
     } else {
-      // Default fallback
-      validatorNodes = [process.env.PRIMARY_VALIDATOR || 'http://localhost:8547'];
+      // Use empty array to let RemotePersistenceManager use defaults and sync with RPC
+      validatorCodes = [];
     }
     
     // Network configuration from environment
@@ -57,22 +60,45 @@ class TOPAYNetworkNode {
     console.log(`🔧 Configuration loaded from environment:`);
     console.log(`   Node ID: ${this.nodeId}`);
     console.log(`   Port: ${this.port}`);
-    console.log(`   Validator Nodes: ${validatorNodes.join(', ')}`);
+    console.log(`   Validator Codes: ${validatorCodes.length > 0 ? validatorCodes.join(', ') : 'Auto-detect from RPC'}`);
     console.log(`   Remote Storage: ${this.enableRemoteStorage ? 'Enabled' : 'Disabled'}`);
     console.log(`   Auto Mining: ${this.autoMining ? 'Enabled' : 'Disabled'}`);
     
     this.blockchain = null;
     this.rpcServer = null;
-    this.persistence = this.enableRemoteStorage ? 
-      new RemotePersistenceManager(validatorNodes, {
-        timeout: this.networkTimeout,
-        maxRetries: this.maxRetries,
-        retryDelay: this.retryDelay,
-        replication: this.storageReplication,
-        backup: this.backupEnabled
-      }) : null;
+    
+    // Configure node-specific storage path
+    const storagePath = this.getNodeStoragePath();
+    console.log(`💾 Node storage path: ${storagePath}`);
+    this.localPersistence = new PersistenceManager(storagePath);
+    this.remotePersistence = new RemotePersistenceManager(validatorCodes, {
+      timeout: this.networkTimeout,
+      maxRetries: this.maxRetries,
+      retryDelay: this.retryDelay,
+      replication: this.storageReplication,
+      backup: this.backupEnabled
+    });
+    this.persistence = this.enableRemoteStorage ? this.remotePersistence : this.localPersistence;
     this.miningTimer = null;
     this.isRunning = false;
+  }
+
+  /**
+   * Get node-specific storage path
+   */
+  getNodeStoragePath() {
+    // Check for explicit storage path in environment
+    const envStoragePath = process.env.STORAGE_PATH;
+    if (envStoragePath && envStoragePath.trim()) {
+      return path.resolve(envStoragePath.trim());
+    }
+    
+    // Generate node-specific path in user's home directory
+    const homeDir = os.homedir();
+    const nodeSpecificDir = `TOPAY-Blockchain-${this.nodeId}-${this.port}`;
+    const defaultPath = path.join(homeDir, 'TOPAY-Blockchain', nodeSpecificDir, 'data');
+    
+    return defaultPath;
   }
 
   /**
@@ -86,16 +112,13 @@ class TOPAYNetworkNode {
     console.log(`⛏️  Auto Mining: ${this.autoMining ? 'Enabled' : 'Disabled'}`);
     console.log(`🔗 Validator Codes: ${this.persistence.validatorCodes.join(', ')}`);
     
-    // Initialize persistence
-    console.log('\n🔄 Initializing remote persistence...');
-    await this.persistence.initialize();
-    
-    // Load or create blockchain
+    // Load or create blockchain first (without validator dependency)
     await this.initializeBlockchain();
     
     // Initialize RPC server with our blockchain instance
     this.rpcServer = new BlockchainRPCServer(this.port);
     this.rpcServer.blockchain = this.blockchain; // Use our blockchain instance
+    this.rpcServer.persistence = this.localPersistence; // Use our persistence manager
     
     console.log('\n✅ Network node initialized successfully!');
   }
@@ -106,15 +129,16 @@ class TOPAYNetworkNode {
   async initializeBlockchain() {
     console.log('\n📊 Initializing blockchain...');
     
-    // Try to load existing blockchain
-    const existingBlockchain = await this.persistence.loadBlockchain();
+    // Always try to load from local storage first
+    console.log('📂 Checking local storage for existing blockchain...');
+    const localBlockchain = await this.localPersistence.loadBlockchain();
     
-    if (existingBlockchain && existingBlockchain.chain && existingBlockchain.chain.length > 1) {
-      console.log('📂 Loading existing blockchain from storage...');
+    if (localBlockchain && localBlockchain.chain && localBlockchain.chain.length > 1) {
+      console.log('📂 Loading existing blockchain from local storage...');
       this.blockchain = new Blockchain();
       try {
-        this.blockchain.importChain(existingBlockchain);
-        console.log(`✅ Blockchain loaded: ${this.blockchain.chain.length} blocks`);
+        this.blockchain.importChain(localBlockchain);
+        console.log(`✅ Blockchain loaded from local storage: ${this.blockchain.chain.length} blocks`);
         console.log(`💰 Mining reward: ${this.blockchain.miningReward} TOPAY`);
         console.log(`⚡ Current difficulty: ${this.blockchain.difficulty}`);
         
@@ -125,13 +149,49 @@ class TOPAYNetworkNode {
           await this.createNewBlockchain();
         }
       } catch (error) {
-        console.error('❌ Failed to load blockchain:', error.message);
+        console.error('❌ Failed to load blockchain from local storage:', error.message);
         console.log('🆕 Creating new blockchain...');
         await this.createNewBlockchain();
       }
     } else {
-      console.log('🆕 No existing blockchain found, creating new one...');
+      console.log('🆕 No existing blockchain found in local storage, creating new one...');
       await this.createNewBlockchain();
+    }
+  }
+
+  /**
+   * Sync blockchain with remote storage
+   */
+  async syncWithRemoteStorage() {
+    console.log('\n🔄 Syncing blockchain with remote storage...');
+    
+    try {
+      // Try to load blockchain from remote storage
+      const remoteBlockchain = await this.remotePersistence.loadBlockchain();
+      
+      if (remoteBlockchain && remoteBlockchain.chain && remoteBlockchain.chain.length > this.blockchain.chain.length) {
+        console.log(`📥 Remote blockchain has more blocks (${remoteBlockchain.chain.length} vs ${this.blockchain.chain.length})`);
+        console.log('🔄 Updating local blockchain with remote data...');
+        
+        // Validate remote blockchain before importing
+        const tempBlockchain = new Blockchain();
+        tempBlockchain.importChain(remoteBlockchain);
+        const isValid = await tempBlockchain.isChainValid();
+        
+        if (isValid) {
+          this.blockchain = tempBlockchain;
+          await this.localPersistence.saveBlockchain(this.blockchain);
+          console.log('✅ Local blockchain updated from remote storage');
+        } else {
+          console.warn('⚠️  Remote blockchain is invalid, keeping local version');
+        }
+      } else if (this.blockchain.chain.length > 1) {
+        console.log('📤 Uploading local blockchain to remote storage...');
+        await this.remotePersistence.saveBlockchain(this.blockchain);
+        console.log('✅ Local blockchain uploaded to remote storage');
+      }
+    } catch (error) {
+      console.warn('⚠️  Failed to sync with remote storage:', error.message);
     }
   }
 
@@ -158,9 +218,9 @@ class TOPAYNetworkNode {
     console.log(`💰 Genesis reward: ${this.blockchain.miningReward} TOPAY`);
     console.log(`🔗 Genesis block hash: ${this.blockchain.getLatestBlock().hash.substring(0, 20)}...`);
     
-    // Save the new blockchain
-    await this.persistence.saveBlockchain(this.blockchain);
-    console.log('💾 Blockchain saved to storage');
+    // Save the new blockchain to local storage
+    await this.localPersistence.saveBlockchain(this.blockchain);
+    console.log('💾 Blockchain saved to local storage');
   }
 
   /**
@@ -174,9 +234,24 @@ class TOPAYNetworkNode {
 
     await this.initialize();
     
-    // Start RPC server
+    // Start RPC server first
     console.log('\n🌐 Starting RPC server...');
     await this.rpcServer.start();
+    
+    // Now initialize remote persistence with validators (RPC server is available)
+    if (this.enableRemoteStorage) {
+      console.log('\n🔄 Initializing remote persistence...');
+      try {
+        await this.remotePersistence.initialize();
+        console.log('✅ Remote persistence initialized successfully!');
+        
+        // Sync with remote storage
+        await this.syncWithRemoteStorage();
+      } catch (error) {
+        console.warn('⚠️  Remote persistence initialization failed:', error.message);
+        console.log('🔄 Continuing with local storage only...');
+      }
+    }
     
     // Start auto-mining if enabled
     if (this.autoMining && this.minerAddress) {
@@ -215,8 +290,17 @@ class TOPAYNetworkNode {
           console.log(`✅ Block mined in ${miningTime.toFixed(2)} seconds`);
           console.log(`💰 Mining reward: ${this.blockchain.miningReward} TOPAY`);
           
-          // Save blockchain after mining
-          await this.persistence.saveBlockchain(this.blockchain);
+          // Save blockchain after mining to local storage
+          await this.localPersistence.saveBlockchain(this.blockchain);
+          
+          // Also save to remote storage if available
+          if (this.enableRemoteStorage && this.remotePersistence.hasActiveNodes()) {
+            try {
+              await this.remotePersistence.saveBlockchain(this.blockchain);
+            } catch (error) {
+              console.warn('⚠️  Failed to save to remote storage:', error.message);
+            }
+          }
         } else {
           console.log('⏳ Auto-mining: No transactions to mine');
         }
@@ -276,12 +360,31 @@ class TOPAYNetworkNode {
       
       this.stopAutoMining();
       
-      // Save final blockchain state
+      // Save final blockchain state to local storage
       try {
-        await this.persistence.saveBlockchain(this.blockchain);
-        console.log('💾 Final blockchain state saved');
+        await this.localPersistence.saveBlockchain(this.blockchain);
+        console.log('💾 Final blockchain state saved to local storage');
       } catch (error) {
-        console.error('❌ Failed to save final state:', error.message);
+        console.error('❌ Failed to save final state to local storage:', error.message);
+      }
+      
+      // Also save to remote storage if available
+      if (this.enableRemoteStorage && this.remotePersistence.hasActiveNodes()) {
+        try {
+          await this.remotePersistence.saveBlockchain(this.blockchain);
+          console.log('💾 Final blockchain state saved to remote storage');
+        } catch (error) {
+          console.error('❌ Failed to save final state to remote storage:', error.message);
+        }
+      }
+      
+      // Cleanup persistence managers
+      try {
+        if (this.remotePersistence) {
+          await this.remotePersistence.destroy();
+        }
+      } catch (error) {
+        console.error('❌ Failed to cleanup remote persistence:', error.message);
       }
       
       console.log('👋 TOPAY Network Node shutdown complete');
