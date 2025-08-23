@@ -116,12 +116,18 @@ export default function TransactionCard({ transaction, className = '' }: Transac
         </div>
       </div>
       
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between">
         <Link 
           href={`/tx/${transaction.hash}`}
           className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
         >
           View Details
+        </Link>
+        <Link 
+          href="/report/transaction" 
+          className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors"
+        >
+          Report Transaction
         </Link>
       </div>
     </div>

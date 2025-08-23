@@ -6,6 +6,8 @@ import SearchBar from '@/components/SearchBar';
 import BlockCard from '@/components/BlockCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ThemeToggle from '@/components/ThemeToggle';
+import ReportButton from '@/components/ReportButton';
+import Footer from '@/components/Footer';
 import { Block } from '@/lib/blockchain';
 import { formatNumber } from '@/lib/utils';
 import { useBlockchainPolling } from '@/lib/hooks/usePolling';
@@ -57,7 +59,9 @@ export default function Home() {
       <header className="header">
         <div className="container py-6">
           <div className="flex justify-between items-start mb-6">
-            <div className="flex-1" />
+            <div className="flex-1 flex items-center">
+              <ReportButton />
+            </div>
             <div className="text-center flex-1">
               <h1 className="text-3xl font-bold mb-2">
                 TOPAY Block Explorer
@@ -172,6 +176,8 @@ export default function Home() {
           </div>
         )}
       </main>
+      
+      <Footer />
     </div>
   );
 }
