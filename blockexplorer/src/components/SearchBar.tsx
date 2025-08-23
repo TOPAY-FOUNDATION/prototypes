@@ -49,20 +49,20 @@ export default function SearchBar({ className = '' }: SearchBarProps) {
   };
 
   return (
-    <form onSubmit={handleSearch} className={`w-full max-w-2xl ${className}`}>
-      <div className="relative">
+    <form onSubmit={handleSearch} className={`search-bar ${className}`}>
+      <div className="search-container">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by Address / Txn Hash / Block Number / Block Hash"
-          className="w-full px-4 py-3 pr-12 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="search-input"
           disabled={isLoading}
         />
         <button
           type="submit"
           disabled={isLoading || !query.trim()}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors dark:bg-blue-700 dark:hover:bg-blue-800"
+          className="search-button"
         >
           {isLoading ? 'Searching...' : 'Search'}
         </button>

@@ -60,7 +60,7 @@ export function formatGas(gas: number): string {
 export function formatGwei(wei: string): string {
   const weiNum = BigInt(wei);
   const gwei = weiNum / BigInt(1000000000);
-  return `${gwei.toString()} Gwei`;
+  return `${gwei.toString()} nTPY`;
 }
 
 export function isValidAddress(address: string): boolean {

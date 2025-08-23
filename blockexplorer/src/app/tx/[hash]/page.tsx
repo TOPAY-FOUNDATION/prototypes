@@ -173,7 +173,7 @@ export default function TransactionDetailPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Value:</span>
                   <span className="text-lg font-semibold text-green-600 dark:text-green-400">
-                    {formatBalance(transaction.value)} ETH
+                    {formatBalance(transaction.value)} TPY
                   </span>
                 </div>
                 
@@ -198,54 +198,54 @@ export default function TransactionDetailPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Address Information</h2>
             <div className="space-y-4">
-              <div className="flex justify-between items-center p-4 bg-red-50 rounded-lg">
+              <div className="flex justify-between items-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
                 <div>
-                  <div className="text-sm font-medium text-gray-600 mb-1">From:</div>
+                  <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">From:</div>
                   <div className="flex items-center space-x-2">
                     <Link 
                       href={`/address/${transaction.from}`}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-mono"
+                      className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-mono"
                     >
                       {transaction.from}
                     </Link>
                     <button
                       onClick={() => handleCopy(transaction.from, 'from')}
-                      className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50"
+                      className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1 rounded border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                     >
                       {copied === 'from' ? 'Copied!' : 'Copy'}
                     </button>
                   </div>
                 </div>
-                <div className="text-red-600 font-semibold">SENDER</div>
+                <div className="text-red-600 dark:text-red-400 font-semibold">SENDER</div>
               </div>
               
               <div className="flex justify-center">
-                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                   </svg>
                 </div>
               </div>
               
-              <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+              <div className="flex justify-between items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <div>
-                  <div className="text-sm font-medium text-gray-600 mb-1">To:</div>
+                  <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">To:</div>
                   <div className="flex items-center space-x-2">
                     <Link 
                       href={`/address/${transaction.to}`}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-mono"
+                      className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-mono"
                     >
                       {transaction.to}
                     </Link>
                     <button
                       onClick={() => handleCopy(transaction.to, 'to')}
-                      className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50"
+                      className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1 rounded border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                     >
                       {copied === 'to' ? 'Copied!' : 'Copy'}
                     </button>
                   </div>
                 </div>
-                <div className="text-green-600 font-semibold">RECIPIENT</div>
+                <div className="text-green-600 dark:text-green-400 font-semibold">RECIPIENT</div>
               </div>
             </div>
           </div>

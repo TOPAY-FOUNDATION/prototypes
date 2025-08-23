@@ -65,9 +65,9 @@ export default function LiveBlockList({ maxBlocks = 5, className = '' }: LiveBlo
   if (loading && blocks.length === 0) {
     return (
       <div className={`${className}`}>
-        <div className="flex justify-center items-center py-8">
+        <div className="loading-spinner py-8">
           <LoadingSpinner size="md" />
-          <span className="ml-3 text-gray-600 dark:text-gray-400">Loading recent blocks...</span>
+          <span className="ml-3 text-secondary">Loading recent blocks...</span>
         </div>
       </div>
     );
@@ -77,9 +77,9 @@ export default function LiveBlockList({ maxBlocks = 5, className = '' }: LiveBlo
     return (
       <div className={`${className}`}>
         <div className="text-center py-8">
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-red-800 dark:text-red-400 mb-2">Error Loading Blocks</h3>
-            <p className="text-red-600 dark:text-red-300">{error.message}</p>
+          <div className="error-message">
+            <h3 className="error-title mb-2">Error Loading Blocks</h3>
+            <p className="error-text">{error.message}</p>
           </div>
         </div>
       </div>
@@ -88,27 +88,27 @@ export default function LiveBlockList({ maxBlocks = 5, className = '' }: LiveBlo
 
   return (
     <div className={`${className}`}>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Recent Blocks</h2>
+      <div className="section-header mb-6">
+        <h2 className="section-title">Recent Blocks</h2>
         <div className="flex items-center space-x-4">
           {newBlocksCount > 0 && (
             <button
               onClick={handleShowNewBlocks}
-              className="flex items-center space-x-2 px-4 py-2 bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-green-700 dark:text-green-300 rounded-lg transition-colors animate-pulse"
+              className="btn btn-success btn-small animate-pulse"
             >
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm font-medium">
+              <div className="live-dot"></div>
+              <span>
                 {newBlocksCount} new block{newBlocksCount > 1 ? 's' : ''}
               </span>
             </button>
           )}
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="live-indicator">
+            <div className={`live-dot ${loading ? 'updating' : ''}`}></div>
+            <span className="live-text">
               {loading ? 'Updating...' : 'Live'}
             </span>
             {lastUpdated && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="timestamp">
                 ({lastUpdated.toLocaleTimeString()})
               </span>
             )}
@@ -122,23 +122,23 @@ export default function LiveBlockList({ maxBlocks = 5, className = '' }: LiveBlo
             <div
               key={block.hash}
               className={`transition-all duration-500 ${
-                index === 0 && newBlocksCount > 0 ? 'ring-2 ring-green-500 ring-opacity-50' : ''
+                index === 0 && newBlocksCount > 0 ? 'highlight-new' : ''
               }`}
             >
               <BlockCard block={block} />
             </div>
           ))
         ) : (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            No blocks available
+          <div className="empty-state">
+            <p className="empty-state-description">No blocks available</p>
           </div>
         )}
       </div>
 
       {loading && blocks.length > 0 && (
-        <div className="flex justify-center items-center py-4 mt-4">
+        <div className="loading-spinner py-4 mt-4">
           <LoadingSpinner size="sm" />
-          <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Checking for new blocks...</span>
+          <span className="ml-2 text-secondary text-sm">Checking for new blocks...</span>
         </div>
       )}
     </div>

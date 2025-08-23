@@ -60,22 +60,22 @@ export default function BlockDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex justify-center items-center">
+      <div className="min-h-screen bg-page flex justify-center items-center">
         <LoadingSpinner size="lg" />
-        <span className="ml-3 text-gray-600">Loading block details...</span>
+        <span className="ml-3 text-secondary">Loading block details...</span>
       </div>
     );
   }
 
   if (error || !block) {
     return (
-      <div className="min-h-screen bg-gray-50 flex justify-center items-center">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto text-center">
-          <h3 className="text-lg font-semibold text-red-800 mb-2">Block Not Found</h3>
-          <p className="text-red-600 mb-4">{error}</p>
+      <div className="min-h-screen bg-page flex justify-center items-center">
+        <div className="error-message text-center">
+          <h3 className="error-title">Block Not Found</h3>
+          <p className="error-text mb-4">{error}</p>
           <button
             onClick={() => router.back()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="btn btn-primary"
           >
             Go Back
           </button>
@@ -85,26 +85,26 @@ export default function BlockDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-page">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <header className="header">
+        <div className="container py-6">
           <div className="flex items-center justify-between">
             <div>
-              <Link href="/" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
+              <Link href="/" className="text-primary hover:text-primary-dark text-sm font-medium">
                 ← Back to Explorer
               </Link>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
+              <h1 className="text-2xl font-bold mt-2">
                 Block #{formatNumber(block.number)}
               </h1>
             </div>
             <div className="text-right">
-              <div className="text-sm text-gray-500 dark:text-gray-400">Block Hash</div>
+              <div className="text-sm text-secondary">Block Hash</div>
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-mono text-gray-900 dark:text-gray-100">{formatHash(block.hash, 12)}</span>
+                <span className="text-sm font-mono">{formatHash(block.hash, 12)}</span>
                 <button
                   onClick={() => handleCopy(block.hash, 'hash')}
-                  className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1 rounded border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                  className="btn btn-small"
                 >
                   {copied === 'hash' ? 'Copied!' : 'Copy'}
                 </button>
@@ -115,37 +115,40 @@ export default function BlockDetailPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="container py-8">
         <div className="space-y-6">
           {/* Block Details */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Block Details</h2>
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">Block Details</h2>
+            </div>
+            <div className="card-body">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Block Number:</span>
-                  <span className="text-sm text-gray-900 dark:text-gray-200">{formatNumber(block.number)}</span>
+                <div className="data-row">
+                  <span className="label">Block Number:</span>
+                  <span className="value">{formatNumber(block.number)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Timestamp:</span>
-                  <span className="text-sm text-gray-900 dark:text-gray-200">{formatTimestamp(block.timestamp)}</span>
+                <div className="data-row">
+                  <span className="label">Timestamp:</span>
+                  <span className="value timestamp">{formatTimestamp(block.timestamp)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Transactions:</span>
-                  <span className="text-sm text-gray-900 dark:text-gray-200">{formatNumber(block.transactions.length)}</span>
+                <div className="data-row">
+                  <span className="label">Transactions:</span>
+                  <span className="value">{formatNumber(block.transactions.length)}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Parent Hash:</span>
+                <div className="data-row">
+                  <span className="label">Parent Hash:</span>
                   <div className="flex items-center space-x-2">
                     <Link 
                       href={`/block/${block.parentHash}`}
-                      className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-mono"
+                      className="text-primary hover:text-primary-dark font-mono"
                     >
                       {formatHash(block.parentHash)}
                     </Link>
                     <button
                       onClick={() => handleCopy(block.parentHash, 'parent')}
-                      className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1 rounded border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                      className="btn btn-small"
                     >
                       {copied === 'parent' ? 'Copied!' : 'Copy'}
                     </button>
@@ -153,34 +156,34 @@ export default function BlockDetailPage() {
                 </div>
               </div>
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Miner:</span>
+                <div className="data-row">
+                  <span className="label">Miner:</span>
                   <div className="flex items-center space-x-2">
                     <Link 
                       href={`/address/${block.miner}`}
-                      className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-mono"
+                      className="text-primary hover:text-primary-dark font-mono"
                     >
                       {formatHash(block.miner)}
                     </Link>
                     <button
                       onClick={() => handleCopy(block.miner, 'miner')}
-                      className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1 rounded border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                      className="btn btn-small"
                     >
                       {copied === 'miner' ? 'Copied!' : 'Copy'}
                     </button>
                   </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium text-gray-600">Gas Used:</span>
-                  <span className="text-sm text-gray-900">{formatGas(block.gasUsed)}</span>
+                <div className="data-row">
+                  <span className="label">Gas Used:</span>
+                  <span className="value">{formatGas(block.gasUsed)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium text-gray-600">Gas Limit:</span>
-                  <span className="text-sm text-gray-900">{formatGas(block.gasLimit)}</span>
+                <div className="data-row">
+                  <span className="label">Gas Limit:</span>
+                  <span className="value">{formatGas(block.gasLimit)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium text-gray-600">Gas Usage:</span>
-                  <span className="text-sm text-gray-900">
+                <div className="data-row">
+                  <span className="label">Gas Usage:</span>
+                  <span className="value">
                     {((block.gasUsed / block.gasLimit) * 100).toFixed(2)}%
                   </span>
                 </div>
@@ -189,33 +192,40 @@ export default function BlockDetailPage() {
             
             {/* Gas Usage Bar */}
             <div className="mt-4">
-              <div className="flex justify-between text-sm text-gray-600 mb-1">
+              <div className="flex justify-between text-sm text-secondary mb-1">
                 <span>Gas Usage</span>
                 <span>{formatGas(block.gasUsed)} / {formatGas(block.gasLimit)}</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
+              <div className="progress-bar">
                 <div 
-                  className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                  className="progress-bar-fill"
                   style={{ width: `${(block.gasUsed / block.gasLimit) * 100}%` }}
                 ></div>
               </div>
             </div>
+            </div>
           </div>
 
           {/* Transactions */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Transactions ({formatNumber(block.transactions.length)})
-            </h2>
-            {block.transactions.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No transactions in this block</p>
-            ) : (
-              <div className="space-y-4">
-                {block.transactions.map((tx, index) => (
-                  <TransactionCard key={tx.hash || index} transaction={tx} />
-                ))}
-              </div>
-            )}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">
+                Transactions ({formatNumber(block.transactions.length)})
+              </h2>
+            </div>
+            <div className="card-body">
+              {block.transactions.length === 0 ? (
+                <div className="empty-state">
+                  <p className="empty-state-description">No transactions in this block</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {block.transactions.map((tx, index) => (
+                    <TransactionCard key={tx.hash || index} transaction={tx} />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>

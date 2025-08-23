@@ -24,76 +24,76 @@ export default function TransactionCard({ transaction, className = '' }: Transac
   };
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700 ${className}`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Transaction</h3>
+    <div className={`card ${className}`}>
+      <div className="card-header">
+        <h3 className="card-title">Transaction</h3>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">Block #{transaction.blockNumber}</span>
+          <span className="text-secondary">Block #{transaction.blockNumber}</span>
         </div>
       </div>
       
-      <div className="space-y-4">
-        <div className="flex justify-between items-start">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-300 mt-1">Hash:</span>
+      <div className="card-body">
+        <div className="data-row">
+          <span className="label">Hash:</span>
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-900 dark:text-white font-mono break-all">
+            <span className="hash">
               {formatHash(transaction.hash, 12)}
             </span>
             <button
               onClick={() => handleCopy(transaction.hash, 'hash')}
-              className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1 rounded border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+              className="copy-button"
             >
               {copied === 'hash' ? 'Copied!' : 'Copy'}
             </button>
           </div>
         </div>
         
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">From:</span>
+        <div className="data-row">
+          <span className="label">From:</span>
           <div className="flex items-center space-x-2">
             <Link 
               href={`/address/${transaction.from}`}
-              className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-mono"
+              className="address link"
             >
               {formatHash(transaction.from)}
             </Link>
             <button
               onClick={() => handleCopy(transaction.from, 'from')}
-              className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1 rounded border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+              className="copy-button"
             >
               {copied === 'from' ? 'Copied!' : 'Copy'}
             </button>
           </div>
         </div>
         
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">To:</span>
+        <div className="data-row">
+          <span className="label">To:</span>
           <div className="flex items-center space-x-2">
             <Link 
               href={`/address/${transaction.to}`}
-              className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-mono"
+              className="address link"
             >
               {formatHash(transaction.to)}
             </Link>
             <button
               onClick={() => handleCopy(transaction.to, 'to')}
-              className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1 rounded border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+              className="copy-button"
             >
               {copied === 'to' ? 'Copied!' : 'Copy'}
             </button>
           </div>
         </div>
         
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Value:</span>
-          <span className="text-sm text-gray-900 dark:text-white font-semibold">
-            {formatBalance(transaction.value)} ETH
+        <div className="data-row">
+          <span className="label">Value:</span>
+          <span className="value text-success font-semibold">
+            {formatBalance(transaction.value)} TPY
           </span>
         </div>
         
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Gas Price:</span>
-          <span className="text-sm text-gray-900 dark:text-white">
+        <div className="data-row">
+          <span className="label">Gas Price:</span>
+          <span className="value">
             {formatGwei(transaction.gasPrice)}
           </span>
         </div>
