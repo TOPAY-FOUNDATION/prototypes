@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { blockchainClient } from '../../../lib/blockchain-client.js';
+import BlockchainClient from '../../../lib/blockchain-client.js';
+
+const blockchainClient = new BlockchainClient('http://localhost:8545');
 
 /**
  * Test API endpoint to verify connections between wallet, blockchain, and validator

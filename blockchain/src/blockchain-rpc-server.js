@@ -4,6 +4,7 @@ import { Blockchain } from './blockchain/blockchain.js';
 import { Transaction } from './blockchain/transaction.js';
 import { PersistenceManager } from './storage/persistence.js';
 import { ValidatorRegistry } from './storage/validator-registry.js';
+import { ContractEngine } from './contracts/ContractEngine.js';
 
 /**
  * TOPAY Blockchain RPC Server
@@ -25,6 +26,7 @@ class BlockchainRPCServer {
     this.miningTimer = null;
     this.miningInterval = 10000; // 10 seconds
     this.defaultMinerAddress = 'TOPAYminer234567890abcdef1234567890abcdef12345678';
+    this.contractEngine = new ContractEngine(this.blockchain);
     this.setupMiddleware();
     this.setupRoutes();
     this.setupValidatorRoutes();
@@ -132,6 +134,13 @@ class BlockchainRPCServer {
           'topay_startAutoMining',
           'topay_stopAutoMining',
           'topay_getAutoMiningStatus',
+          // Smart contract methods
+          'topay_deployContract',
+          'topay_callContract',
+          'topay_getContract',
+          'topay_getAllContracts',
+          'topay_getContractsByType',
+          'topay_getContractsByDeployer',
           // Development and testing methods
           'topay_addTestData',
           'topay_resetChain'
@@ -157,10 +166,6 @@ class BlockchainRPCServer {
   }
 
   async handleRPCMethod(method, params) {
-    import('fs').then(fs => {
-      const methodLogData = `\n[${new Date().toISOString()}] RPC Method Called: ${method} with params: ${JSON.stringify(params)}`;
-      fs.appendFileSync('C:\\Users\\RealShahriya\\Desktop\\TOPAY FOUNDATION\\Projects\\topay-prototype\\blockchain\\method.log', methodLogData);
-    }).catch(() => {});
     
     switch (method) {
       case 'topay_getBlockNumber':
@@ -492,6 +497,85 @@ class BlockchainRPCServer {
           miningInterval: this.miningInterval,
           mempoolSize: this.blockchain.mempool.length
         };
+
+      case 'topay_deployContract':
+        const { contractType, constructorArgs, deployer, gasLimit } = params[0] || {};
+        if (!contractType || !deployer) {
+          throw new Error('Contract type and deployer address required');
+        }
+        
+        const deployResult = await this.contractEngine.deployContract(
+          contractType,
+          constructorArgs || [],
+          deployer,
+          gasLimit || 100000
+        );
+        
+        if (!deployResult.success) {
+          throw new Error(deployResult.error);
+        }
+        
+        return {
+          contractAddress: deployResult.contractAddress,
+          transactionHash: deployResult.transactionHash,
+          gasUsed: deployResult.gasUsed,
+          contractInfo: deployResult.contractInfo,
+          status: 'deployed'
+        };
+
+      case 'topay_callContract':
+        const { contractAddress, functionName, args, caller, gasLimit: callGasLimit } = params[0] || {};
+        console.log(`🔧 RPC topay_callContract: ${functionName} on ${contractAddress}`);
+        console.log(`📋 RPC Args: [${(args || []).join(', ')}], Caller: ${caller}`);
+        
+        if (!contractAddress || !functionName) {
+          throw new Error('Contract address and function name required');
+        }
+        
+        const callResult = await this.contractEngine.callContract(
+          contractAddress,
+          functionName,
+          args || [],
+          caller || 'anonymous',
+          callGasLimit || 21000
+        );
+        
+        console.log(`✅ RPC Contract call result:`, callResult);
+        
+        if (!callResult.success) {
+          throw new Error(callResult.error);
+        }
+        
+        return {
+          result: callResult.result,
+          gasUsed: callResult.gasUsed,
+          transactionHash: callResult.transactionHash,
+          status: 'success'
+        };
+
+      case 'topay_getContract':
+        const contractAddr = params[0];
+        if (!contractAddr) throw new Error('Contract address required');
+        
+        const contract = this.contractEngine.getContract(contractAddr);
+        if (!contract) throw new Error('Contract not found');
+        
+        return contract;
+
+      case 'topay_getAllContracts':
+        return this.contractEngine.getAllContracts();
+
+      case 'topay_getContractsByType':
+        const type = params[0];
+        if (!type) throw new Error('Contract type required');
+        
+        return this.contractEngine.getContractsByType(type);
+
+      case 'topay_getContractsByDeployer':
+        const deployerAddr = params[0];
+        if (!deployerAddr) throw new Error('Deployer address required');
+        
+        return this.contractEngine.getContractsByDeployer(deployerAddr);
 
       default:
         throw new Error(`Method '${method}' not found`);

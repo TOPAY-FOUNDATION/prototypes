@@ -9,7 +9,7 @@ import CustomerSupport from './components/CustomerSupport';
 import SupportButton from './components/SupportButton';
 import Account from './components/Account';
 import Settings from './components/Settings';
-import History from './components/History';
+import TransactionHistory from './components/TransactionHistory';
 import ConnectionStatus from './components/ConnectionStatus';
 
 export default function WalletApp() {
@@ -113,6 +113,7 @@ export default function WalletApp() {
           <WalletManager 
             onWalletChange={handleWalletChange}
             currentBalance={balance}
+            walletAddress={walletAddress}
           />
         )}
         
@@ -125,7 +126,7 @@ export default function WalletApp() {
         )}
         
         {activeTab === 'history' && (
-          <History />
+          <TransactionHistory walletAddress={walletAddress} />
         )}
         
         {activeTab === 'account' && (

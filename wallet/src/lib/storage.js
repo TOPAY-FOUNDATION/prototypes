@@ -5,18 +5,18 @@
  * Manages persistent storage of blockchain and wallet data
  */
 
-import fs from 'fs/promises';
-import path from 'path';
+// Browser-compatible storage using localStorage
+// Removed Node.js dependencies for browser compatibility
 import { Blockchain } from './blockchain.js';
 import { Wallet } from './wallet.js';
 
 export class PersistenceManager {
   constructor(dataDir = './data') {
     this.dataDir = dataDir;
-    this.blockchainFile = path.join(dataDir, 'blockchain.json');
-    this.walletsFile = path.join(dataDir, 'wallets.json');
-    this.configFile = path.join(dataDir, 'config.json');
-    this.backupDir = path.join(dataDir, 'backups');
+    this.blockchainKey = 'topay_blockchain_data';
+    this.walletsKey = 'topay_wallets_data';
+    this.configKey = 'topay_config_data';
+    this.backupPrefix = 'topay_backup_';
     this.autoSaveInterval = null;
     this.autoSaveEnabled = false;
   }
@@ -26,9 +26,10 @@ export class PersistenceManager {
    */
   async initialize() {
     try {
-      await fs.mkdir(this.dataDir, { recursive: true });
-      await fs.mkdir(this.backupDir, { recursive: true });
-      console.log(`Storage initialized at: ${this.dataDir}`);
+      if (typeof localStorage === 'undefined') {
+        throw new Error('localStorage not available');
+      }
+      console.log('Storage initialized using localStorage');
     } catch (error) {
       console.error('Failed to initialize storage:', error);
       throw error;
@@ -43,9 +44,9 @@ export class PersistenceManager {
       await this.initialize();
       
       const blockchainData = blockchain.exportChain();
-      const jsonData = JSON.stringify(blockchainData, null, 2);
+      const jsonData = JSON.stringify(blockchainData);
       
-      await fs.writeFile(this.blockchainFile, jsonData, 'utf8');
+      localStorage.setItem(this.blockchainKey, jsonData);
       console.log('Blockchain saved successfully');
       
     } catch (error) {
@@ -59,7 +60,13 @@ export class PersistenceManager {
    */
   async loadBlockchain() {
     try {
-      const data = await fs.readFile(this.blockchainFile, 'utf8');
+      const data = localStorage.getItem(this.blockchainKey);
+      
+      if (!data) {
+        console.log('No existing blockchain found, creating new one');
+        return new Blockchain();
+      }
+      
       const blockchainData = JSON.parse(data);
       
       const blockchain = new Blockchain();
@@ -69,11 +76,6 @@ export class PersistenceManager {
       return blockchain;
       
     } catch (error) {
-      if (error.code === 'ENOENT') {
-        console.log('No existing blockchain found, creating new one');
-        return new Blockchain();
-      }
-      
       console.error('Failed to load blockchain:', error);
       throw error;
     }
@@ -92,8 +94,8 @@ export class PersistenceManager {
         walletsData[address] = wallet.exportPublicData();
       }
       
-      const jsonData = JSON.stringify(walletsData, null, 2);
-      await fs.writeFile(this.walletsFile, jsonData, 'utf8');
+      const jsonData = JSON.stringify(walletsData);
+      localStorage.setItem(this.walletsKey, jsonData);
       
       console.log('Wallets saved successfully');
       
@@ -108,24 +110,26 @@ export class PersistenceManager {
    */
   async loadWallets() {
     try {
-      const data = await fs.readFile(this.walletsFile, 'utf8');
-      const walletsData = JSON.parse(data);
+      const data = localStorage.getItem(this.walletsKey);
       
-      const wallets = new Map();
-      for (const [address, walletData] of Object.entries(walletsData)) {
-        const wallet = Wallet.fromPublicData(walletData);
-        wallets.set(address, wallet);
-      }
-      
-      console.log('Wallets loaded successfully');
-      return wallets;
-      
-    } catch (error) {
-      if (error.code === 'ENOENT') {
+      if (!data) {
         console.log('No existing wallets found, creating empty wallet map');
         return new Map();
       }
       
+      const walletsData = JSON.parse(data);
+      
+      const wallets = new Map();
+      for (const [address, walletData] of Object.entries(walletsData)) {
+        const wallet = new Wallet();
+        wallet.importWallet(walletData.privateKey);
+        wallets.set(address, wallet);
+      }
+      
+      console.log(`Loaded ${wallets.size} wallets`);
+      return wallets;
+      
+    } catch (error) {
       console.error('Failed to load wallets:', error);
       throw error;
     }
@@ -138,8 +142,8 @@ export class PersistenceManager {
     try {
       await this.initialize();
       
-      const jsonData = JSON.stringify(config, null, 2);
-      await fs.writeFile(this.configFile, jsonData, 'utf8');
+      const jsonData = JSON.stringify(config);
+      localStorage.setItem(this.configKey, jsonData);
       
       console.log('Configuration saved successfully');
       
@@ -154,18 +158,19 @@ export class PersistenceManager {
    */
   async loadConfig() {
     try {
-      const data = await fs.readFile(this.configFile, 'utf8');
+      const data = localStorage.getItem(this.configKey);
+      
+      if (!data) {
+        console.log('No existing configuration found, using defaults');
+        return this.getDefaultConfig();
+      }
+      
       const config = JSON.parse(data);
       
       console.log('Configuration loaded successfully');
       return config;
       
     } catch (error) {
-      if (error.code === 'ENOENT') {
-        console.log('No existing configuration found, using defaults');
-        return this.getDefaultConfig();
-      }
-      
       console.error('Failed to load configuration:', error);
       throw error;
     }
@@ -235,30 +240,45 @@ export class PersistenceManager {
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const backupName = name || `backup-${timestamp}`;
-      const backupPath = path.join(this.backupDir, backupName);
+      const backupKey = `${this.backupPrefix}${backupName}`;
       
-      await fs.mkdir(backupPath, { recursive: true });
+      const backupData = {
+        timestamp: new Date().toISOString(),
+        blockchain: null,
+        wallets: null,
+        config: null
+      };
       
-      // Copy blockchain file
+      // Try to load existing data
       try {
-        await fs.copyFile(this.blockchainFile, path.join(backupPath, 'blockchain.json'));
+        const blockchain = await this.loadBlockchain();
+        backupData.blockchain = blockchain.exportChain();
       } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
+        console.warn('Could not backup blockchain data:', error.message);
       }
       
-      // Copy wallets file
       try {
-        await fs.copyFile(this.walletsFile, path.join(backupPath, 'wallets.json'));
+        const wallets = await this.loadWallets();
+        const walletsData = {};
+        for (const [address, wallet] of wallets) {
+          walletsData[address] = {
+            address: wallet.address,
+            publicKey: wallet.publicKey,
+            privateKey: wallet.privateKey
+          };
+        }
+        backupData.wallets = walletsData;
       } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
+        console.warn('Could not backup wallet data:', error.message);
       }
       
-      // Copy config file
       try {
-        await fs.copyFile(this.configFile, path.join(backupPath, 'config.json'));
+        backupData.config = await this.loadConfig();
       } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
+        console.warn('Could not backup config data:', error.message);
       }
+      
+      localStorage.setItem(backupKey, JSON.stringify(backupData));
       
       console.log(`Backup created: ${backupName}`);
       return backupName;
@@ -274,12 +294,20 @@ export class PersistenceManager {
    */
   async listBackups() {
     try {
-      const backups = await fs.readdir(this.backupDir);
-      return backups.filter(item => item.startsWith('backup-'));
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        return [];
+      const backups = [];
+      
+      // Iterate through localStorage keys to find backups
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(this.backupPrefix)) {
+          const name = key.replace(this.backupPrefix, '');
+          backups.push(name);
+        }
       }
+      
+      return backups;
+    } catch (error) {
+      console.error('Failed to list backups:', error);
       throw error;
     }
   }
@@ -289,33 +317,41 @@ export class PersistenceManager {
    */
   async restoreFromBackup(backupName) {
     try {
-      const backupPath = path.join(this.backupDir, backupName);
+      const backupKey = `${this.backupPrefix}${backupName}`;
+      const data = localStorage.getItem(backupKey);
       
-      // Check if backup exists
-      await fs.access(backupPath);
+      if (!data) {
+        throw new Error(`Backup not found: ${backupName}`);
+      }
+      
+      const backupData = JSON.parse(data);
+      
+      console.log(`Restoring from backup: ${backupName}`);
       
       // Restore blockchain
-      const blockchainBackup = path.join(backupPath, 'blockchain.json');
-      try {
-        await fs.copyFile(blockchainBackup, this.blockchainFile);
-      } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
+      if (backupData.blockchain) {
+        const blockchain = new Blockchain();
+        blockchain.importChain(backupData.blockchain);
+        await this.saveBlockchain(blockchain);
+        console.log('Blockchain restored');
       }
       
       // Restore wallets
-      const walletsBackup = path.join(backupPath, 'wallets.json');
-      try {
-        await fs.copyFile(walletsBackup, this.walletsFile);
-      } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
+      if (backupData.wallets) {
+        const wallets = new Map();
+        for (const [address, walletData] of Object.entries(backupData.wallets)) {
+          const wallet = new Wallet();
+          wallet.importWallet(walletData.privateKey);
+          wallets.set(address, wallet);
+        }
+        await this.saveWallets(wallets);
+        console.log('Wallets restored');
       }
       
       // Restore config
-      const configBackup = path.join(backupPath, 'config.json');
-      try {
-        await fs.copyFile(configBackup, this.configFile);
-      } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
+      if (backupData.config) {
+        await this.saveConfig(backupData.config);
+        console.log('Configuration restored');
       }
       
       console.log(`Restored from backup: ${backupName}`);
@@ -332,46 +368,52 @@ export class PersistenceManager {
   async getStorageStats() {
     try {
       const stats = {
-        dataDir: this.dataDir,
+        storage: 'localStorage',
         files: {},
         backups: [],
         totalSize: 0
       };
 
-      // Check blockchain file
+      // Check blockchain data
       try {
-        const blockchainStat = await fs.stat(this.blockchainFile);
-        stats.files.blockchain = {
-          size: blockchainStat.size,
-          modified: blockchainStat.mtime
-        };
-        stats.totalSize += blockchainStat.size;
+        const blockchainData = localStorage.getItem(this.blockchainKey);
+        if (blockchainData) {
+          stats.files.blockchain = {
+            size: blockchainData.length,
+            exists: true
+          };
+          stats.totalSize += blockchainData.length;
+        }
       } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
+        console.warn('Could not get blockchain stats:', error);
       }
 
-      // Check wallets file
+      // Check wallets data
       try {
-        const walletsStat = await fs.stat(this.walletsFile);
-        stats.files.wallets = {
-          size: walletsStat.size,
-          modified: walletsStat.mtime
-        };
-        stats.totalSize += walletsStat.size;
+        const walletsData = localStorage.getItem(this.walletsKey);
+        if (walletsData) {
+          stats.files.wallets = {
+            size: walletsData.length,
+            exists: true
+          };
+          stats.totalSize += walletsData.length;
+        }
       } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
+        console.warn('Could not get wallets stats:', error);
       }
 
-      // Check config file
+      // Check config data
       try {
-        const configStat = await fs.stat(this.configFile);
-        stats.files.config = {
-          size: configStat.size,
-          modified: configStat.mtime
-        };
-        stats.totalSize += configStat.size;
+        const configData = localStorage.getItem(this.configKey);
+        if (configData) {
+          stats.files.config = {
+            size: configData.length,
+            exists: true
+          };
+          stats.totalSize += configData.length;
+        }
       } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
+        console.warn('Could not get config stats:', error);
       }
 
       // List backups
@@ -403,8 +445,8 @@ export class PersistenceManager {
       const toRemove = backups.slice(0, backups.length - keepCount);
       
       for (const backup of toRemove) {
-        const backupPath = path.join(this.backupDir, backup);
-        await fs.rm(backupPath, { recursive: true, force: true });
+        const backupKey = `${this.backupPrefix}${backup}`;
+        localStorage.removeItem(backupKey);
         console.log(`Removed old backup: ${backup}`);
       }
 

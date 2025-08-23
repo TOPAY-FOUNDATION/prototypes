@@ -1,102 +1,52 @@
-/* Profile Component Styles - Enhanced Futuristic */
+/* Profile Component Styles - Clean Professional */
 
 .profileContainer {
-  background: rgba(0, 0, 0, 0.95);
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(0, 255, 255, 0.3);
-  border-radius: var(--border-radius-xl);
+  background: #ffffff;
+  border: 1px solid var(--secondary-200);
+  border-radius: var(--radius-xl);
   padding: var(--spacing-6);
-  box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(0, 255, 255, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   transition: all var(--transition-normal);
-  position: relative;
-  overflow: hidden;
-  animation: fadeInUp 0.6s ease-out;
-}
-
-.profileContainer::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.8), rgba(255, 0, 255, 0.8), transparent);
-  animation: scanLine 3s ease-in-out infinite;
 }
 
 .profileContainer:hover {
-  border-color: rgba(0, 255, 255, 0.6);
-  box-shadow: 
-    0 16px 48px rgba(0, 0, 0, 0.6),
-    0 0 30px rgba(0, 255, 255, 0.3);
-  transform: translateY(-2px);
+  border-color: var(--secondary-300);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
 }
 
 /* Header */
 .header {
   position: relative;
   margin-bottom: var(--spacing-6);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  border-radius: var(--border-radius-lg);
 }
 
 .banner {
   height: 200px;
-  background: linear-gradient(135deg, 
-    rgba(0, 255, 255, 0.3) 0%, 
-    rgba(255, 0, 255, 0.3) 50%, 
-    rgba(0, 255, 0, 0.3) 100%);
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
   position: relative;
-  overflow: hidden;
-}
-
-.banner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 50%, rgba(0, 255, 255, 0.2) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.2) 0%, transparent 50%),
-    radial-gradient(circle at 40% 80%, rgba(0, 255, 0, 0.2) 0%, transparent 50%);
-  animation: profilePulse 4s ease-in-out infinite;
-}
-
-.banner::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  animation: profileScan 6s ease-in-out infinite;
 }
 
 .editBannerButton {
   position: absolute;
   top: var(--spacing-4);
   right: var(--spacing-4);
-  background: rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(0, 255, 255, 0.5);
-  border-radius: var(--border-radius-md);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--secondary-300);
+  border-radius: var(--radius-md);
   padding: var(--spacing-2) var(--spacing-3);
-  color: rgba(0, 255, 255, 0.9);
-  font-family: 'JetBrains Mono', monospace;
+  color: var(--secondary-700);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: var(--font-size-sm);
   cursor: pointer;
   transition: all var(--transition-normal);
-  backdrop-filter: blur(10px);
 }
 
 .editBannerButton:hover {
-  border-color: rgba(0, 255, 255, 0.8);
-  background: rgba(0, 255, 255, 0.1);
+  background: #ffffff;
+  border-color: var(--secondary-400);
   transform: translateY(-1px);
   box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
 }
@@ -148,8 +98,8 @@
 
 .avatar:hover {
   transform: scale(1.05);
-  border-color: rgba(0, 255, 255, 0.8);
-  box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+  border-color: var(--primary-500);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .editAvatarButton {
@@ -158,21 +108,22 @@
   right: 0;
   width: 36px;
   height: 36px;
-  background: rgba(0, 0, 0, 0.9);
-  border: 2px solid rgba(0, 255, 255, 0.5);
+  background: #ffffff;
+  border: 2px solid var(--secondary-300);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(0, 255, 255, 0.9);
+  color: var(--secondary-600);
   cursor: pointer;
   transition: all var(--transition-normal);
   font-size: 16px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .editAvatarButton:hover {
-  border-color: rgba(0, 255, 255, 0.8);
-  background: rgba(0, 255, 255, 0.1);
+  border-color: var(--primary-500);
+  color: var(--primary-600);
   transform: scale(1.1);
 }
 
@@ -184,24 +135,20 @@
 .userName {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  background: linear-gradient(135deg, rgba(0, 255, 255, 1), rgba(255, 0, 255, 1));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-family: 'JetBrains Mono', monospace;
+  color: var(--secondary-900);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   margin: 0 0 var(--spacing-2) 0;
-  text-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
 }
 
 .userEmail {
-  color: rgba(0, 255, 255, 0.7);
-  font-family: 'JetBrains Mono', monospace;
+  color: var(--secondary-600);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: var(--font-size-sm);
   margin: 0 0 var(--spacing-2) 0;
 }
 
 .userBio {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--secondary-700);
   font-size: var(--font-size-sm);
   line-height: 1.5;
   margin: 0;
@@ -217,37 +164,25 @@
 }
 
 .statItem {
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(0, 255, 255, 0.3);
-  border-radius: var(--border-radius-lg);
+  background: var(--secondary-50);
+  border: 1px solid var(--secondary-200);
+  border-radius: var(--radius-lg);
   padding: var(--spacing-4);
   text-align: center;
   transition: all var(--transition-normal);
-  position: relative;
-  overflow: hidden;
-}
-
-.statItem::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.6), transparent);
 }
 
 .statItem:hover {
-  border-color: rgba(0, 255, 255, 0.6);
-  background: rgba(0, 255, 255, 0.05);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 255, 255, 0.2);
+  border-color: var(--secondary-300);
+  background: var(--secondary-100);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .statValue {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  color: #ffffff;
+  color: var(--secondary-900);
   font-family: 'JetBrains Mono', monospace;
   margin: 0 0 var(--spacing-1) 0;
   text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
@@ -264,34 +199,17 @@
 
 /* Profile Form */
 .profileForm {
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(0, 255, 255, 0.2);
-  border-radius: var(--border-radius-lg);
+  background: var(--secondary-50);
+  border: 1px solid var(--secondary-200);
+  border-radius: var(--radius-lg);
   padding: var(--spacing-6);
-  position: relative;
-  overflow: hidden;
-}
-
-.profileForm::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.4), transparent);
 }
 
 .formTitle {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  background: linear-gradient(135deg, rgba(0, 255, 255, 1), rgba(255, 0, 255, 1));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-family: 'JetBrains Mono', monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  color: var(--secondary-900);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   margin: 0 0 var(--spacing-6) 0;
 }
 
@@ -310,21 +228,19 @@
 
 .formLabel {
   font-size: var(--font-size-sm);
-  color: rgba(0, 255, 255, 0.8);
-  font-family: 'JetBrains Mono', monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--secondary-700);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-weight: var(--font-weight-medium);
 }
 
 .formInput,
 .formTextarea {
-  background: rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(0, 255, 255, 0.3);
-  border-radius: var(--border-radius-md);
+  background: #ffffff;
+  border: 1px solid var(--secondary-300);
+  border-radius: var(--radius-md);
   padding: var(--spacing-3);
-  color: #ffffff;
-  font-family: 'JetBrains Mono', monospace;
+  color: var(--secondary-900);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: var(--font-size-sm);
   transition: all var(--transition-normal);
   resize: vertical;
@@ -333,16 +249,13 @@
 .formInput:focus,
 .formTextarea:focus {
   outline: none;
-  border-color: rgba(0, 255, 255, 0.8);
-  box-shadow: 
-    0 0 0 2px rgba(0, 255, 255, 0.2),
-    0 0 20px rgba(0, 255, 255, 0.3);
-  background: rgba(0, 255, 255, 0.05);
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .formInput::placeholder,
 .formTextarea::placeholder {
-  color: rgba(0, 255, 255, 0.5);
+  color: var(--secondary-400);
 }
 
 .formActions {
@@ -354,94 +267,40 @@
 .saveButton,
 .cancelButton {
   padding: var(--spacing-3) var(--spacing-6);
-  border-radius: var(--border-radius-md);
-  font-family: 'JetBrains Mono', monospace;
+  border-radius: var(--radius-md);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   cursor: pointer;
   transition: all var(--transition-normal);
-  position: relative;
-  overflow: hidden;
 }
 
 .saveButton {
-  background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 255, 0.2));
-  border: 1px solid rgba(0, 255, 255, 0.5);
-  color: rgba(0, 255, 255, 0.9);
-}
-
-.saveButton::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s ease;
+  background: var(--primary-500);
+  border: 1px solid var(--primary-600);
+  color: #ffffff;
 }
 
 .saveButton:hover {
-  border-color: rgba(0, 255, 255, 0.8);
-  background: rgba(0, 255, 255, 0.1);
+  background: var(--primary-600);
+  border-color: var(--primary-700);
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
-}
-
-.saveButton:hover::before {
-  left: 100%;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .cancelButton {
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.8);
+  background: #ffffff;
+  border: 1px solid var(--secondary-300);
+  color: var(--secondary-700);
 }
 
 .cancelButton:hover {
-  border-color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--secondary-50);
+  border-color: var(--secondary-400);
   transform: translateY(-1px);
 }
 
-/* Animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes scanLine {
-  0%, 100% { transform: translateX(-100%); }
-  50% { transform: translateX(100%); }
-}
-
-@keyframes profilePulse {
-  0%, 100% { opacity: 0.8; }
-  50% { opacity: 1; }
-}
-
-@keyframes profileScan {
-  0%, 100% { left: -100%; }
-  50% { left: 100%; }
-}
-
-@keyframes avatarPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(0, 255, 255, 0.6); }
-}
-
-@keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
+/* Clean animations removed for professional appearance */
 
 /* Responsive Design */
 @media (max-width: 768px) {

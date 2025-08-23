@@ -1580,5 +1580,7 @@ async function startMiner() {
     }
 }
 
-// Start the miner
-startMiner();
+// Only start the miner if this file is run directly (not imported as a module)
+if (require.main === module) {
+    startMiner();
+}
