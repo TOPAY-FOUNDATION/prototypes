@@ -154,6 +154,17 @@ export class Transaction {
       return isValid;
     }
     
+    // Allow governance system transactions with amount 0
+    if (this.data && (this.data.type === 'VOTE' || this.data.type === 'REPORT' || this.data.type === 'REVERSAL_REQUEST')) {
+      const isValid = this.signature !== null;
+      console.log('🔍 Governance transaction validation:', {
+        type: this.data.type,
+        amount: this.amount,
+        isValid
+      });
+      return isValid;
+    }
+    
     if (this.amount <= 0) {
       console.log('❌ Validation failed: Invalid amount');
       return false;

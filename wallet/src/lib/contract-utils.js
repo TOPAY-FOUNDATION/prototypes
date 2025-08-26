@@ -47,13 +47,12 @@ class WalletContractUtils {
   /**
    * Deploy TOPAY token contract
    */
-  async deployTOPAYToken(name, symbol, totalSupply, decimals = 18) {
+  async deployTOPAYToken(name, symbol, totalSupply, decimals = 18, deployer) {
     try {
-      const result = await this.makeRPCCall('topay_deployToken', [
-        name,
-        symbol,
-        totalSupply,
-        decimals
+      const result = await this.makeRPCCall('topay_deployContract', [
+        'ERC20',
+        [name, symbol, totalSupply, decimals],
+        deployer
       ]);
       
       console.log(`✅ TOPAY Token deployed: ${result.contractAddress}`);
@@ -74,12 +73,12 @@ class WalletContractUtils {
    */
   async transferTokens(contractAddress, from, to, amount) {
     try {
-      const result = await this.makeRPCCall('topay_transferToken', [
+      const result = await this.makeRPCCall('topay_callContract', [{
         contractAddress,
-        from,
-        to,
-        amount
-      ]);
+        functionName: 'transfer',
+        args: [to, amount],
+        caller: from
+      }]);
       
       console.log(`✅ Token transfer successful: ${result.transactionHash}`);
       return result;
@@ -99,12 +98,14 @@ class WalletContractUtils {
    */
   async getTokenBalance(contractAddress, walletAddress) {
     try {
-      const balance = await this.makeRPCCall('topay_getTokenBalance', [
+      const result = await this.makeRPCCall('topay_callContract', [{
         contractAddress,
-        walletAddress
-      ]);
+        functionName: 'balanceOf',
+        args: [walletAddress],
+        caller: 'anonymous'
+      }]);
       
-      return parseFloat(balance) || 0;
+      return parseFloat(result.result) || 0;
     } catch (error) {
       console.error('❌ Failed to get token balance:', error);
       // Return mock balance for development
@@ -117,13 +118,38 @@ class WalletContractUtils {
    */
   async getTokenInfo(contractAddress) {
     try {
-      const info = await this.makeRPCCall('topay_getTokenInfo', [contractAddress]);
+      const [name, symbol, decimals, totalSupply] = await Promise.all([
+        this.makeRPCCall('topay_callContract', [{
+          contractAddress,
+          functionName: 'name',
+          args: [],
+          caller: 'anonymous'
+        }]),
+        this.makeRPCCall('topay_callContract', [{
+          contractAddress,
+          functionName: 'symbol',
+          args: [],
+          caller: 'anonymous'
+        }]),
+        this.makeRPCCall('topay_callContract', [{
+          contractAddress,
+          functionName: 'decimals',
+          args: [],
+          caller: 'anonymous'
+        }]),
+        this.makeRPCCall('topay_callContract', [{
+          contractAddress,
+          functionName: 'totalSupply',
+          args: [],
+          caller: 'anonymous'
+        }])
+      ]);
       
       return {
-        name: info.name || 'Unknown Token',
-        symbol: info.symbol || 'UNK',
-        decimals: parseInt(info.decimals) || 18,
-        totalSupply: parseFloat(info.totalSupply) || 0
+        name: name.result || 'Unknown Token',
+        symbol: symbol.result || 'UNK',
+        decimals: parseInt(decimals.result) || 18,
+        totalSupply: parseFloat(totalSupply.result) || 0
       };
     } catch (error) {
       console.error('❌ Failed to get token info:', error);
@@ -143,12 +169,12 @@ class WalletContractUtils {
    */
   async approveTokens(contractAddress, owner, spender, amount) {
     try {
-      const result = await this.makeRPCCall('topay_approveToken', [
+      const result = await this.makeRPCCall('topay_callContract', [{
         contractAddress,
-        owner,
-        spender,
-        amount
-      ]);
+        functionName: 'approve',
+        args: [spender, amount],
+        caller: owner
+      }]);
       
       console.log(`✅ Token approval successful: ${result.transactionHash}`);
       return result;
@@ -168,13 +194,14 @@ class WalletContractUtils {
    */
   async getTokenAllowance(contractAddress, owner, spender) {
     try {
-      const allowance = await this.makeRPCCall('topay_getTokenAllowance', [
+      const result = await this.makeRPCCall('topay_callContract', [{
         contractAddress,
-        owner,
-        spender
-      ]);
+        functionName: 'allowance',
+        args: [owner, spender],
+        caller: 'anonymous'
+      }]);
       
-      return parseFloat(allowance) || 0;
+      return parseFloat(result.result) || 0;
     } catch (error) {
       console.error('❌ Failed to get token allowance:', error);
       // Return mock allowance for development
@@ -187,13 +214,12 @@ class WalletContractUtils {
    */
   async transferFromTokens(contractAddress, from, to, amount, spender) {
     try {
-      const result = await this.makeRPCCall('topay_transferFromToken', [
+      const result = await this.makeRPCCall('topay_callContract', [{
         contractAddress,
-        from,
-        to,
-        amount,
-        spender
-      ]);
+        functionName: 'transferFrom',
+        args: [from, to, amount],
+        caller: spender
+      }]);
       
       console.log(`✅ TransferFrom successful: ${result.transactionHash}`);
       return result;
@@ -213,12 +239,12 @@ class WalletContractUtils {
    */
   async mintTokens(contractAddress, to, amount, owner) {
     try {
-      const result = await this.makeRPCCall('topay_mintToken', [
+      const result = await this.makeRPCCall('topay_callContract', [{
         contractAddress,
-        to,
-        amount,
-        owner
-      ]);
+        functionName: 'mint',
+        args: [to, amount],
+        caller: owner
+      }]);
       
       console.log(`✅ Token minting successful: ${result.transactionHash}`);
       return result;
@@ -238,11 +264,12 @@ class WalletContractUtils {
    */
   async burnTokens(contractAddress, amount, owner) {
     try {
-      const result = await this.makeRPCCall('topay_burnToken', [
+      const result = await this.makeRPCCall('topay_callContract', [{
         contractAddress,
-        amount,
-        owner
-      ]);
+        functionName: 'burn',
+        args: [amount],
+        caller: owner
+      }]);
       
       console.log(`✅ Token burning successful: ${result.transactionHash}`);
       return result;
@@ -262,7 +289,7 @@ class WalletContractUtils {
    */
   async getDeployedContracts() {
     try {
-      const contracts = await this.makeRPCCall('topay_getDeployedContracts', []);
+      const contracts = await this.makeRPCCall('topay_getAllContracts', []);
       return contracts || [];
     } catch (error) {
       console.error('❌ Failed to get deployed contracts:', error);
@@ -347,7 +374,7 @@ class WalletContractUtils {
    */
   async getTransactionStatus(txHash) {
     try {
-      const status = await this.makeRPCCall('topay_getTransactionStatus', [txHash]);
+      const status = await this.makeRPCCall('topay_getTransaction', [txHash]);
       return status;
     } catch (error) {
       console.error('❌ Failed to get transaction status:', error);
@@ -366,7 +393,7 @@ class WalletContractUtils {
    */
   async getNetworkInfo() {
     try {
-      const info = await this.makeRPCCall('topay_getNetworkInfo', []);
+      const info = await this.makeRPCCall('topay_getChainInfo', []);
       return info;
     } catch (error) {
       console.error('❌ Failed to get network info:', error);

@@ -5,6 +5,7 @@
 @import "./styles/layout.css";
 @import "./styles/components.css";
 @import "./styles/utilities.css";
+@import "./styles/page.css";
 
 :root {
   --font-sans: var(--font-geist-sans);

@@ -8,6 +8,7 @@
 import { computeHash, fragmentData, reconstructData } from '@topayfoundation/topayz512';
 import { Block } from './block.js';
 import { Transaction } from './transaction.js';
+import { GovernanceSystems } from './governance-systems.js';
 
 export class Blockchain {
   constructor() {
@@ -19,6 +20,9 @@ export class Blockchain {
     this.validators = new Set(); // For future PoS
     this.networkNodes = new Set(); // For network simulation
     this.fragmentedBlocks = new Map(); // For mobile optimization
+    
+    // Initialize governance systems
+    this.governance = new GovernanceSystems(this);
   }
 
   /**
@@ -379,5 +383,91 @@ export class Blockchain {
     }
     
     return results;
+  }
+
+  // ==================== GOVERNANCE SYSTEM METHODS ====================
+
+  /**
+   * Request transaction reversal
+   */
+  async requestTransactionReversal(transactionId, requesterAddress, reason, evidence = null) {
+    return await this.governance.requestTransactionReversal(transactionId, requesterAddress, reason, evidence);
+  }
+
+  /**
+   * Approve transaction reversal
+   */
+  async approveTransactionReversal(transactionId, approverAddress) {
+    return await this.governance.approveTransactionReversal(transactionId, approverAddress);
+  }
+
+  /**
+   * Register voter for governance
+   */
+  async registerVoter(voterAddress) {
+    return await this.governance.registerVoter(voterAddress);
+  }
+
+  /**
+   * Create governance proposal
+   */
+  async createProposal(proposerAddress, title, description, options, votingPeriod) {
+    return await this.governance.createProposal(proposerAddress, title, description, options, votingPeriod);
+  }
+
+  /**
+   * Cast vote on proposal
+   */
+  async castVote(proposalId, voterAddress, optionId, weight = 1) {
+    return await this.governance.castVote(proposalId, voterAddress, optionId, weight);
+  }
+
+  /**
+   * Submit report for suspicious activity
+   */
+  async submitReport(reporterAddress, targetType, targetId, category, description, evidence = null) {
+    return await this.governance.submitReport(reporterAddress, targetType, targetId, category, description, evidence);
+  }
+
+  /**
+   * Moderate submitted report
+   */
+  async moderateReport(reportId, moderatorAddress, action, notes = '') {
+    return await this.governance.moderateReport(reportId, moderatorAddress, action, notes);
+  }
+
+  /**
+   * Check if address is blacklisted
+   */
+  isAddressBlacklisted(address) {
+    return this.governance.isAddressBlacklisted(address);
+  }
+
+  /**
+   * Check if transaction is flagged
+   */
+  isTransactionFlagged(transactionId) {
+    return this.governance.isTransactionFlagged(transactionId);
+  }
+
+  /**
+   * Get governance statistics
+   */
+  getGovernanceStats() {
+    return {
+      reversals: this.governance.getReversalStats(),
+      voting: this.governance.getVotingStats(),
+      reports: this.governance.getReportStats()
+    };
+  }
+
+  /**
+   * Get pending governance items
+   */
+  getPendingGovernanceItems() {
+    return {
+      reversals: this.governance.getPendingReversals(),
+      proposals: this.governance.getActiveProposals()
+    };
   }
 }
