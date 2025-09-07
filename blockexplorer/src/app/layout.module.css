@@ -1,0 +1,8 @@
+/* Styles scoped to app/layout.tsx */
+
+.bodyRoot {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Font variables are applied via next/font in layout.tsx body class, so keep this minimal. */

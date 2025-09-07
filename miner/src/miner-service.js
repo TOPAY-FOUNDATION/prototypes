@@ -1384,35 +1384,65 @@ class MinerService extends EventEmitter {
     }
 
     /**
-     * Save mined block data to persistent storage
+     * Save mined block data to persistent storage with comprehensive blockchain data
      */
     async saveMinedBlockData(block) {
         try {
             const baseDataDir = this.config.get('dataPath', path.join(__dirname, '..', 'data'));
-            const dataDir = path.join(baseDataDir, 'mined-blocks');
-            await fs.mkdir(dataDir, { recursive: true });
             
-            // Save individual block file
-            const blockFile = path.join(dataDir, `block-${block.index}.json`);
+            // Create all necessary directories
+            const directories = [
+                path.join(baseDataDir, 'mined-blocks'),
+                path.join(baseDataDir, 'blocks'),
+                path.join(baseDataDir, 'transactions'),
+                path.join(baseDataDir, 'backups')
+            ];
+            
+            for (const dir of directories) {
+                await fs.mkdir(dir, { recursive: true });
+            }
+            
+            // Save individual block file with enhanced data
+            const blockFile = path.join(baseDataDir, 'mined-blocks', `block-${block.index}.json`);
             const blockData = {
                 ...block.toJSON(),
                 minedAt: Date.now(),
                 minerAddress: this.minerAddress,
-                miningStats: { ...this.miningStats }
+                miningStats: { ...this.miningStats },
+                networkInfo: {
+                    peersConnected: this.peers.size,
+                    rpcConnected: this.rpcConnected,
+                    wsConnected: this.wsConnected
+                }
             };
             
             await fs.writeFile(blockFile, JSON.stringify(blockData, null, 2));
             
+            // Save block to main blocks directory
+            const mainBlockFile = path.join(baseDataDir, 'blocks', `block-${block.index}.json`);
+            await fs.writeFile(mainBlockFile, JSON.stringify(block.toJSON(), null, 2));
+            
+            // Save individual transactions
+            await this.saveBlockTransactions(block, baseDataDir);
+            
             // Update mining summary
             await this.updateMiningSummary(block);
             
-            // Save full blockchain state
-            await this.saveBlockchainState();
+            // Save complete blockchain state
+            await this.saveCompleteBlockchainData();
             
-            console.log(`💾 Block data saved: ${blockFile}`);
+            // Create automatic backup
+            await this.createAutomaticBackup(block.index);
+            
+            // Update blockchain index
+            await this.updateBlockchainIndex(block);
+            
+            console.log(`💾 Complete block data saved: ${blockFile}`);
+            console.log(`📊 Blockchain state updated with ${this.blockchain.chain.length} blocks`);
             
         } catch (error) {
             console.error('❌ Failed to save block data:', error.message);
+            throw error;
         }
     }
 
@@ -1471,30 +1501,213 @@ class MinerService extends EventEmitter {
     }
 
     /**
-     * Save complete blockchain state
+     * Save complete blockchain data with comprehensive information
      */
-    async saveBlockchainState() {
+    async saveCompleteBlockchainData() {
         try {
             const baseDataDir = this.config.get('dataPath', path.join(__dirname, '..', 'data'));
+            
+            // Save main blockchain state
             const stateFile = path.join(baseDataDir, 'blockchain-state.json');
             const blockchainData = {
                 chain: this.blockchain.chain.map(block => block.toJSON()),
                 mempool: this.blockchain.mempool.map(tx => tx.toJSON()),
                 difficulty: this.blockchain.difficulty,
                 miningReward: this.blockchain.miningReward,
-                lastUpdated: Date.now()
+                networkNodes: Array.from(this.blockchain.networkNodes || []),
+                validators: Array.from(this.blockchain.validators || []),
+                lastUpdated: Date.now(),
+                minerInfo: {
+                    minerAddress: this.minerAddress,
+                    validatorId: this.validatorId,
+                    miningStats: { ...this.miningStats }
+                }
             };
             
             await fs.writeFile(stateFile, JSON.stringify(blockchainData, null, 2));
-            console.log('💾 Blockchain state saved');
+            
+            // Save compressed blockchain for backup
+            const compressedFile = path.join(baseDataDir, 'blockchain-compressed.json');
+            const compressedData = {
+                chainLength: this.blockchain.chain.length,
+                latestBlockHash: this.blockchain.getLatestBlock().hash,
+                totalTransactions: this.blockchain.chain.reduce((total, block) => total + block.transactions.length, 0),
+                difficulty: this.blockchain.difficulty,
+                lastUpdated: Date.now()
+            };
+            
+            await fs.writeFile(compressedFile, JSON.stringify(compressedData, null, 2));
+            
+            // Save blockchain metadata
+            await this.saveBlockchainMetadata();
+            
+            console.log('💾 Complete blockchain data saved');
             
         } catch (error) {
-            console.error('❌ Failed to save blockchain state:', error.message);
+            console.error('❌ Failed to save complete blockchain data:', error.message);
+            throw error;
         }
     }
 
     /**
-     * Load blockchain state from storage
+     * Save individual block transactions
+     */
+    async saveBlockTransactions(block, baseDataDir) {
+        try {
+            const transactionsDir = path.join(baseDataDir, 'transactions');
+            
+            for (let i = 0; i < block.transactions.length; i++) {
+                const transaction = block.transactions[i];
+                const txFile = path.join(transactionsDir, `tx-${block.index}-${i}.json`);
+                const txData = {
+                    ...transaction.toJSON(),
+                    blockIndex: block.index,
+                    blockHash: block.hash,
+                    transactionIndex: i,
+                    savedAt: Date.now()
+                };
+                
+                await fs.writeFile(txFile, JSON.stringify(txData, null, 2));
+            }
+            
+        } catch (error) {
+            console.error('❌ Failed to save block transactions:', error.message);
+        }
+    }
+    
+    /**
+     * Create automatic backup after mining
+     */
+    async createAutomaticBackup(blockIndex) {
+        try {
+            const baseDataDir = this.config.get('dataPath', path.join(__dirname, '..', 'data'));
+            const backupsDir = path.join(baseDataDir, 'backups');
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const backupFile = path.join(backupsDir, `blockchain-backup-block-${blockIndex}-${timestamp}.json`);
+            
+            const backupData = {
+                blockIndex,
+                timestamp: Date.now(),
+                minerAddress: this.minerAddress,
+                blockchain: {
+                    chain: this.blockchain.chain.map(block => block.toJSON()),
+                    mempool: this.blockchain.mempool.map(tx => tx.toJSON()),
+                    difficulty: this.blockchain.difficulty,
+                    miningReward: this.blockchain.miningReward
+                },
+                miningStats: { ...this.miningStats },
+                validationStats: { ...this.validationStats }
+            };
+            
+            await fs.writeFile(backupFile, JSON.stringify(backupData, null, 2));
+            console.log(`📦 Automatic backup created: ${backupFile}`);
+            
+        } catch (error) {
+            console.error('❌ Failed to create automatic backup:', error.message);
+        }
+    }
+    
+    /**
+     * Update blockchain index for fast lookups
+     */
+    async updateBlockchainIndex(block) {
+        try {
+            const baseDataDir = this.config.get('dataPath', path.join(__dirname, '..', 'data'));
+            const indexFile = path.join(baseDataDir, 'blockchain-index.json');
+            
+            let index = {
+                blocks: {},
+                transactions: {},
+                addresses: {},
+                lastUpdated: Date.now()
+            };
+            
+            // Load existing index
+            try {
+                const existingData = await fs.readFile(indexFile, 'utf8');
+                index = JSON.parse(existingData);
+            } catch (error) {
+                // File doesn't exist, use default index
+            }
+            
+            // Update block index
+            index.blocks[block.index] = {
+                hash: block.hash,
+                timestamp: block.timestamp,
+                transactionCount: block.transactions.length,
+                nonce: block.nonce,
+                difficulty: block.difficulty
+            };
+            
+            // Update transaction and address indexes
+            block.transactions.forEach((tx, txIndex) => {
+                const txId = `${block.index}-${txIndex}`;
+                index.transactions[txId] = {
+                    from: tx.from,
+                    to: tx.to,
+                    amount: tx.amount,
+                    blockIndex: block.index,
+                    timestamp: tx.timestamp
+                };
+                
+                // Update address index
+                if (tx.from && tx.from !== 'SYSTEM') {
+                    if (!index.addresses[tx.from]) index.addresses[tx.from] = [];
+                    index.addresses[tx.from].push(txId);
+                }
+                
+                if (!index.addresses[tx.to]) index.addresses[tx.to] = [];
+                index.addresses[tx.to].push(txId);
+            });
+            
+            index.lastUpdated = Date.now();
+            await fs.writeFile(indexFile, JSON.stringify(index, null, 2));
+            
+        } catch (error) {
+            console.error('❌ Failed to update blockchain index:', error.message);
+        }
+    }
+    
+    /**
+     * Save blockchain metadata
+     */
+    async saveBlockchainMetadata() {
+        try {
+            const baseDataDir = this.config.get('dataPath', path.join(__dirname, '..', 'data'));
+            const metadataFile = path.join(baseDataDir, 'blockchain-metadata.json');
+            
+            const metadata = {
+                version: '1.0.0',
+                createdAt: this.startTime,
+                lastUpdated: Date.now(),
+                minerInfo: {
+                    minerAddress: this.minerAddress,
+                    validatorId: this.validatorId
+                },
+                chainStats: {
+                    totalBlocks: this.blockchain.chain.length,
+                    totalTransactions: this.blockchain.chain.reduce((total, block) => total + block.transactions.length, 0),
+                    currentDifficulty: this.blockchain.difficulty,
+                    miningReward: this.blockchain.miningReward
+                },
+                networkStats: {
+                    peersConnected: this.peers.size,
+                    rpcConnected: this.rpcConnected,
+                    wsConnected: this.wsConnected
+                },
+                miningStats: { ...this.miningStats },
+                validationStats: { ...this.validationStats }
+            };
+            
+            await fs.writeFile(metadataFile, JSON.stringify(metadata, null, 2));
+            
+        } catch (error) {
+            console.error('❌ Failed to save blockchain metadata:', error.message);
+        }
+    }
+
+    /**
+     * Load blockchain state from storage with enhanced recovery
      */
     async loadBlockchainState() {
         try {

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import styles from './report-button.module.css';
 
 interface ReportButtonProps {
   className?: string;
@@ -10,11 +11,11 @@ export default function ReportButton({ className = '' }: ReportButtonProps) {
   return (
     <Link 
       href="/report/transaction"
-      className={`btn btn-error ${className}`}
+      className={`${styles['report-button']} ${className}`}
     >
       <svg 
         xmlns="http://www.w3.org/2000/svg" 
-        className="h-5 w-5 mr-2" 
+        className={styles['report-icon']} 
         fill="none" 
         viewBox="0 0 24 24" 
         stroke="currentColor"

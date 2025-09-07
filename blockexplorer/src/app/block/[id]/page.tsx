@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -7,7 +6,7 @@ import { Block } from '@/lib/blockchain';
 import TransactionCard from '@/components/TransactionCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { formatHash, formatTimestamp, formatNumber, formatGas, copyToClipboard } from '@/lib/utils';
-
+import styles from './block-page.module.css';
 export default function BlockDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -15,9 +14,7 @@ export default function BlockDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState('');
-
   const blockId = params.id as string;
-
   useEffect(() => {
     const fetchBlock = async () => {
       try {
@@ -42,12 +39,10 @@ export default function BlockDetailPage() {
         setLoading(false);
       }
     };
-
     if (blockId) {
       fetchBlock();
     }
   }, [blockId]);
-
   const handleCopy = async (text: string, type: string) => {
     try {
       await copyToClipboard(text);
@@ -57,25 +52,23 @@ export default function BlockDetailPage() {
       console.error('Failed to copy:', error);
     }
   };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-page flex justify-center items-center">
+      <div className={styles.loadingContainer}>
         <LoadingSpinner size="lg" />
-        <span className="ml-3 text-secondary">Loading block details...</span>
+        <span className={styles.loadingText}>Loading block details...</span>
       </div>
     );
   }
-
   if (error || !block) {
     return (
-      <div className="min-h-screen bg-page flex justify-center items-center">
-        <div className="error-message text-center">
-          <h3 className="error-title">Block Not Found</h3>
-          <p className="error-text mb-4">{error}</p>
+      <div className={styles.errorContainer}>
+        <div className={styles.errorMessage}>
+          <h3 className={styles.errorTitle}>Block Not Found</h3>
+          <p className={styles.errorText}>{error}</p>
           <button
             onClick={() => router.back()}
-            className="btn btn-primary"
+            className={styles.backButton}
           >
             Go Back
           </button>
@@ -83,28 +76,27 @@ export default function BlockDetailPage() {
       </div>
     );
   }
-
   return (
-    <div className="min-h-screen bg-page">
+    <div className={styles.pageContainer}>
       {/* Header */}
-      <header className="header">
-        <div className="container py-6">
-          <div className="flex items-center justify-between">
+      <header className={styles.header}>
+        <div className={styles.headerContainer}>
+          <div className={styles.headerContent}>
             <div>
-              <Link href="/" className="text-primary hover:text-primary-dark text-sm font-medium">
+              <Link href="/" className={styles.backLink}>
                 ← Back to Explorer
               </Link>
-              <h1 className="text-2xl font-bold mt-2">
+              <h1 className={styles.pageTitle}>
                 Block #{formatNumber(block.number)}
               </h1>
             </div>
-            <div className="text-right">
-              <div className="text-sm text-secondary">Block Hash</div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-mono">{formatHash(block.hash, 12)}</span>
+            <div className={styles.hashContainer}>
+              <div className={styles.hashLabel}>Block Hash</div>
+              <div className={styles.hashContent}>
+                <span className={styles.hashText}>{formatHash(block.hash, 12)}</span>
                 <button
                   onClick={() => handleCopy(block.hash, 'hash')}
-                  className="btn btn-small"
+                  className={styles.copyButton}
                 >
                   {copied === 'hash' ? 'Copied!' : 'Copy'}
                 </button>
@@ -113,77 +105,73 @@ export default function BlockDetailPage() {
           </div>
         </div>
       </header>
-
       {/* Main Content */}
-      <main className="container py-8">
-        <div className="space-y-6">
+      <main className={styles.mainContent}>
+        <div className={styles.contentGrid}>
           {/* Block Details */}
-          <div className="card">
-            <div className="card-header">
-              <h2 className="card-title">Block Details</h2>
-            </div>
-            <div className="card-body">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="data-row">
-                  <span className="label">Block Number:</span>
-                  <span className="value">{formatNumber(block.number)}</span>
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>Block Details</h2>
+            <div className={styles.infoGrid}>
+              <div className={styles.infoGroup}>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Block Number:</span>
+                  <span className={styles.infoText}>{formatNumber(block.number)}</span>
                 </div>
-                <div className="data-row">
-                  <span className="label">Timestamp:</span>
-                  <span className="value timestamp">{formatTimestamp(block.timestamp)}</span>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Timestamp:</span>
+                  <span className={styles.infoText}>{formatTimestamp(block.timestamp)}</span>
                 </div>
-                <div className="data-row">
-                  <span className="label">Transactions:</span>
-                  <span className="value">{formatNumber(block.transactions.length)}</span>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Transactions:</span>
+                  <span className={styles.infoText}>{formatNumber(block.transactions.length)}</span>
                 </div>
-                <div className="data-row">
-                  <span className="label">Parent Hash:</span>
-                  <div className="flex items-center space-x-2">
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Parent Hash:</span>
+                  <div className={styles.infoValue}>
                     <Link 
                       href={`/block/${block.parentHash}`}
-                      className="text-primary hover:text-primary-dark font-mono"
+                      className={styles.hashLink}
                     >
                       {formatHash(block.parentHash)}
                     </Link>
                     <button
                       onClick={() => handleCopy(block.parentHash, 'parent')}
-                      className="btn btn-small"
+                      className={styles.copyButton}
                     >
                       {copied === 'parent' ? 'Copied!' : 'Copy'}
                     </button>
                   </div>
                 </div>
               </div>
-              <div className="space-y-3">
-                <div className="data-row">
-                  <span className="label">Miner:</span>
-                  <div className="flex items-center space-x-2">
+              <div className={styles.infoGroup}>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Miner:</span>
+                  <div className={styles.infoValue}>
                     <Link 
                       href={`/address/${block.miner}`}
-                      className="text-primary hover:text-primary-dark font-mono"
+                      className={styles.hashLink}
                     >
                       {formatHash(block.miner)}
                     </Link>
                     <button
                       onClick={() => handleCopy(block.miner, 'miner')}
-                      className="btn btn-small"
+                      className={styles.copyButton}
                     >
                       {copied === 'miner' ? 'Copied!' : 'Copy'}
                     </button>
                   </div>
                 </div>
-                <div className="data-row">
-                  <span className="label">Gas Used:</span>
-                  <span className="value">{formatGas(block.gasUsed)}</span>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Gas Used:</span>
+                  <span className={styles.infoText}>{formatGas(block.gasUsed)}</span>
                 </div>
-                <div className="data-row">
-                  <span className="label">Gas Limit:</span>
-                  <span className="value">{formatGas(block.gasLimit)}</span>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Gas Limit:</span>
+                  <span className={styles.infoText}>{formatGas(block.gasLimit)}</span>
                 </div>
-                <div className="data-row">
-                  <span className="label">Gas Usage:</span>
-                  <span className="value">
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Gas Usage:</span>
+                  <span className={styles.infoText}>
                     {((block.gasUsed / block.gasLimit) * 100).toFixed(2)}%
                   </span>
                 </div>
@@ -191,35 +179,30 @@ export default function BlockDetailPage() {
             </div>
             
             {/* Gas Usage Bar */}
-            <div className="mt-4">
-              <div className="flex justify-between text-sm text-secondary mb-1">
+            <div className={styles.gasUsageSection}>
+              <div className={styles.gasUsageHeader}>
                 <span>Gas Usage</span>
                 <span>{formatGas(block.gasUsed)} / {formatGas(block.gasLimit)}</span>
               </div>
-              <div className="progress-bar">
+              <div className={styles.gasUsageBar}>
                 <div 
-                  className="progress-bar-fill"
+                  className={styles.gasUsageFill} 
                   style={{ width: `${(block.gasUsed / block.gasLimit) * 100}%` }}
-                ></div>
+                />
               </div>
             </div>
-            </div>
           </div>
-
+          
           {/* Transactions */}
-          <div className="card">
-            <div className="card-header">
-              <h2 className="card-title">
-                Transactions ({formatNumber(block.transactions.length)})
-              </h2>
-            </div>
-            <div className="card-body">
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>Transactions</h2>
+            <div className={styles.transactionsSection}>
               {block.transactions.length === 0 ? (
-                <div className="empty-state">
-                  <p className="empty-state-description">No transactions in this block</p>
+                <div className={styles.noTransactions}>
+                  <p>No transactions in this block</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className={styles.transactionsList}>
                   {block.transactions.map((tx, index) => (
                     <TransactionCard key={tx.hash || index} transaction={tx} />
                   ))}

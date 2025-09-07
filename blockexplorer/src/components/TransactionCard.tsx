@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Transaction } from '@/lib/blockchain';
 import { formatHash, formatBalance, formatGwei, formatGas, copyToClipboard } from '@/lib/utils';
 import { useState } from 'react';
+import styles from './transaction-card.module.css';
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -24,111 +25,101 @@ export default function TransactionCard({ transaction, className = '' }: Transac
   };
 
   return (
-    <div className={`card ${className}`}>
-      <div className="card-header">
-        <h3 className="card-title">Transaction</h3>
-        <div className="flex items-center space-x-2">
-          <span className="text-secondary">Block #{transaction.blockNumber}</span>
+    <div className={`${styles['transaction-card']} ${className}`}>
+      <div className={styles['card-header']}>
+        <div className={styles['tx-info']}>
+          <div className={styles['tx-icon-container']}>
+            <svg className={styles['tx-icon']} fill="currentColor" viewBox="0 0 20 20">
+              <path d="M8 5a1 1 0 100 2h5.586l-1.293 1.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L13.586 5H8zM12 15a1 1 0 100-2H6.414l1.293-1.293a1 1 0 10-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L6.414 15H12z" />
+            </svg>
+          </div>
+          <div>
+            <Link 
+              href={`/tx/${transaction.hash}`}
+              className={styles['tx-hash-link']}
+            >
+              {formatHash(transaction.hash, 12)}
+            </Link>
+            <p className={styles['block-number']}>
+              Block #{transaction.blockNumber}
+            </p>
+          </div>
+        </div>
+        <div className={styles['tx-value-container']}>
+          <p className={styles['tx-value']}>
+            {formatBalance(transaction.value)} TPY
+          </p>
+          <p className={styles['tx-gas-price']}>
+            {formatGwei(transaction.gasPrice)}
+          </p>
         </div>
       </div>
       
-      <div className="card-body">
-        <div className="data-row">
-          <span className="label">Hash:</span>
-          <div className="flex items-center space-x-2">
-            <span className="hash">
-              {formatHash(transaction.hash, 12)}
-            </span>
-            <button
-              onClick={() => handleCopy(transaction.hash, 'hash')}
-              className="copy-button"
-            >
-              {copied === 'hash' ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
-        </div>
-        
-        <div className="data-row">
-          <span className="label">From:</span>
-          <div className="flex items-center space-x-2">
+      <div className={styles['details-grid']}>
+        <div>
+          <p className={styles['detail-label']}>From</p>
+          <div className={styles['address-container']}>
             <Link 
               href={`/address/${transaction.from}`}
-              className="address link"
+              className={styles['address-link']}
             >
               {formatHash(transaction.from)}
             </Link>
             <button
               onClick={() => handleCopy(transaction.from, 'from')}
-              className="copy-button"
+              className={styles['copy-button']}
+              title="Copy address"
             >
-              {copied === 'from' ? 'Copied!' : 'Copy'}
+              <svg className={styles['copy-icon']} fill="currentColor" viewBox="0 0 20 20">
+                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+              </svg>
             </button>
           </div>
         </div>
         
-        <div className="data-row">
-          <span className="label">To:</span>
-          <div className="flex items-center space-x-2">
+        <div>
+          <p className={styles['detail-label']}>To</p>
+          <div className={styles['address-container']}>
             <Link 
               href={`/address/${transaction.to}`}
-              className="address link"
+              className={styles['address-link']}
             >
               {formatHash(transaction.to)}
             </Link>
             <button
               onClick={() => handleCopy(transaction.to, 'to')}
-              className="copy-button"
+              className={styles['copy-button']}
+              title="Copy address"
             >
-              {copied === 'to' ? 'Copied!' : 'Copy'}
+              <svg className={styles['copy-icon']} fill="currentColor" viewBox="0 0 20 20">
+                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+              </svg>
             </button>
           </div>
         </div>
-        
-        <div className="data-row">
-          <span className="label">Value:</span>
-          <span className="value text-success font-semibold">
-            {formatBalance(transaction.value)} TPY
-          </span>
-        </div>
-        
-        <div className="data-row">
-          <span className="label">Gas Price:</span>
-          <span className="value">
-            {formatGwei(transaction.gasPrice)}
-          </span>
-        </div>
-        
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Gas Limit:</span>
-          <span className="text-sm text-gray-900 dark:text-white">
-            {formatGas(transaction.gas)}
-          </span>
-        </div>
-        
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Block Hash:</span>
-          <Link 
-            href={`/block/${transaction.blockHash}`}
-            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-mono"
-          >
-            {formatHash(transaction.blockHash)}
-          </Link>
-        </div>
       </div>
       
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between">
-        <Link 
-          href={`/tx/${transaction.hash}`}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-        >
-          View Details
-        </Link>
-        <Link 
-          href="/report/transaction" 
-          className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors"
-        >
-          Report Transaction
-        </Link>
+      <div className={styles['card-footer']}>
+        <div className={styles['footer-content']}>
+          <div className={styles['gas-info']}>
+            <span className={styles['gas-text']}>
+              Gas: {formatGas(transaction.gas)}
+            </span>
+            {copied && (
+              <span className={styles['copied-text']}>
+                Copied!
+              </span>
+            )}
+          </div>
+          <Link 
+            href={`/tx/${transaction.hash}`}
+            className={styles['details-link']}
+          >
+            View Details →
+          </Link>
+        </div>
       </div>
     </div>
   );

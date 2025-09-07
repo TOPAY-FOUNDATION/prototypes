@@ -1,0 +1,249 @@
+.pageContainer {
+  min-height: 100vh;
+  background-color: var(--bg-page);
+}
+
+.loadingContainer {
+  min-height: 100vh;
+  background-color: var(--bg-page);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loadingText {
+  margin-left: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.errorContainer {
+  min-height: 100vh;
+  background-color: var(--bg-page);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.errorBox {
+  background-color: var(--bg-error-light);
+  border: 1px solid var(--border-error);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  max-width: 28rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.errorTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-error);
+  margin-bottom: 0.5rem;
+}
+
+.errorText {
+  color: var(--text-error-secondary);
+  margin-bottom: 1rem;
+}
+
+.backButton {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-primary);
+  color: white;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.backButton:hover {
+  background-color: var(--bg-primary-dark);
+}
+
+.header {
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.headerContainer {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .headerContainer {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .headerContainer {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.backLink {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: var(--text-primary-dark);
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+  color: var(--text-primary);
+}
+
+.addressContainer {
+  text-align: right;
+}
+
+.addressLabel {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.addressContent {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.addressText {
+  font-size: 0.875rem;
+  font-family: monospace;
+  color: var(--text-primary);
+}
+
+.copyButton {
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--border-light);
+  background-color: transparent;
+  transition: background-color 0.2s;
+}
+
+.copyButton:hover {
+  background-color: var(--bg-hover);
+}
+
+.mainContent {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .mainContent {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mainContent {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.contentGrid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.card {
+  background-color: var(--bg-card);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.balanceCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.balanceLabel {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.balanceValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-success);
+}
+
+.balanceCurrency {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-left: 0.25rem;
+}
+
+.tabsContainer {
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 1.5rem;
+}
+
+.tabsList {
+  display: flex;
+  gap: 1rem;
+}
+
+.tabItem {
+  padding: 0.75rem 0;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.tabItemActive {
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-primary);
+}
+
+.transactionsList {
+  display: grid;
+  gap: 1rem;
+}
+
+.noTransactions {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}

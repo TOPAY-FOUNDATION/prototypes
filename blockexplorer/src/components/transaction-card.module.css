@@ -1,0 +1,268 @@
+/* Transaction Card Styles */
+
+.transaction-card {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  transition: box-shadow 0.2s;
+}
+
+.transaction-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+:global(.dark) .transaction-card {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.tx-icon-container {
+  width: 2rem;
+  height: 2rem;
+  background-color: #d1fae5;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:global(.dark) .tx-icon-container {
+  background-color: #065f46;
+}
+
+.tx-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #10b981;
+}
+
+:global(.dark) .tx-icon {
+  color: #34d399;
+}
+
+.tx-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tx-hash-link {
+  color: #2563eb;
+  font-family: monospace;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.tx-hash-link:hover {
+  color: #1d4ed8;
+}
+
+:global(.dark) .tx-hash-link {
+  color: #60a5fa;
+}
+
+:global(.dark) .tx-hash-link:hover {
+  color: #93c5fd;
+}
+
+.block-number {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+:global(.dark) .block-number {
+  color: #9ca3af;
+}
+
+.tx-value-container {
+  text-align: right;
+}
+
+.tx-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #10b981;
+}
+
+:global(.dark) .tx-value {
+  color: #34d399;
+}
+
+.tx-gas-price {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+:global(.dark) .tx-gas-price {
+  color: #9ca3af;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 768px) {
+  .details-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+:global(.dark) .detail-label {
+  color: #9ca3af;
+}
+
+.address-container {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.address-link {
+  color: #2563eb;
+  font-family: monospace;
+  font-size: 0.75rem;
+  text-decoration: none;
+}
+
+.address-link:hover {
+  color: #1d4ed8;
+}
+
+:global(.dark) .address-link {
+  color: #60a5fa;
+}
+
+:global(.dark) .address-link:hover {
+  color: #93c5fd;
+}
+
+.copy-button {
+  color: #9ca3af;
+  padding: 0.25rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.copy-button:hover {
+  color: #6b7280;
+}
+
+:global(.dark) .copy-button:hover {
+  color: #d1d5db;
+}
+
+.copy-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.card-footer {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
+:global(.dark) .card-footer {
+  border-top-color: #374151;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.gas-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.gas-text {
+  color: #6b7280;
+}
+
+:global(.dark) .gas-text {
+  color: #9ca3af;
+}
+
+.copied-text {
+  color: #10b981;
+  font-weight: 500;
+}
+
+:global(.dark) .copied-text {
+  color: #34d399;
+}
+
+.tx-status {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.status-success {
+  color: #10b981;
+}
+
+.status-pending {
+  color: #f59e0b;
+}
+
+.status-failed {
+  color: #ef4444;
+}
+
+:global(.dark) .status-success {
+  color: #34d399;
+}
+
+:global(.dark) .status-pending {
+  color: #fbbf24;
+}
+
+:global(.dark) .status-failed {
+  color: #f87171;
+}
+
+.details-link {
+  color: #2563eb;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.details-link:hover {
+  color: #1d4ed8;
+}
+
+:global(.dark) .details-link {
+  color: #60a5fa;
+}
+
+:global(.dark) .details-link:hover {
+  color: #93c5fd;
+}

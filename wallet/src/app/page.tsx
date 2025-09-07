@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { Wallet, Send, User, Settings as SettingsIcon, History as HistoryIcon } from 'lucide-react';
 import styles from './page.module.css';
 import WalletManager from './components/WalletManager';
-import TransactionForm from './components/TransactionForm';
-import CustomerSupport from './components/CustomerSupport';
-import SupportButton from './components/SupportButton';
-import Account from './components/Account';
-import Settings from './components/Settings';
-import TransactionHistory from './components/TransactionHistory';
+import TransactionForm from './components/transactions/TransactionForm';
+import CustomerSupport from './components/support/CustomerSupport';
+import SupportButton from './components/support/SupportButton';
+import Account from './components/account/Account';
+import Settings from './components/settings/Settings';
+import TransactionHistory from './components/transactions/TransactionHistory';
 import ConnectionStatus from './components/ConnectionStatus';
 
 export default function WalletApp() {

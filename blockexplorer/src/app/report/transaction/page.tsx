@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import styles from './report-page.module.css';
 
 export default function ReportTransactionPage() {
   const [loading, setLoading] = useState(false);
@@ -49,25 +50,25 @@ export default function ReportTransactionPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-page">
-        <div className="container py-12 max-w-2xl mx-auto">
-          <div className="card">
-            <div className="card-header">
-              <h1 className="card-title text-xl">Report Submitted</h1>
+      <div className={styles.pageContainer}>
+        <div className={styles.container}>
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <h1 className={styles.cardTitle}>Report Submitted</h1>
             </div>
-            <div className="card-body">
-              <div className="text-center py-8">
-                <div className="mb-4 text-green-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className={styles.cardBody}>
+              <div className={styles.successContainer}>
+                <div className={styles.successIcon}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold mb-2">Thank You!</h2>
-                <p className="text-secondary mb-6">Your report has been submitted successfully.</p>
-                <div className="flex justify-center space-x-4">
+                <h2 className={styles.successTitle}>Thank You!</h2>
+                <p className={styles.successMessage}>Your report has been submitted successfully.</p>
+                <div className={styles.successButtonContainer}>
                   <Link 
                     href="/"
-                    className="btn btn-primary"
+                    className={`${styles.button} ${styles.buttonPrimary}`}
                   >
                     Return to Home
                   </Link>
@@ -81,50 +82,42 @@ export default function ReportTransactionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-page">
-      <div className="container py-12 max-w-2xl mx-auto">
-        <div className="card">
-          <div className="card-header">
-            <h1 className="card-title text-xl">Report {reportType === 'transaction' ? 'Transaction' : 'Wallet Address'}</h1>
+    <div className={styles.pageContainer}>
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h1 className={styles.cardTitle}>Report {reportType === 'transaction' ? 'Transaction' : 'Wallet Address'}</h1>
           </div>
-          <div className="card-body">
+          <div className={styles.cardBody}>
             <form onSubmit={handleSubmit}>
               {/* Report Type Picker */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-3">What would you like to report?</label>
-                <div className="flex space-x-4">
+              <div className={styles.formGroup}>
+                <label className={styles.formLabelGroup}>What would you like to report?</label>
+                <div className={styles.buttonGroup}>
                   <button
                     type="button"
                     onClick={() => handleReportTypeChange('transaction')}
-                    className={`flex-1 p-3 border rounded-md text-center transition-colors ${
-                      reportType === 'transaction'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                        : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600'
-                    }`}
+                    className={`${styles.reportTypeButton} ${reportType === 'transaction' ? styles.reportTypeButtonActive : styles.reportTypeButtonInactive}`}
                   >
-                    <div className="font-medium">Transaction</div>
-                    <div className="text-sm text-secondary mt-1">Report a suspicious transaction</div>
+                    <div className={styles.reportTypeTitle}>Transaction</div>
+                    <div className={styles.reportTypeDescription}>Report a suspicious transaction</div>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleReportTypeChange('wallet')}
-                    className={`flex-1 p-3 border rounded-md text-center transition-colors ${
-                      reportType === 'wallet'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                        : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600'
-                    }`}
+                    className={`${styles.reportTypeButton} ${reportType === 'wallet' ? styles.reportTypeButtonActive : styles.reportTypeButtonInactive}`}
                   >
-                    <div className="font-medium">Wallet Address</div>
-                    <div className="text-sm text-secondary mt-1">Report a suspicious wallet</div>
+                    <div className={styles.reportTypeTitle}>Wallet Address</div>
+                    <div className={styles.reportTypeDescription}>Report a suspicious wallet</div>
                   </button>
                 </div>
               </div>
 
               {/* Dynamic Input Field */}
-              <div className="mb-4">
+              <div className={styles.formGroup}>
                 {reportType === 'transaction' ? (
                   <>
-                    <label htmlFor="transactionHash" className="block text-sm font-medium mb-1">Transaction Hash</label>
+                    <label htmlFor="transactionHash" className={styles.formLabel}>Transaction Hash</label>
                     <input
                       type="text"
                       id="transactionHash"
@@ -132,13 +125,13 @@ export default function ReportTransactionPage() {
                       value={formData.transactionHash}
                       onChange={handleChange}
                       required
-                      className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 font-mono"
+                      className={styles.input}
                       placeholder="Enter the transaction hash"
                     />
                   </>
                 ) : (
                   <>
-                    <label htmlFor="walletAddress" className="block text-sm font-medium mb-1">Wallet Address</label>
+                    <label htmlFor="walletAddress" className={styles.formLabel}>Wallet Address</label>
                     <input
                       type="text"
                       id="walletAddress"
@@ -146,22 +139,22 @@ export default function ReportTransactionPage() {
                       value={formData.walletAddress}
                       onChange={handleChange}
                       required
-                      className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 font-mono"
+                      className={styles.input}
                       placeholder="Enter the wallet address"
                     />
                   </>
                 )}
               </div>
               
-              <div className="mb-4">
-                <label htmlFor="reason" className="block text-sm font-medium mb-1">Reason for Report</label>
+              <div className={styles.formGroup}>
+                <label htmlFor="reason" className={styles.formLabel}>Reason for Report</label>
                 <select
                   id="reason"
                   name="reason"
                   value={formData.reason}
                   onChange={handleChange}
                   required
-                  className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900"
+                  className={styles.select}
                 >
                   <option value="">Select a reason</option>
                   <option value="suspicious">Suspicious Activity</option>
@@ -173,8 +166,8 @@ export default function ReportTransactionPage() {
                 </select>
               </div>
               
-              <div className="mb-4">
-                <label htmlFor="description" className="block text-sm font-medium mb-1">Description</label>
+              <div className={styles.formGroup}>
+                <label htmlFor="description" className={styles.formLabel}>Description</label>
                 <textarea
                   id="description"
                   name="description"
@@ -182,40 +175,40 @@ export default function ReportTransactionPage() {
                   onChange={handleChange}
                   required
                   rows={4}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900"
+                  className={styles.textarea}
                   placeholder={`Please provide details about why you are reporting this ${reportType === 'transaction' ? 'transaction' : 'wallet address'}`}
                 ></textarea>
               </div>
               
-              <div className="mb-6">
-                <label htmlFor="email" className="block text-sm font-medium mb-1">Your Email (optional)</label>
+              <div className={styles.formGroup}>
+                <label htmlFor="email" className={styles.formLabel}>Your Email (optional)</label>
                 <input
                   type="email"
                   id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900"
+                  className={styles.input}
                   placeholder="For follow-up information"
                 />
               </div>
               
-              <div className="flex justify-between">
+              <div className={styles.buttonContainer}>
                 <Link 
                   href="/"
-                  className="btn btn-secondary"
+                  className={`${styles.button} ${styles.buttonSecondary}`}
                 >
                   Cancel
                 </Link>
                 <button
                   type="submit"
                   disabled={loading || (!formData.transactionHash && !formData.walletAddress) || !formData.reason || !formData.description}
-                  className="btn btn-primary"
+                  className={`${styles.button} ${styles.buttonPrimary}`}
                 >
                   {loading ? (
                     <>
-                      <LoadingSpinner size="sm" />
-                      <span className="ml-2">Submitting...</span>
+                      <span className={styles.loadingSpinner}><LoadingSpinner size="sm" /></span>
+                      <span className={styles.loadingText}>Submitting...</span>
                     </>
                   ) : 'Submit Report'}
                 </button>
