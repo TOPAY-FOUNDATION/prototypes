@@ -1,425 +1,559 @@
-/* TOPAY Wallet - Welcome Complete Component Styles */
+/* WelcomeComplete component styles */
 
 .container {
-  background: var(--surface);
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-2xl);
-  padding: var(--spacing-3xl);
-  text-align: center;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--card-bg);
   border: 1px solid var(--border);
-  animation: slideUp 0.6s ease-out;
-  position: relative;
-  overflow: hidden;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s ease-out;
+  text-align: center;
 }
 
-.container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, var(--success-50) 0%, var(--primary-50) 100%);
-  opacity: 0.5;
-  pointer-events: none;
+.dark .container {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.content {
-  position: relative;
-  z-index: 1;
+.iconContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
 }
 
-/* Success Icon */
 .successIcon {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto var(--spacing-xl);
-  background: linear-gradient(135deg, var(--success-500), var(--success-600));
-  color: var(--text-inverse);
-  border-radius: var(--radius-full);
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto 1.5rem;
+  padding: 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 50%;
+  color: var(--success);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-lg);
-  animation: pulse 2s ease-in-out infinite;
+  animation: successPulse 0.6s ease-out;
 }
 
-/* Title and Description */
 .title {
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-md);
-  background: linear-gradient(135deg, var(--success-600), var(--primary-600));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 0.75rem;
 }
 
-.description {
-  font-size: var(--font-size-lg);
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-2xl);
-  line-height: var(--line-height-relaxed);
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
+.subtitle {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
 }
 
-/* Wallet Info Section */
 .walletInfo {
-  background: var(--background-secondary);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-2xl);
-  margin-bottom: var(--spacing-2xl);
+  background: var(--surface);
   border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
   text-align: left;
 }
 
-.walletInfoTitle {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-lg);
+.walletCard {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.walletHeader {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.walletAddress {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.walletAddress label {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.address {
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  background: var(--surface);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.walletStats {
+  display: flex;
+  gap: 2rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.statValue {
+  font-size: 1rem;
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.walletInfoTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .walletInfoIcon {
-  background: var(--primary-100);
-  color: var(--primary-600);
-  padding: var(--spacing-xs);
-  border-radius: var(--radius-md);
-}
-
-.infoGrid {
-  display: grid;
-  gap: var(--spacing-lg);
+  color: var(--primary);
 }
 
 .infoItem {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.infoItem:last-child {
+  border-bottom: none;
 }
 
 .infoLabel {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.875rem;
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .infoValue {
+  font-size: 0.875rem;
+  color: var(--foreground);
+  font-weight: 600;
   font-family: var(--font-geist-mono);
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-  background: var(--surface);
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  word-break: break-all;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.address {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-medium);
-}
-
-/* Security Features */
-.securityFeatures {
+.features {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-2xl);
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 
-.securityCard {
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.feature {
+  padding: 1rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
+  border-radius: 0.5rem;
   text-align: center;
-  transition: all var(--transition-fast);
-  position: relative;
-  overflow: hidden;
+  transition: all 0.2s ease;
 }
 
-.securityCard:hover {
-  border-color: var(--primary-300);
-  box-shadow: var(--shadow-md);
+.feature:hover {
+  background: var(--border);
   transform: translateY(-2px);
 }
 
-.securityCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(14, 165, 233, 0.1), transparent);
-  transition: left 0.5s;
-}
-
-.securityCard:hover::before {
-  left: 100%;
-}
-
-.securityIcon {
-  font-size: var(--font-size-3xl);
-  margin-bottom: var(--spacing-md);
-  position: relative;
-  z-index: 1;
-}
-
-.securityTitle {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-sm);
-  position: relative;
-  z-index: 1;
-}
-
-.securityDescription {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  line-height: var(--line-height-relaxed);
-  position: relative;
-  z-index: 1;
-}
-
-/* Action Buttons */
-.actions {
-  display: flex;
-  gap: var(--spacing-md);
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.primaryButton {
-  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
-  color: var(--text-inverse);
-  border: none;
-  padding: var(--spacing-md) var(--spacing-2xl);
-  border-radius: var(--radius-lg);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  box-shadow: var(--shadow-md);
-}
-
-.primaryButton:hover {
-  background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-
-.primaryButton:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-md);
-}
-
-.secondaryButton {
-  background: var(--surface);
-  color: var(--text-primary);
-  border: 1px solid var(--border-secondary);
-  padding: var(--spacing-md) var(--spacing-xl);
-  border-radius: var(--radius-lg);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.secondaryButton:hover {
-  background: var(--surface-hover);
-  border-color: var(--text-tertiary);
-  transform: translateY(-1px);
-}
-
-/* Important Notice */
-.importantNotice {
-  background: var(--warning-50);
-  border: 1px solid var(--warning-200);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
-  margin-bottom: var(--spacing-2xl);
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-sm);
+.featureContent {
   text-align: left;
 }
 
-.noticeIcon {
-  color: var(--warning-600);
-  flex-shrink: 0;
-  margin-top: 2px;
+.featureContent h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 0.5rem;
 }
 
-.noticeContent {
-  flex: 1;
+.featureContent p {
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
-.noticeTitle {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  color: var(--warning-800);
-  margin-bottom: var(--spacing-xs);
+.featureIcon {
+  width: 2rem;
+  height: 2rem;
+  margin: 0 auto 0.75rem;
+  color: var(--primary);
 }
 
-.noticeText {
-  font-size: var(--font-size-sm);
-  color: var(--warning-700);
-  line-height: var(--line-height-relaxed);
+.featureTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 0.25rem;
+}
+
+.featureDescription {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.button {
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.buttonPrimary {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.buttonPrimary:hover {
+  background: var(--primary-600);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.buttonSecondary {
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+
+.buttonSecondary:hover {
+  background: var(--border);
+  border-color: var(--primary);
+}
+
+.buttonIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.tips {
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.tipsTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tipsIcon {
+  color: var(--primary);
+}
+
+.tipsList {
+  list-style: none;
+  padding: 0;
   margin: 0;
+}
+
+.tipItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  line-height: 1.5;
+}
+
+.tipItem:last-child {
+  margin-bottom: 0;
+}
+
+.tipIcon {
+  color: var(--success);
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.footerText {
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.footerLink {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footerLink:hover {
+  text-decoration: underline;
 }
 
 /* Animations */
 @keyframes slideUp {
   from {
-    transform: translateY(30px);
     opacity: 0;
+    transform: translateY(20px);
   }
   to {
+    opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
     opacity: 1;
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
+/* Responsive design */
+@media (max-width: 640px) {
   .container {
-    padding: var(--spacing-2xl);
-    border-radius: var(--radius-xl);
+    padding: 1.5rem;
   }
-
-  .title {
-    font-size: var(--font-size-2xl);
-  }
-
-  .description {
-    font-size: var(--font-size-base);
-  }
-
-  .walletInfo {
-    padding: var(--spacing-lg);
-  }
-
-  .securityFeatures {
+  
+  .features {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
-
-  .actions {
-    flex-direction: column;
-    align-items: stretch;
+  
+  .walletInfo {
+    padding: 1rem;
   }
-
-  .primaryButton,
-  .secondaryButton {
-    justify-content: center;
+  
+  .infoValue {
+    max-width: 150px;
   }
 }
 
 @media (max-width: 480px) {
   .container {
-    padding: var(--spacing-lg);
+    padding: 1rem;
   }
-
+  
   .successIcon {
-    width: 60px;
-    height: 60px;
+    width: 4rem;
+    height: 4rem;
   }
-
+  
   .title {
-    font-size: var(--font-size-xl);
+    font-size: 1.5rem;
   }
-
-  .walletInfoTitle {
-    font-size: var(--font-size-lg);
+  
+  .subtitle {
+    font-size: 0.875rem;
   }
-
-  .securityCard {
-    padding: var(--spacing-md);
+  
+  .button {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
   }
-
-  .securityIcon {
-    font-size: var(--font-size-2xl);
-  }
-
-  .primaryButton {
-    padding: var(--spacing-sm) var(--spacing-lg);
-    font-size: var(--font-size-base);
-  }
-
-  .secondaryButton {
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: var(--font-size-sm);
+  
+  .infoValue {
+    max-width: 120px;
   }
 }
 
-/* High Contrast Mode */
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .container,
+  .successIcon {
+    animation: none;
+  }
+}
+
+/* High contrast mode */
 @media (prefers-contrast: high) {
   .container {
     border-width: 2px;
   }
-
-  .walletInfo,
-  .securityCard,
-  .importantNotice {
+  
+  .button {
     border-width: 2px;
   }
-
-  .infoValue {
+  
+  .walletInfo,
+  .tips {
     border-width: 2px;
   }
 }
 
-/* Print Styles */
-@media print {
-  .container {
-    box-shadow: none;
-    border: 1px solid #ccc;
-  }
+.securityReminder {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
 
-  .container::before {
-    display: none;
-  }
+.securityReminder h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+}
 
-  .successIcon {
-    background: #ccc;
-    color: white;
-  }
+.reminderList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
-  .title {
-    color: black;
-    -webkit-text-fill-color: black;
-  }
+.reminderList li {
+  padding: 0.5rem 0;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
 
-  .actions {
-    display: none;
-  }
+.nextSteps {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
 
-  .securityCard {
-    break-inside: avoid;
-  }
+.nextSteps h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+}
+
+.stepsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+
+.stepNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.stepContent {
+  flex: 1;
+}
+
+.stepContent h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 0.5rem;
+}
+
+.stepContent p {
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.completeButton {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.completeButton:hover {
+  background: var(--primary-600);
 }

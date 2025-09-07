@@ -9,9 +9,21 @@ import { computeHash, fragmentData, reconstructData } from '@topayfoundation/top
 import { Block } from './block.js';
 import { Transaction } from './transaction.js';
 import { GovernanceSystems } from './governance-systems.js';
+import { WalletManager } from '../wallet/WalletManager.js';
 
 export class Blockchain {
-  constructor() {
+  constructor(options = {}) {
+    // Genesis wallet configuration
+    this.genesisBalance = options.genesisBalance || 1000000;
+    this.genesisWalletAddress = options.genesisWalletAddress || null;
+    
+    // Initialize wallet manager
+    this.walletManager = new WalletManager({
+      dataPath: options.walletDataPath || './data/wallets',
+      autoCreateGenesis: options.autoCreateGenesis !== false,
+      genesisBalance: this.genesisBalance
+    });
+    
     this.chain = [this.createGenesisBlock()];
     this.difficulty = 2;
     this.pendingTransactions = [];
@@ -23,16 +35,62 @@ export class Blockchain {
     
     // Initialize governance systems
     this.governance = new GovernanceSystems(this);
+    
+    // Initialize genesis wallet system
+    this.initializeGenesisWallet();
   }
 
   /**
-   * Create the genesis block
+   * Initialize genesis wallet system
+   */
+  async initializeGenesisWallet() {
+    try {
+      await this.walletManager.initialize();
+      
+      const genesisWallet = this.walletManager.getGenesisWallet();
+      if (genesisWallet) {
+        this.genesisWalletAddress = genesisWallet.address;
+        console.log(`👑 Genesis wallet initialized: ${this.genesisWalletAddress}`);
+        console.log(`💰 Genesis balance: ${this.genesisBalance} TOPAY`);
+      }
+    } catch (error) {
+      console.error('❌ Failed to initialize genesis wallet:', error.message);
+    }
+  }
+
+  /**
+   * Create the genesis block with pre-allocated funds
    */
   createGenesisBlock() {
-    const genesisBlock = new Block(Date.now(), [], '0');
+    const genesisTransactions = [];
+    
+    // Create genesis funding transaction if genesis wallet exists
+    if (this.genesisWalletAddress && this.genesisBalance > 0) {
+      const genesisTransaction = new Transaction(
+        'GENESIS', // Special genesis sender
+        this.genesisWalletAddress,
+        this.genesisBalance,
+        'Genesis block pre-allocation'
+      );
+      
+      // Set special genesis transaction properties
+      genesisTransaction.timestamp = Date.now();
+      genesisTransaction.signature = 'GENESIS_SIGNATURE';
+      genesisTransaction.id = computeHash(`GENESIS${this.genesisWalletAddress}${this.genesisBalance}`);
+      
+      genesisTransactions.push(genesisTransaction);
+      
+      console.log(`🎯 Genesis block will pre-allocate ${this.genesisBalance} TOPAY to ${this.genesisWalletAddress}`);
+    }
+    
+    const genesisBlock = new Block(Date.now(), genesisTransactions, '0');
     genesisBlock.index = 0;
     genesisBlock.hash = '000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000';
-    genesisBlock.merkleRoot = '0'.repeat(128);
+    genesisBlock.merkleRoot = genesisTransactions.length > 0 ? 
+      computeHash(JSON.stringify(genesisTransactions)) : 
+      '0'.repeat(128);
+    
+    console.log(`🏗️ Genesis block created with ${genesisTransactions.length} pre-allocation transactions`);
     return genesisBlock;
   }
 
@@ -162,23 +220,72 @@ export class Blockchain {
   }
 
   /**
-   * Get balance for an address
+   * Get balance for address (including genesis pre-allocation)
    */
   getBalance(address) {
     let balance = 0;
 
     for (const block of this.chain) {
       for (const transaction of block.transactions) {
-        if (transaction.from === address) {
+        // Handle genesis transactions (from 'GENESIS')
+        if (transaction.from === 'GENESIS' && transaction.to === address) {
+          balance += transaction.amount;
+        }
+        // Handle regular transactions
+        else if (transaction.from === address) {
           balance -= transaction.amount;
         }
-        if (transaction.to === address) {
+        else if (transaction.to === address) {
           balance += transaction.amount;
         }
       }
     }
 
     return balance;
+  }
+  
+  /**
+   * Get wallet manager instance
+   */
+  getWalletManager() {
+    return this.walletManager;
+  }
+  
+  /**
+   * Get genesis wallet
+   */
+  getGenesisWallet() {
+    return this.walletManager.getGenesisWallet();
+  }
+  
+  /**
+   * Create a new wallet
+   */
+  async createWallet(options = {}) {
+    return await this.walletManager.createWallet(options);
+  }
+  
+  /**
+   * Get wallet by address
+   */
+  getWallet(address) {
+    return this.walletManager.getWallet(address);
+  }
+  
+  /**
+   * Fund wallet from genesis
+   */
+  async fundWalletFromGenesis(targetAddress, amount) {
+    const transaction = await this.walletManager.fundWalletFromGenesis(targetAddress, amount);
+    await this.addTransaction(transaction);
+    return transaction;
+  }
+  
+  /**
+   * Get all wallet balances
+   */
+  getWalletBalances() {
+    return this.walletManager.getWalletBalances(this);
   }
 
   /**

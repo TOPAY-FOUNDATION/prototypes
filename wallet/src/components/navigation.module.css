@@ -1,0 +1,253 @@
+/* Navigation component styles matching block explorer design */
+
+.nav-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+}
+
+.nav-logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.nav-logo-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--foreground);
+  transition: opacity 0.2s ease;
+}
+
+.nav-logo-link:hover {
+  opacity: 0.8;
+}
+
+.nav-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: linear-gradient(135deg, var(--primary), var(--primary-600));
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.nav-logo-text {
+  color: white;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.nav-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--foreground);
+}
+
+.nav-menu-desktop {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.nav-links {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: var(--primary);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.nav-link-active {
+  color: var(--primary);
+  background: rgba(59, 130, 246, 0.12);
+  font-weight: 600;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-menu-mobile {
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-menu-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-menu-button:hover {
+  background: var(--border);
+  border-color: var(--primary);
+}
+
+.nav-menu-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.nav-mobile-menu {
+  border-top: 1px solid var(--border);
+  padding: 1rem 0;
+  background: var(--surface);
+}
+
+.nav-mobile-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.nav-mobile-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.nav-mobile-link:hover {
+  color: var(--primary);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.nav-mobile-link-active {
+  color: var(--primary);
+  background: rgba(59, 130, 246, 0.12);
+  font-weight: 600;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 768px) {
+  .nav-menu-desktop {
+    display: none;
+  }
+  
+  .nav-menu-mobile {
+    display: flex;
+  }
+  
+  .nav-title {
+    font-size: 1.125rem;
+  }
+  
+  .nav-logo {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+  
+  .nav-logo-text {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-container {
+    padding: 0.75rem 0;
+  }
+  
+  .nav-title {
+    font-size: 1rem;
+  }
+  
+  .nav-logo {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .nav-logo-text {
+    font-size: 1rem;
+  }
+  
+  .nav-mobile-menu {
+    padding: 0.75rem 0;
+  }
+}
+
+/* Animation for mobile menu */
+.nav-mobile-menu {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Focus styles for accessibility */
+.nav-link:focus-visible,
+.nav-mobile-link:focus-visible,
+.nav-menu-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Dark mode adjustments */
+.dark .nav-header {
+  background: rgba(11, 18, 32, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .nav-logo {
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+}
+
+.dark .nav-mobile-menu {
+  background: rgba(11, 18, 32, 0.95);
+}

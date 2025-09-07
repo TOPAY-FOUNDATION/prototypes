@@ -115,6 +115,7 @@ class BlockchainRPCServer {
           'topay_sendRawTransaction',
           'topay_getMempool',
           'topay_mine',
+          'topay_submitBlock',
           'topay_getChainInfo',
           'topay_validateChain',
           'topay_getTransactionHistory',
@@ -312,6 +313,73 @@ class BlockchainRPCServer {
           };
         } finally {
           this.isMining = false;
+        }
+
+      case 'topay_submitBlock':
+        const blockData = params[0];
+        if (!blockData) throw new Error('Block data required');
+        
+        console.log(`📥 Received mined block #${blockData.index} from external miner`);
+        
+        try {
+          // Validate the submitted block
+          if (!blockData.hash || !blockData.previousHash || !blockData.transactions) {
+            throw new Error('Invalid block structure');
+          }
+          
+          // Check if block already exists
+          const existingBlock = this.blockchain.getBlock(blockData.index);
+          if (existingBlock) {
+            console.log(`⚠️ Block #${blockData.index} already exists`);
+            return { success: false, message: 'Block already exists' };
+          }
+          
+          // Validate block connects to chain
+          const latestBlock = this.blockchain.getLatestBlock();
+          if (blockData.index !== latestBlock.index + 1) {
+            throw new Error(`Invalid block index. Expected ${latestBlock.index + 1}, got ${blockData.index}`);
+          }
+          
+          if (blockData.previousHash !== latestBlock.hash) {
+            throw new Error('Block does not connect to latest block');
+          }
+          
+          // Import the block into blockchain
+          const { Block } = await import('./blockchain/block.js');
+          const newBlock = Block.fromJSON(blockData);
+          
+          // Add block to chain
+          this.blockchain.chain.push(newBlock);
+          
+          // Remove mined transactions from mempool
+          for (const tx of blockData.transactions) {
+            const txIndex = this.blockchain.mempool.findIndex(mempoolTx => 
+              mempoolTx.id === tx.id || mempoolTx.hash === tx.hash
+            );
+            if (txIndex !== -1) {
+              this.blockchain.mempool.splice(txIndex, 1);
+            }
+          }
+          
+          // Save blockchain
+          await this.persistence.saveBlockchain(this.blockchain);
+          
+          console.log(`✅ Block #${blockData.index} successfully added to blockchain`);
+          console.log(`📊 Chain now has ${this.blockchain.chain.length} blocks`);
+          
+          return {
+            success: true,
+            message: 'Block successfully added to blockchain',
+            blockIndex: blockData.index,
+            chainLength: this.blockchain.chain.length
+          };
+          
+        } catch (error) {
+          console.error(`❌ Failed to submit block #${blockData.index}:`, error.message);
+          return {
+            success: false,
+            message: error.message
+          };
         }
 
       case 'topay_getChainInfo':

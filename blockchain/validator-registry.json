@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2025-08-16T17:51:19.250Z",
+  "lastUpdated": "2025-09-07T22:53:47.890Z",
   "totalValidators": 6,
   "validators": {
     "TOPAY-VAL-::1-8547-MDTCGBJG": {
@@ -123,16 +123,16 @@
         "version": "1.0.0",
         "startTime": "2025-08-14T18:20:31.841Z",
         "nodeType": "validator",
-        "lastUpdate": "2025-08-16T17:51:19.246Z",
+        "lastUpdate": "2025-09-07T22:53:47.889Z",
         "blockHeight": 2,
-        "lastValidation": "2025-08-16T17:50:29.016Z",
-        "uptime": 270088
+        "lastValidation": "2025-09-07T22:53:16.485Z",
+        "uptime": 13083509
       },
       "status": "offline",
       "registeredAt": "2025-08-14T18:20:31.848Z",
-      "lastSeen": "2025-08-16T17:51:19.250Z",
+      "lastSeen": "2025-09-07T22:53:47.890Z",
       "healthScore": 0,
-      "requestCount": 1138
+      "requestCount": 2052
     }
   }
 }

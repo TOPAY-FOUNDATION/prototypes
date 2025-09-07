@@ -792,6 +792,8 @@ class MinerService extends EventEmitter {
         const rpcEndpoint = rpcUrl.endsWith('/rpc') ? rpcUrl : `${rpcUrl}/rpc`;
         
         try {
+            console.log('🔄 Starting comprehensive blockchain synchronization...');
+            
             const response = await fetch(rpcEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -806,12 +808,24 @@ class MinerService extends EventEmitter {
             if (response.ok) {
                 const data = await response.json();
                 if (data.result && data.result.blockCount) {
+                    console.log('📊 Network chain info:', data.result);
+                    
                     // Compare with local blockchain and sync if needed
                     const remoteBlockCount = data.result.blockCount;
-                    if (remoteBlockCount > this.blockchain.chain.length) {
-                        console.log(`🔄 Syncing blockchain (${remoteBlockCount - this.blockchain.chain.length} new blocks)`);
-                        // Implement sync logic here
+                    const localBlockCount = this.blockchain.chain.length;
+                    
+                    if (remoteBlockCount > localBlockCount) {
+                        console.log(`📥 Syncing ${remoteBlockCount - localBlockCount} missing blocks...`);
+                        await this.downloadAndSaveCompleteBlockchain(remoteBlockCount - 1);
+                    } else {
+                        console.log('✅ Local blockchain is up to date');
                     }
+                    
+                    // Sync mempool transactions
+                    await this.syncMempoolFromNetwork(rpcEndpoint);
+                    
+                    // Update sync statistics
+                    await this.updateSyncStats(data.result);
                 }
                 
                 // Update peer status
@@ -821,6 +835,8 @@ class MinerService extends EventEmitter {
                     connected: true,
                     lastSeen: Date.now()
                 });
+                
+                console.log('✅ Comprehensive blockchain synchronization completed');
             }
         } catch (error) {
             console.warn('⚠️ Sync failed:', error.message);
@@ -830,6 +846,9 @@ class MinerService extends EventEmitter {
             if (peer) {
                 peer.connected = false;
             }
+            
+            // Try alternative sync methods
+            await this.attemptAlternativeSync();
         }
     }
 
@@ -1338,6 +1357,9 @@ class MinerService extends EventEmitter {
             // Save blockchain data
             await this.saveMinedBlockData(latestBlock);
             
+            // Broadcast mined block to blockchain network
+            await this.broadcastMinedBlockToNetwork(latestBlock);
+            
             console.log(`✅ Block #${latestBlock.index} mined successfully!`);
             console.log(`   Mining time: ${miningTime}ms`);
             console.log(`   Hash rate: ${this.miningStats.hashRate.toFixed(2)} H/s`);
@@ -1703,6 +1725,328 @@ class MinerService extends EventEmitter {
             
         } catch (error) {
             console.error('❌ Failed to save blockchain metadata:', error.message);
+        }
+    }
+
+    /**
+     * Download and save complete blockchain from network
+     */
+    async downloadAndSaveCompleteBlockchain(targetHeight) {
+        try {
+            const rpcUrl = this.config.get('rpcUrl', 'http://localhost:8545');
+            const rpcEndpoint = rpcUrl.endsWith('/rpc') ? rpcUrl : `${rpcUrl}/rpc`;
+            const localHeight = this.blockchain.chain.length - 1;
+            
+            for (let blockIndex = localHeight + 1; blockIndex <= targetHeight; blockIndex++) {
+                try {
+                    // Download block data
+                    const blockResponse = await fetch(rpcEndpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            jsonrpc: '2.0',
+                            method: 'topay_getBlock',
+                            params: [blockIndex],
+                            id: blockIndex
+                        })
+                    });
+                    
+                    if (blockResponse.ok) {
+                        const blockData = await blockResponse.json();
+                        if (blockData.result) {
+                            // Reconstruct block from network data
+                            const block = this.Block.fromJSON(blockData.result);
+                            
+                            // Validate block before adding
+                            if (await this.validateNetworkBlock(block)) {
+                                this.blockchain.chain.push(block);
+                                
+                                // Save the downloaded block immediately
+                                await this.saveDownloadedBlock(block, blockIndex);
+                                
+                                console.log(`📥 Downloaded and saved block #${blockIndex}`);
+                            } else {
+                                console.warn(`⚠️ Invalid block #${blockIndex} from network`);
+                            }
+                        }
+                    }
+                } catch (blockError) {
+                    console.error(`❌ Failed to download block #${blockIndex}:`, blockError.message);
+                }
+            }
+            
+            // Save complete updated blockchain state
+            await this.saveCompleteBlockchainData();
+            
+        } catch (error) {
+            console.error('❌ Failed to download complete blockchain:', error.message);
+        }
+    }
+    
+    /**
+     * Sync mempool transactions from network
+     */
+    async syncMempoolFromNetwork(rpcEndpoint) {
+        try {
+            const mempoolResponse = await fetch(rpcEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    jsonrpc: '2.0',
+                    method: 'topay_getMempool',
+                    params: [],
+                    id: 'mempool'
+                })
+            });
+            
+            if (mempoolResponse.ok) {
+                const mempoolData = await mempoolResponse.json();
+                if (mempoolData.result && Array.isArray(mempoolData.result)) {
+                    // Clear local mempool and add network transactions
+                    this.blockchain.mempool = [];
+                    
+                    for (const txData of mempoolData.result) {
+                        try {
+                            const transaction = this.Transaction.fromJSON(txData);
+                            if (await transaction.isValid()) {
+                                this.blockchain.mempool.push(transaction);
+                            }
+                        } catch (txError) {
+                            console.warn('⚠️ Invalid transaction in network mempool:', txError.message);
+                        }
+                    }
+                    
+                    console.log(`📥 Synced ${this.blockchain.mempool.length} transactions from network mempool`);
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ Failed to sync mempool from network:', error.message);
+        }
+    }
+    
+    /**
+     * Validate block received from network
+     */
+    async validateNetworkBlock(block) {
+        try {
+            // Basic validation checks
+            if (!block.hash || !block.previousHash || !block.timestamp) {
+                return false;
+            }
+            
+            // Validate block hash
+            const calculatedHash = await block.calculateHash();
+            if (calculatedHash !== block.hash) {
+                return false;
+            }
+            
+            // Validate previous hash connection
+            if (this.blockchain.chain.length > 0) {
+                const previousBlock = this.blockchain.getLatestBlock();
+                if (block.previousHash !== previousBlock.hash) {
+                    return false;
+                }
+            }
+            
+            // Validate transactions
+            for (const transaction of block.transactions) {
+                if (!(await transaction.isValid())) {
+                    return false;
+                }
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('❌ Block validation failed:', error.message);
+            return false;
+        }
+    }
+    
+    /**
+     * Save downloaded block with complete data
+     */
+    async saveDownloadedBlock(block, blockIndex) {
+        try {
+            const baseDataDir = this.config.get('dataPath', path.join(__dirname, '..', 'data'));
+            
+            // Save to blocks directory
+            const blocksDir = path.join(baseDataDir, 'blocks');
+            await fs.mkdir(blocksDir, { recursive: true });
+            
+            const blockFile = path.join(blocksDir, `block-${blockIndex}.json`);
+            const blockData = {
+                ...block.toJSON(),
+                downloadedAt: Date.now(),
+                source: 'network_sync'
+            };
+            
+            await fs.writeFile(blockFile, JSON.stringify(blockData, null, 2));
+            
+            // Save transactions
+            await this.saveBlockTransactions(block, baseDataDir);
+            
+            // Update blockchain index
+            await this.updateBlockchainIndex(block);
+            
+        } catch (error) {
+            console.error('❌ Failed to save downloaded block:', error.message);
+        }
+    }
+    
+    /**
+     * Update synchronization statistics
+     */
+    async updateSyncStats(chainInfo) {
+        try {
+            const baseDataDir = this.config.get('dataPath', path.join(__dirname, '..', 'data'));
+            const syncStatsFile = path.join(baseDataDir, 'sync-stats.json');
+            
+            const syncStats = {
+                lastSyncTime: Date.now(),
+                networkBlockHeight: chainInfo.blockCount || 0,
+                localBlockHeight: this.blockchain.chain.length - 1,
+                syncedBlocks: this.blockchain.chain.length,
+                mempoolSize: this.blockchain.mempool.length,
+                networkInfo: chainInfo,
+                syncHistory: []
+            };
+            
+            // Load existing stats to preserve history
+            try {
+                const existingData = await fs.readFile(syncStatsFile, 'utf8');
+                const existingStats = JSON.parse(existingData);
+                syncStats.syncHistory = existingStats.syncHistory || [];
+            } catch (error) {
+                // File doesn't exist, use default
+            }
+            
+            // Add current sync to history
+            syncStats.syncHistory.push({
+                timestamp: Date.now(),
+                blocksDownloaded: Math.max(0, syncStats.networkBlockHeight - syncStats.localBlockHeight),
+                success: true
+            });
+            
+            // Keep only last 100 sync records
+            if (syncStats.syncHistory.length > 100) {
+                syncStats.syncHistory = syncStats.syncHistory.slice(-100);
+            }
+            
+            await fs.writeFile(syncStatsFile, JSON.stringify(syncStats, null, 2));
+            
+        } catch (error) {
+            console.error('❌ Failed to update sync stats:', error.message);
+        }
+    }
+    
+    /**
+     * Attempt alternative synchronization methods
+     */
+    async attemptAlternativeSync() {
+        try {
+            console.log('🔄 Attempting alternative sync methods...');
+            
+            // Try to sync from peers
+            for (const [peerId, peer] of this.peers) {
+                if (peer.connected && peer.address !== this.config.get('rpcUrl')) {
+                    try {
+                        console.log(`🔄 Trying to sync from peer: ${peerId}`);
+                        // Implement peer-to-peer sync logic here
+                        break;
+                    } catch (peerError) {
+                        console.warn(`⚠️ Failed to sync from peer ${peerId}:`, peerError.message);
+                    }
+                }
+            }
+            
+        } catch (error) {
+            console.error('❌ All sync methods failed:', error.message);
+        }
+    }
+
+    /**
+     * Broadcast mined block to blockchain network
+     */
+    async broadcastMinedBlockToNetwork(block) {
+        try {
+            const rpcUrl = this.config.get('rpcUrl', 'http://localhost:8545');
+            const rpcEndpoint = rpcUrl.endsWith('/rpc') ? rpcUrl : `${rpcUrl}/rpc`;
+            
+            console.log(`📡 Broadcasting mined block #${block.index} to network...`);
+            
+            // Send the mined block to the blockchain network
+            const response = await fetch(rpcEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    jsonrpc: '2.0',
+                    method: 'topay_submitBlock',
+                    params: [block.toJSON()],
+                    id: `submit-block-${block.index}`
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.result && result.result.success) {
+                    console.log(`✅ Block #${block.index} successfully broadcasted to network`);
+                    
+                    // Broadcast transactions to network mempool
+                    await this.broadcastTransactionsToNetwork(block.transactions);
+                    
+                    return { success: true, message: 'Block broadcasted successfully' };
+                } else {
+                    console.warn(`⚠️ Block broadcast failed:`, result.error || 'Unknown error');
+                    return { success: false, message: result.error?.message || 'Broadcast failed' };
+                }
+            } else {
+                console.warn(`⚠️ Network request failed: ${response.status}`);
+                return { success: false, message: `Network request failed: ${response.status}` };
+            }
+            
+        } catch (error) {
+            console.error('❌ Failed to broadcast block to network:', error.message);
+            return { success: false, message: error.message };
+        }
+    }
+    
+    /**
+     * Broadcast transactions to network mempool
+     */
+    async broadcastTransactionsToNetwork(transactions) {
+        try {
+            const rpcUrl = this.config.get('rpcUrl', 'http://localhost:8545');
+            const rpcEndpoint = rpcUrl.endsWith('/rpc') ? rpcUrl : `${rpcUrl}/rpc`;
+            
+            for (const transaction of transactions) {
+                // Skip mining reward transactions (from: null)
+                if (transaction.from === null) continue;
+                
+                try {
+                    const response = await fetch(rpcEndpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            jsonrpc: '2.0',
+                            method: 'topay_sendTransaction',
+                            params: [transaction.toJSON ? transaction.toJSON() : transaction],
+                            id: `broadcast-tx-${transaction.id || Date.now()}`
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.result) {
+                            console.log(`📡 Transaction ${transaction.id?.substring(0, 10)}... broadcasted to network`);
+                        }
+                    }
+                } catch (txError) {
+                    console.warn(`⚠️ Failed to broadcast transaction:`, txError.message);
+                }
+            }
+            
+        } catch (error) {
+            console.error('❌ Failed to broadcast transactions:', error.message);
         }
     }
 

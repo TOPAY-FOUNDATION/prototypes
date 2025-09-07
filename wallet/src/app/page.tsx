@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Wallet, Send, User, Settings as SettingsIcon, History as HistoryIcon } from 'lucide-react';
 import styles from './page.module.css';
+import Navigation from '../components/Navigation';
 import WalletManager from './components/WalletManager';
 import TransactionForm from './components/transactions/TransactionForm';
 import CustomerSupport from './components/support/CustomerSupport';
@@ -48,12 +48,6 @@ export default function WalletApp() {
     }
   }, []);
 
-  const handleWalletChange = (address: string, newBalance: number) => {
-    setWalletAddress(address);
-    setBalance(newBalance);
-    localStorage.setItem('walletAddress', address);
-  };
-
   const handleTransactionSent = () => {
     if (walletAddress) {
       fetchBalance(walletAddress);
@@ -61,91 +55,63 @@ export default function WalletApp() {
   };
 
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>TOPAY Wallet</h1>
-        <p className={styles.subtitle}>Quantum-Safe Digital Currency</p>
-      </header>
+    <div className="bg-page min-h-screen">
+      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+      
+      <div className="container">
+        <div className={styles.main}>
+          {/* Connection Status */}
+          <div className={styles.statusBar}>
+            <ConnectionStatus />
+          </div>
 
-      {/* Connection Status */}
-      <ConnectionStatus />
+          {/* Main Content */}
+          <div className={styles.content}>
+            {activeTab === 'wallet' && (
+              <div className="animate-fade-in">
+                <WalletManager 
+                  onWalletChange={(address: string, balance: number) => {
+                    setWalletAddress(address);
+                    setBalance(balance);
+                    localStorage.setItem('walletAddress', address);
+                  }}
+                  currentBalance={balance}
+                  walletAddress={walletAddress}
+                />
+              </div>
+            )}
+            {activeTab === 'send' && (
+              <div className="animate-fade-in">
+                <TransactionForm 
+                  walletAddress={walletAddress}
+                  balance={balance}
+                  onTransactionSent={handleTransactionSent}
+                />
+              </div>
+            )}
+            {activeTab === 'history' && (
+              <div className="animate-fade-in">
+                <TransactionHistory walletAddress={walletAddress} />
+              </div>
+            )}
+            {activeTab === 'account' && (
+              <div className="animate-fade-in">
+                <Account 
+                  walletAddress={walletAddress}
+                />
+              </div>
+            )}
+            {activeTab === 'settings' && (
+              <div className="animate-fade-in">
+                <Settings />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
-      <nav className={styles.nav}>
-        <button
-          className={`${styles.navButton} ${activeTab === 'wallet' ? styles.active : ''}`}
-          onClick={() => setActiveTab('wallet')}
-        >
-          <Wallet size={18} className={styles.navIcon} />
-          Wallet
-        </button>
-        <button
-          className={`${styles.navButton} ${activeTab === 'send' ? styles.active : ''}`}
-          onClick={() => setActiveTab('send')}
-        >
-          <Send size={18} className={styles.navIcon} />
-          Send
-        </button>
-        <button
-          className={`${styles.navButton} ${activeTab === 'history' ? styles.active : ''}`}
-          onClick={() => setActiveTab('history')}
-        >
-          <HistoryIcon size={18} className={styles.navIcon} />
-          History
-        </button>
-        <button
-          className={`${styles.navButton} ${activeTab === 'account' ? styles.active : ''}`}
-          onClick={() => setActiveTab('account')}
-        >
-          <User size={18} className={styles.navIcon} />
-          Account
-        </button>
-        <button
-          className={`${styles.navButton} ${activeTab === 'settings' ? styles.active : ''}`}
-          onClick={() => setActiveTab('settings')}
-        >
-          <SettingsIcon size={18} className={styles.navIcon} />
-          Settings
-        </button>
-      </nav>
-
-      <main className={styles.main}>
-        {activeTab === 'wallet' && (
-          <WalletManager 
-            onWalletChange={handleWalletChange}
-            currentBalance={balance}
-            walletAddress={walletAddress}
-          />
-        )}
-        
-        {activeTab === 'send' && (
-          <TransactionForm 
-            walletAddress={walletAddress}
-            balance={balance}
-            onTransactionSent={handleTransactionSent}
-          />
-        )}
-        
-        {activeTab === 'history' && (
-          <TransactionHistory walletAddress={walletAddress} />
-        )}
-        
-        {activeTab === 'account' && (
-          <Account walletAddress={walletAddress} />
-        )}
-        
-        {activeTab === 'settings' && (
-          <Settings />
-        )}
-      </main>
-
-      <footer className={styles.footer}>
-        <p>&copy; 2024 TOPAY Foundation. Quantum-Safe Blockchain Technology.</p>
-      </footer>
-
-      {/* Support Button */}
       <SupportButton onClick={() => setIsSupportOpen(true)} />
-
-      {/* Customer Support Modal with AI Assistant */}
+      
       <CustomerSupport 
         isOpen={isSupportOpen} 
         onClose={() => setIsSupportOpen(false)} 
