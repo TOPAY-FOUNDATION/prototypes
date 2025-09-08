@@ -1,15 +1,31 @@
 /* Block Card Styles */
 
 .block-card {
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  transition: box-shadow 0.2s;
+  background-color: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .block-card:hover {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.clickable-card {
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.clickable-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.15);
+  cursor: pointer;
+  background: linear-gradient(to right, rgba(59, 130, 246, 0.03), rgba(59, 130, 246, 0.01));
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 :global(.dark) .block-card {
@@ -31,22 +47,22 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 9999px;
-  background-color: #dbeafe;
+  background-color: rgba(59, 130, 246, 0.1);
   margin-right: 1rem;
 }
 
 :global(.dark) .icon-container {
-  background-color: #1e3a8a;
+  background-color: rgba(59, 130, 246, 0.2);
 }
 
 .block-icon {
   width: 1.25rem;
   height: 1.25rem;
-  color: #2563eb;
+  color: var(--primary, #3b82f6);
 }
 
 :global(.dark) .block-icon {
-  color: #60a5fa;
+  color: var(--primary, #3b82f6);
 }
 
 .block-info {
@@ -58,20 +74,20 @@
 .block-number-link {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #2563eb;
+  color: var(--primary, #3b82f6);
   text-decoration: none;
 }
 
 .block-number-link:hover {
-  color: #1d4ed8;
+  color: var(--primary-700, #1d4ed8);
 }
 
 :global(.dark) .block-number-link {
-  color: #60a5fa;
+  color: var(--primary, #3b82f6);
 }
 
 :global(.dark) .block-number-link:hover {
-  color: #93c5fd;
+  color: var(--primary-700, #1d4ed8);
 }
 
 .timestamp {
@@ -130,22 +146,27 @@
 }
 
 .miner-link {
-  color: #2563eb;
+  color: var(--primary, #3b82f6);
   font-family: monospace;
   font-size: 0.75rem;
   text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
 .miner-link:hover {
-  color: #1d4ed8;
+  color: var(--primary-700, #1d4ed8);
+  background: rgba(59, 130, 246, 0.1);
 }
 
 :global(.dark) .miner-link {
-  color: #60a5fa;
+  color: var(--primary, #3b82f6);
 }
 
 :global(.dark) .miner-link:hover {
-  color: #93c5fd;
+  color: var(--primary-700, #1d4ed8);
+  background: rgba(59, 130, 246, 0.2);
 }
 
 .gas-info {
@@ -173,11 +194,12 @@
 }
 
 .gas-bar-container {
-  width: 100%;
-  background-color: #e5e7eb;
-  border-radius: 9999px;
-  height: 0.375rem;
-  margin-top: 0.25rem;
+  height: 8px;
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 :global(.dark) .gas-bar-container {
@@ -185,14 +207,15 @@
 }
 
 .gas-bar {
-  background-color: #2563eb;
-  height: 0.375rem;
-  border-radius: 9999px;
-  transition: width 0.3s;
+  height: 100%;
+  background: linear-gradient(to right, var(--primary), var(--primary-700));
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
 }
 
 :global(.dark) .gas-bar {
-  background-color: #3b82f6;
+  background: linear-gradient(90deg, var(--primary, #3b82f6) 0%, var(--primary-700, #1d4ed8) 100%);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
 }
 
 .card-footer {
@@ -216,7 +239,7 @@
 }
 
 .hash-link:hover {
-  color: #2563eb;
+  color: var(--primary, #3b82f6);
 }
 
 :global(.dark) .hash-link {
@@ -224,23 +247,28 @@
 }
 
 :global(.dark) .hash-link:hover {
-  color: #60a5fa;
+  color: var(--primary, #3b82f6);
 }
 
 .details-link {
-  color: #2563eb;
+  color: var(--primary, #3b82f6);
   font-weight: 500;
   text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
 .details-link:hover {
-  color: #1d4ed8;
+  color: var(--primary-700, #1d4ed8);
+  background: rgba(59, 130, 246, 0.1);
 }
 
 :global(.dark) .details-link {
-  color: #60a5fa;
+  color: var(--primary, #3b82f6);
 }
 
 :global(.dark) .details-link:hover {
-  color: #93c5fd;
+  color: var(--primary-700, #1d4ed8);
+  background: rgba(59, 130, 246, 0.2);
 }

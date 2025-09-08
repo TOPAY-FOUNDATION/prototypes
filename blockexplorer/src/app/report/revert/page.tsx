@@ -5,10 +5,10 @@ import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import styles from './report-page.module.css';
 
-export default function ReportTransactionPage() {
+export default function ReportRevertPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [reportType, setReportType] = useState('transaction');
+  const [reportType, setReportType] = useState('revert');
   const [formData, setFormData] = useState({
     transactionHash: '',
     walletAddress: '',
@@ -30,8 +30,8 @@ export default function ReportTransactionPage() {
     // Clear the input field when switching types
     setFormData(prev => ({
       ...prev,
-      transactionHash: '',
-      walletAddress: ''
+      transactionHash: type === 'revert' ? prev.transactionHash : '',
+      walletAddress: type === 'wallet' ? prev.walletAddress : ''
     }));
   };
 
@@ -86,7 +86,7 @@ export default function ReportTransactionPage() {
       <div className={styles.container}>
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h1 className={styles.cardTitle}>Report {reportType === 'transaction' ? 'Transaction' : 'Wallet Address'}</h1>
+            <h1 className={styles.cardTitle}>Report {reportType === 'revert' ? 'Revert' : 'Wallet Address'}</h1>
           </div>
           <div className={styles.cardBody}>
             <form onSubmit={handleSubmit}>
@@ -96,11 +96,11 @@ export default function ReportTransactionPage() {
                 <div className={styles.buttonGroup}>
                   <button
                     type="button"
-                    onClick={() => handleReportTypeChange('transaction')}
-                    className={`${styles.reportTypeButton} ${reportType === 'transaction' ? styles.reportTypeButtonActive : styles.reportTypeButtonInactive}`}
+                    onClick={() => handleReportTypeChange('revert')}
+                    className={`${styles.reportTypeButton} ${reportType === 'revert' ? styles.reportTypeButtonActive : styles.reportTypeButtonInactive}`}
                   >
-                    <div className={styles.reportTypeTitle}>Transaction</div>
-                    <div className={styles.reportTypeDescription}>Report a suspicious transaction</div>
+                    <div className={styles.reportTypeTitle}>Revert</div>
+                    <div className={styles.reportTypeDescription}>Report a transaction revert issue</div>
                   </button>
                   <button
                     type="button"
@@ -115,7 +115,7 @@ export default function ReportTransactionPage() {
 
               {/* Dynamic Input Field */}
               <div className={styles.formGroup}>
-                {reportType === 'transaction' ? (
+                {reportType === 'revert' ? (
                   <>
                     <label htmlFor="transactionHash" className={styles.formLabel}>Transaction Hash</label>
                     <input
@@ -126,7 +126,7 @@ export default function ReportTransactionPage() {
                       onChange={handleChange}
                       required
                       className={styles.input}
-                      placeholder="Enter the transaction hash"
+                      placeholder="Enter the transaction hash that reverted"
                     />
                   </>
                 ) : (
@@ -176,7 +176,7 @@ export default function ReportTransactionPage() {
                   required
                   rows={4}
                   className={styles.textarea}
-                  placeholder={`Please provide details about why you are reporting this ${reportType === 'transaction' ? 'transaction' : 'wallet address'}`}
+                  placeholder={`Please provide details about why you are reporting this ${reportType === 'revert' ? 'revert issue' : 'wallet address'}`}
                 ></textarea>
               </div>
               
@@ -202,7 +202,7 @@ export default function ReportTransactionPage() {
                 </Link>
                 <button
                   type="submit"
-                  disabled={loading || (!formData.transactionHash && !formData.walletAddress) || !formData.reason || !formData.description}
+                  disabled={loading || (reportType === 'revert' && !formData.transactionHash) || (reportType === 'wallet' && !formData.walletAddress) || !formData.reason || !formData.description}
                   className={`${styles.button} ${styles.buttonPrimary}`}
                 >
                   {loading ? (

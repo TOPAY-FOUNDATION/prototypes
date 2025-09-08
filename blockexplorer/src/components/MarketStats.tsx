@@ -22,10 +22,10 @@ export default function MarketStats({ className = '' }: MarketStatsProps) {
     // In a real application, this would fetch from an API
     // For now, we'll use mock data
     const mockData: MarketData = {
-      price: 2345.67,
-      marketCap: 282000000000,
-      volume24h: 12500000000,
-      change24h: 2.34,
+      price: 0,
+      marketCap: 0,
+      volume24h: 0,
+      change24h: 0,
     };
 
     // Simulate API fetch delay
@@ -99,7 +99,7 @@ export default function MarketStats({ className = '' }: MarketStatsProps) {
 
       <div className={styles['market-stat-card']}>
         <div className={styles['stat-title']}>Circulating Supply</div>
-        <div className={styles['stat-value']}>120.2M TOPAY</div>
+        <div className={styles['stat-value']}>0 TOPAY</div>
       </div>
     </div>
   );

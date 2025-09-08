@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Block } from '@/lib/blockchain';
 import { formatHash, formatTimeAgo, formatNumber, formatGas } from '@/lib/utils';
 import styles from './block-card.module.css';
@@ -12,9 +13,21 @@ interface BlockCardProps {
 
 export default function BlockCard({ block, className = '' }: BlockCardProps) {
   const gasPercentage = (block.gasUsed / block.gasLimit) * 100;
+  const router = useRouter();
+  
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on a link or button
+    if ((e.target as HTMLElement).closest('a, button')) {
+      return;
+    }
+    router.push(`/block/${block.number}`);
+  };
   
   return (
-    <div className={`${styles['block-card']} ${className}`}>
+    <div 
+      className={`${styles['block-card']} ${styles['clickable-card']} ${className}`}
+      onClick={handleCardClick}
+    >
       <div className={styles['card-header']}>
         <div className={styles['block-info']}>
           <div className={styles['icon-container']}>
@@ -23,12 +36,9 @@ export default function BlockCard({ block, className = '' }: BlockCardProps) {
             </svg>
           </div>
           <div>
-            <Link 
-              href={`/block/${block.number}`}
-              className={styles['block-number-link']}
-            >
+            <span className={styles['block-number-link']}>
               {formatNumber(block.number)}
-            </Link>
+            </span>
             <p className={styles['timestamp']}>
               {formatTimeAgo(block.timestamp)}
             </p>
@@ -75,18 +85,12 @@ export default function BlockCard({ block, className = '' }: BlockCardProps) {
       </div>
       
       <div className={styles['card-footer']}>
-        <Link 
-          href={`/block/${block.hash}`}
-          className={styles['hash-link']}
-        >
+        <span className={styles['hash-link']}>
           Hash: {formatHash(block.hash)}
-        </Link>
-        <Link 
-          href={`/block/${block.number}`}
-          className={styles['details-link']}
-        >
+        </span>
+        <span className={styles['details-link']}>
           View Details →
-        </Link>
+        </span>
       </div>
     </div>
   );

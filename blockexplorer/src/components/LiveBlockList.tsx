@@ -5,6 +5,8 @@ import BlockCard from './BlockCard';
 import LoadingSpinner from './LoadingSpinner';
 import { Block } from '@/lib/blockchain';
 import { useBlockchainPolling } from '@/lib/hooks/usePolling';
+import styles from './live-block-list.module.css';
+import { CubeIcon } from '@heroicons/react/24/outline';
 
 interface LiveBlockListProps {
   maxBlocks?: number;
@@ -65,9 +67,11 @@ export default function LiveBlockList({ maxBlocks = 5, className = '' }: LiveBlo
   if (loading && blocks.length === 0) {
     return (
       <div className={`${className}`}>
-        <div className="loading-spinner py-8">
-          <LoadingSpinner size="md" />
-          <span className="ml-3 text-secondary">Loading recent blocks...</span>
+        <div className={styles.container}>
+          <div className={styles.loadingContainer}>
+            <LoadingSpinner size="md" />
+            <span className={styles.loadingText}>Loading recent blocks...</span>
+          </div>
         </div>
       </div>
     );
@@ -76,10 +80,10 @@ export default function LiveBlockList({ maxBlocks = 5, className = '' }: LiveBlo
   if (error && blocks.length === 0) {
     return (
       <div className={`${className}`}>
-        <div className="text-center py-8">
-          <div className="error-message">
-            <h3 className="error-title mb-2">Error Loading Blocks</h3>
-            <p className="error-text">{error.message}</p>
+        <div className={styles.container}>
+          <div className={styles.errorContainer}>
+            <h3 className={styles.errorTitle}>Error Loading Blocks</h3>
+            <p className={styles.errorText}>{error.message}</p>
           </div>
         </div>
       </div>
@@ -88,59 +92,68 @@ export default function LiveBlockList({ maxBlocks = 5, className = '' }: LiveBlo
 
   return (
     <div className={`${className}`}>
-      <div className="section-header mb-6">
-        <h2 className="section-title">Recent Blocks</h2>
-        <div className="flex items-center space-x-4">
-          {newBlocksCount > 0 && (
-            <button
-              onClick={handleShowNewBlocks}
-              className="btn btn-success btn-small animate-pulse"
-            >
-              <div className="live-dot"></div>
-              <span>
-                {newBlocksCount} new block{newBlocksCount > 1 ? 's' : ''}
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>
+            <CubeIcon className={styles.titleIcon} />
+            Recent Blocks
+          </h2>
+          <div className="flex items-center space-x-4">
+            {newBlocksCount > 0 && (
+              <button
+                onClick={handleShowNewBlocks}
+                className={styles.newBlocksButton}
+              >
+                <div className={styles.liveDot}></div>
+                <span>
+                  {newBlocksCount} new block{newBlocksCount > 1 ? 's' : ''}
+                </span>
+              </button>
+            )}
+            <div className={styles.liveStatus}>
+              <div className={`${styles.liveDot} ${loading ? 'animate-pulse' : ''}`}></div>
+              <span className={styles.liveStatusText}>
+                {loading ? 'Updating...' : 'Live'}
               </span>
-            </button>
-          )}
-          <div className="live-indicator">
-            <div className={`live-dot ${loading ? 'updating' : ''}`}></div>
-            <span className="live-text">
-              {loading ? 'Updating...' : 'Live'}
-            </span>
-            {lastUpdated && (
-              <span className="timestamp">
-                ({lastUpdated.toLocaleTimeString()})
-              </span>
+              {lastUpdated && (
+                <span className="text-xs opacity-70">
+                  ({lastUpdated.toLocaleTimeString()})
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.content}>
+          <div className={styles.blocksList}>
+            {blocks.length > 0 ? (
+              blocks.map((block, index) => (
+                <div
+                  key={block.hash}
+                  className={`transition-all duration-500 ${
+                    index === 0 && newBlocksCount > 0 ? 'animate-pulse' : ''
+                  }`}
+                >
+                  <BlockCard block={block} />
+                </div>
+              ))
+            ) : (
+              <div className={styles.emptyState}>
+                <CubeIcon className={styles.emptyStateIcon} />
+                <h3 className={styles.emptyStateTitle}>No Blocks Available</h3>
+                <p className={styles.emptyStateText}>There are currently no blocks in the blockchain.</p>
+              </div>
             )}
           </div>
         </div>
-      </div>
 
-      <div className="space-y-4">
-        {blocks.length > 0 ? (
-          blocks.map((block, index) => (
-            <div
-              key={block.hash}
-              className={`transition-all duration-500 ${
-                index === 0 && newBlocksCount > 0 ? 'highlight-new' : ''
-              }`}
-            >
-              <BlockCard block={block} />
-            </div>
-          ))
-        ) : (
-          <div className="empty-state">
-            <p className="empty-state-description">No blocks available</p>
+        {loading && blocks.length > 0 && (
+          <div className="flex items-center justify-center py-4 mt-2 text-center">
+            <LoadingSpinner size="sm" />
+            <span className="ml-2 text-sm opacity-70">Checking for new blocks...</span>
           </div>
         )}
       </div>
-
-      {loading && blocks.length > 0 && (
-        <div className="loading-spinner py-4 mt-4">
-          <LoadingSpinner size="sm" />
-          <span className="ml-2 text-secondary text-sm">Checking for new blocks...</span>
-        </div>
-      )}
     </div>
   );
 }

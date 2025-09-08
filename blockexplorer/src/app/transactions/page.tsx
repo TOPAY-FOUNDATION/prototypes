@@ -1,12 +1,12 @@
 'use client';
 
-import LiveBlockList from '@/components/LiveBlockList';
+import RecentTransactions from '@/components/RecentTransactions';
 import ThemeToggle from '@/components/ThemeToggle';
 import SearchBar from '@/components/SearchBar';
 import Link from 'next/link';
-import styles from './blocks-page.module.css';
+import styles from './transactions-page.module.css';
 
-export default function BlocksPage() {
+export default function TransactionsPage() {
   return (
     <div className={styles.pageContainer}>
       {/* Header */}
@@ -23,10 +23,10 @@ export default function BlocksPage() {
             </div>
             <div className="text-center flex-1">
               <h1 className={styles.pageTitle}>
-                Live Blocks
+                Live Transactions
               </h1>
               <p className="text-secondary">
-                Real-time view of the latest blocks on the TOPAY network
+                Real-time view of the latest transactions on the TOPAY network
               </p>
             </div>
             <div className="flex-1 flex justify-end">
@@ -41,7 +41,7 @@ export default function BlocksPage() {
 
       {/* Main Content */}
       <main className={styles.mainContent}>
-        <LiveBlockList maxBlocks={10} />
+        <RecentTransactions maxTransactions={20} blocksToScan={20} />
       </main>
     </div>
   );

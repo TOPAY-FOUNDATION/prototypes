@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Transaction } from '@/lib/blockchain';
 import { formatHash, formatBalance, formatGwei, formatGas, copyToClipboard } from '@/lib/utils';
 import { useState } from 'react';
@@ -13,6 +14,7 @@ interface TransactionCardProps {
 
 export default function TransactionCard({ transaction, className = '' }: TransactionCardProps) {
   const [copied, setCopied] = useState('');
+  const router = useRouter();
 
   const handleCopy = async (text: string, type: string) => {
     try {
@@ -24,8 +26,19 @@ export default function TransactionCard({ transaction, className = '' }: Transac
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on a link or button
+    if ((e.target as HTMLElement).closest('a, button')) {
+      return;
+    }
+    router.push(`/tx/${transaction.hash}`);
+  };
+
   return (
-    <div className={`${styles['transaction-card']} ${className}`}>
+    <div 
+      className={`${styles['transaction-card']} ${styles['clickable-card']} ${className}`}
+      onClick={handleCardClick}
+    >
       <div className={styles['card-header']}>
         <div className={styles['tx-info']}>
           <div className={styles['tx-icon-container']}>
@@ -34,12 +47,15 @@ export default function TransactionCard({ transaction, className = '' }: Transac
             </svg>
           </div>
           <div>
-            <Link 
-              href={`/tx/${transaction.hash}`}
+            <span 
               className={styles['tx-hash-link']}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCopy(transaction.hash, 'hash');
+              }}
             >
               {formatHash(transaction.hash, 12)}
-            </Link>
+            </span>
             <p className={styles['block-number']}>
               Block #{transaction.blockNumber}
             </p>
@@ -113,12 +129,9 @@ export default function TransactionCard({ transaction, className = '' }: Transac
               </span>
             )}
           </div>
-          <Link 
-            href={`/tx/${transaction.hash}`}
-            className={styles['details-link']}
-          >
+          <span className={styles['details-link']}>
             View Details →
-          </Link>
+          </span>
         </div>
       </div>
     </div>

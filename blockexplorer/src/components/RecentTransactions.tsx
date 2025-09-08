@@ -5,6 +5,8 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import TransactionCard from '@/components/TransactionCard';
 import { type Transaction, type Block } from '@/lib/blockchain';
 import { useBlockchainPolling } from '@/lib/hooks/usePolling';
+import styles from './recent-transactions.module.css';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
 interface RecentTransactionsProps {
   maxTransactions?: number;
@@ -63,9 +65,11 @@ export default function RecentTransactions({
   if (loading && (!transactions || transactions.length === 0)) {
     return (
       <div className={`${className}`}>
-        <div className="loading-spinner py-8">
-          <LoadingSpinner size="md" />
-          <span className="ml-3 text-secondary">Loading recent transactions...</span>
+        <div className={styles.container}>
+          <div className={styles.loadingContainer}>
+            <LoadingSpinner size="md" />
+            <span className={styles.loadingText}>Loading recent transactions...</span>
+          </div>
         </div>
       </div>
     );
@@ -74,10 +78,10 @@ export default function RecentTransactions({
   if (error && (!transactions || transactions.length === 0)) {
     return (
       <div className={`${className}`}>
-        <div className="text-center py-8">
-          <div className="error-message">
-            <h3 className="error-title mb-2">Error Loading Transactions</h3>
-            <p className="error-text">{error.message}</p>
+        <div className={styles.container}>
+          <div className={styles.errorContainer}>
+            <h3 className={styles.errorTitle}>Error Loading Transactions</h3>
+            <p className={styles.errorText}>{error.message}</p>
           </div>
         </div>
       </div>
@@ -86,30 +90,39 @@ export default function RecentTransactions({
 
   return (
     <div className={`${className}`}>
-      <div className="section-header mb-6">
-        <h2 className="section-title">Recent Transactions</h2>
-        <div className="flex items-center space-x-4">
-          <div className="live-indicator">
-            <div className={`live-dot ${loading ? 'updating' : ''}`}></div>
-            <span className="live-text">{loading ? 'Updating...' : 'Live'}</span>
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>
+            <ArrowPathIcon className={styles.titleIcon} />
+            Recent Transactions
+          </h2>
+          <div className={styles.liveStatus}>
+            <div className={`${styles.liveDot} ${loading ? 'animate-pulse' : ''}`}></div>
+            <span className={styles.liveStatusText}>
+              {loading ? 'Updating...' : 'Live'}
+            </span>
             {lastUpdated && (
-              <span className="timestamp">({lastUpdated.toLocaleTimeString()})</span>
+              <span className="text-xs opacity-70">({lastUpdated.toLocaleTimeString()})</span>
+            )}
+          </div>
+        </div>
+
+        <div className={styles.content}>
+          <div className={styles.transactionsList}>
+            {transactions && transactions.length > 0 ? (
+              transactions.map((tx) => (
+                <TransactionCard key={tx.hash} transaction={tx} />
+              ))
+            ) : (
+              <div className={styles.emptyState}>
+                <ArrowPathIcon className={styles.emptyStateIcon} />
+                <h3 className={styles.emptyStateTitle}>No Transactions Available</h3>
+                <p className={styles.emptyStateText}>There are currently no transactions in the blockchain.</p>
+              </div>
             )}
           </div>
         </div>
       </div>
-
-      {transactions && transactions.length > 0 ? (
-        <div className="space-y-4">
-          {transactions.map((tx) => (
-            <TransactionCard key={tx.hash} transaction={tx} />
-          ))}
-        </div>
-      ) : (
-        <div className="empty-state">
-          <p className="empty-state-description">No transactions available</p>
-        </div>
-      )}
     </div>
   );
 }

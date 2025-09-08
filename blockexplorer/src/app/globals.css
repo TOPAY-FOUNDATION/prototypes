@@ -61,6 +61,23 @@ body {
   --muted: #6b7280;      /* gray-500 */
   --border: #e5e7eb;     /* gray-200 */
   --surface: #ffffff;
+  
+  /* Additional variables for block and transaction pages */
+  --secondary: #6b7280;  /* gray-500 */
+  --error-light: #fef2f2; /* red-50 */
+  --error-border: #fecaca; /* red-200 */
+  --bg-page: #ffffff;
+  --bg-error-light: #fef2f2;
+  --border-error: #fecaca;
+  --text-secondary: #6b7280;
+  --text-error: #ef4444;
+  --text-error-secondary: #dc2626;
+  --text-primary: #111827;
+  --text-primary-dark: #374151;
+  --text-success: #16a34a;
+  --bg-primary: #3b82f6;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
 }
 .dark {
   --primary: #60a5fa; /* blue-400 */
@@ -70,6 +87,23 @@ body {
   --muted: #9ca3af;      /* gray-400 */
   --border: #334155;     /* slate-700 */
   --surface: rgba(255,255,255,0.04);
+  
+  /* Dark mode overrides for additional variables */
+  --secondary: #9ca3af;  /* gray-400 */
+  --error-light: #1f2937; /* gray-800 */
+  --error-border: #ef4444; /* red-500 */
+  --bg-page: #0b1220;
+  --bg-error-light: #1f2937;
+  --border-error: #ef4444;
+  --text-secondary: #9ca3af;
+  --text-error: #f87171;
+  --text-error-secondary: #fca5a5;
+  --text-primary: #f9fafb;
+  --text-primary-dark: #d1d5db;
+  --text-success: #34d399;
+  --bg-primary: #60a5fa;
+  --card-bg: rgba(255,255,255,0.04);
+  --input-bg: #1f2937;
 }
 
 /* ---------------------------------------

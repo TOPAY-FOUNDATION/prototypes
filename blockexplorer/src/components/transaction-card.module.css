@@ -3,18 +3,33 @@
 .transaction-card {
   background-color: white;
   border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  transition: box-shadow 0.2s;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .transaction-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.15), 0 4px 10px -4px rgba(0, 0, 0, 0.1);
+}
+
+.clickable-card {
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.clickable-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.15), 0 6px 12px -4px rgba(0, 0, 0, 0.1);
+  border-color: rgba(37, 99, 235, 0.3);
 }
 
 :global(.dark) .transaction-card {
-  background-color: #1f2937;
-  border-color: #374151;
+  background-color: rgba(31, 41, 55, 0.8);
+  border-color: rgba(55, 65, 81, 0.6);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
@@ -25,17 +40,19 @@
 }
 
 .tx-icon-container {
-  width: 2rem;
-  height: 2rem;
-  background-color: #d1fae5;
-  border-radius: 0.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-radius: 0.625rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 5px rgba(16, 185, 129, 0.15);
 }
 
 :global(.dark) .tx-icon-container {
-  background-color: #065f46;
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+  box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
 }
 
 .tx-icon {
@@ -58,8 +75,11 @@
   color: #2563eb;
   font-family: monospace;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
+  transition: color 0.2s ease;
+  position: relative;
+  cursor: pointer;
 }
 
 .tx-hash-link:hover {
@@ -88,9 +108,13 @@
 }
 
 .tx-value {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.9375rem;
+  font-weight: 700;
   color: #10b981;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 :global(.dark) .tx-value {
@@ -109,8 +133,12 @@
 .details-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.75rem;
+  gap: 1rem;
   font-size: 0.875rem;
+  margin: 0.75rem 0;
+  padding: 0.75rem 0;
+  border-top: 1px solid rgba(229, 231, 235, 0.5);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
 }
 
 @media (min-width: 768px) {
@@ -129,6 +157,11 @@
   color: #9ca3af;
 }
 
+:global(.dark) .details-grid {
+  border-top: 1px solid rgba(55, 65, 81, 0.5);
+  border-bottom: 1px solid rgba(55, 65, 81, 0.5);
+}
+
 .address-container {
   display: flex;
   align-items: center;
@@ -140,10 +173,15 @@
   font-family: monospace;
   font-size: 0.75rem;
   text-decoration: none;
+  transition: color 0.2s ease;
+  position: relative;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
 }
 
 .address-link:hover {
   color: #1d4ed8;
+  background-color: rgba(37, 99, 235, 0.1);
 }
 
 :global(.dark) .address-link {
@@ -178,7 +216,7 @@
 .card-footer {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid rgba(243, 244, 246, 0.5);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -186,7 +224,7 @@
 }
 
 :global(.dark) .card-footer {
-  border-top-color: #374151;
+  border-top-color: rgba(55, 65, 81, 0.5);
 }
 
 .footer-content {
@@ -212,7 +250,8 @@
 
 .copied-text {
   color: #10b981;
-  font-weight: 500;
+  font-weight: 600;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 :global(.dark) .copied-text {
@@ -251,16 +290,25 @@
 
 .details-link {
   color: #2563eb;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
+  transition: all 0.2s ease;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
 }
 
 .details-link:hover {
   color: #1d4ed8;
+  background-color: rgba(37, 99, 235, 0.1);
 }
 
 :global(.dark) .details-link {
   color: #60a5fa;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 :global(.dark) .details-link:hover {

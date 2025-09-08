@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, Wallet, Shield, Zap } from 'lucide-react';
+import { CheckCircle, Wallet } from 'lucide-react';
 import styles from './WelcomeComplete.module.css';
 
 interface WelcomeCompleteProps {

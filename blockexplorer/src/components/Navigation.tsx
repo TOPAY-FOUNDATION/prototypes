@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
 import ReportButton from './ReportButton';
 import styles from './navigation.module.css';
