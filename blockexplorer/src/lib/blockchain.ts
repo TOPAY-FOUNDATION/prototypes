@@ -127,6 +127,43 @@ class BlockchainClient {
     }
   }
 
+  async validateTransactionHash(txHash: string): Promise<boolean> {
+    try {
+      if (!txHash || txHash.trim() === '') {
+        return false;
+      }
+      
+      const transaction = await this.getTransaction(txHash);
+      return transaction && transaction.hash === txHash;
+    } catch (error) {
+      console.error('Transaction validation failed:', error);
+      return false;
+    }
+  }
+
+  async validateWalletAddress(address: string): Promise<boolean> {
+    try {
+      if (!address || address.trim() === '') {
+        return false;
+      }
+      
+      // Check if address has any transaction history or balance
+      const [balance, txCount] = await Promise.all([
+        this.getAddressBalance(address),
+        this.getAddressTransactionCount(address)
+      ]);
+      
+      // Address exists if it has balance > 0 or transaction count > 0
+      const hasBalance = balance && balance !== '0';
+      const hasTxHistory = txCount > 0;
+      
+      return hasBalance || hasTxHistory;
+    } catch (error) {
+      console.error('Address validation failed:', error);
+      return false;
+    }
+  }
+
   private formatBlock(blockData: unknown): Block {
     const block = blockData as {
       number: string | number;

@@ -59,7 +59,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/report/transaction" className={styles.link}>
+                <Link href="/report/revert" className={styles.link}>
                   Report
                 </Link>
               </li>

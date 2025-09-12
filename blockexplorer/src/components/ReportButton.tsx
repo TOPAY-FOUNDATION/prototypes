@@ -10,7 +10,7 @@ interface ReportButtonProps {
 export default function ReportButton({ className = '' }: ReportButtonProps) {
   return (
     <Link 
-      href="/report/transaction"
+      href="/report/revert"
       className={`${styles['report-button']} ${className}`}
     >
       <svg 
