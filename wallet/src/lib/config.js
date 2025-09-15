@@ -7,9 +7,9 @@
 export const config = {
   // Main blockchain RPC server configuration
   blockchain: {
-    rpcUrl: process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:8546/rpc',
-    healthUrl: process.env.NEXT_PUBLIC_BLOCKCHAIN_HEALTH_URL || 'http://localhost:8546/health',
-    apiUrl: process.env.NEXT_PUBLIC_BLOCKCHAIN_API_URL || 'http://localhost:8546/api',
+    rpcUrl: process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001/rpc',
+    healthUrl: process.env.NEXT_PUBLIC_BLOCKCHAIN_HEALTH_URL || 'http://localhost:3001/health',
+    apiUrl: process.env.NEXT_PUBLIC_BLOCKCHAIN_API_URL || 'http://localhost:3001/api',
     retryAttempts: parseInt(process.env.NEXT_PUBLIC_RETRY_ATTEMPTS) || 3,
     retryDelay: parseInt(process.env.NEXT_PUBLIC_RETRY_DELAY) || 1000,
     timeout: parseInt(process.env.NEXT_PUBLIC_REQUEST_TIMEOUT) || 10000

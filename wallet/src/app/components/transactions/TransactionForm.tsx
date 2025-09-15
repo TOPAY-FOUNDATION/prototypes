@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import styles from '../../page.module.css';
+import styles from './TransactionForm.module.css';
 
 interface TransactionFormProps {
   walletAddress: string;

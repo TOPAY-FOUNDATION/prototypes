@@ -1,5 +1,20 @@
 /* TOPAY Wallet Manager - Component Styles */
 
+.walletContainer {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-2xl);
+  border: 1px solid var(--border);
+  transition: all var(--transition-normal);
+  animation: slideUp 0.4s ease-out;
+}
+
+.walletContainer:hover {
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-2px);
+}
+
 .container {
   background: var(--surface);
   border-radius: var(--radius-xl);
@@ -16,6 +31,23 @@
 }
 
 /* Header Section */
+.titleSection {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.walletIcon {
+  color: var(--primary-600);
+  background: var(--primary-50);
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-md);
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -76,6 +108,20 @@
 }
 
 /* Balance Section */
+.mainBalance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.priceInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
 .balanceSection {
   background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
   color: var(--text-inverse);
@@ -310,6 +356,164 @@
   line-height: var(--line-height-relaxed);
   position: relative;
   z-index: 1;
+}
+
+/* Tokens Section */
+.tokensSection {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--spacing-xl);
+}
+
+.tokensHeader {
+  background: var(--background-secondary);
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tokensControls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.toggleButton {
+  background: var(--primary-50);
+  color: var(--primary-700);
+  border: 1px solid var(--primary-200);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.toggleButton:hover {
+  background: var(--primary-100);
+  border-color: var(--primary-300);
+}
+
+.importButton {
+  background: var(--success-500);
+  color: var(--text-inverse);
+  border: none;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.importButton:hover {
+  background: var(--success-600);
+  transform: translateY(-1px);
+}
+
+.tokensList {
+  display: flex;
+  flex-direction: column;
+}
+
+.tokenItem {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all var(--transition-fast);
+}
+
+.tokenItem:last-child {
+  border-bottom: none;
+}
+
+.tokenItem:hover {
+  background: var(--surface-hover);
+}
+
+.tokenInfo {
+  flex: 1;
+}
+
+.tokenHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.tokenSymbol {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.tokenName {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.tokenBalance {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  font-family: var(--font-geist-mono);
+}
+
+.tokenError {
+  font-size: var(--font-size-xs);
+  color: var(--error-500);
+  margin-top: var(--spacing-xs);
+}
+
+.tokenActions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.actionButton {
+  background: var(--primary-50);
+  color: var(--primary-700);
+  border: 1px solid var(--primary-200);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+}
+
+.actionButton:hover {
+  background: var(--primary-100);
+  border-color: var(--primary-300);
+}
+
+.removeButton {
+  background: var(--error-50);
+  color: var(--error-700);
+  border: 1px solid var(--error-200);
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.removeButton:hover {
+  background: var(--error-100);
+  border-color: var(--error-300);
 }
 
 /* Wallet List */
@@ -626,6 +830,137 @@
     background: var(--text-primary);
     color: var(--background);
   }
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modalContent {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-2xl);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+.modalContent h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-lg) 0;
+}
+
+.input {
+  width: 100%;
+  padding: var(--spacing-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--spacing-md);
+  transition: all var(--transition-fast);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px var(--primary-100);
+}
+
+.input::placeholder {
+  color: var(--text-secondary);
+}
+
+.modalActions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+  margin-top: var(--spacing-lg);
+}
+
+.cancelButton {
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-weight: var(--font-weight-medium);
+}
+
+.cancelButton:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary-300);
+}
+
+.confirmButton {
+  background: var(--primary-500);
+  color: var(--text-inverse);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-weight: var(--font-weight-medium);
+}
+
+.confirmButton:hover {
+  background: var(--primary-600);
+}
+
+.confirmButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Message Styles */
+.message {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-lg);
+  font-weight: var(--font-weight-medium);
+  animation: slideUp 0.3s ease-out;
+}
+
+.message.success {
+  background: var(--success-100);
+  color: var(--success-800);
+  border: 1px solid var(--success-200);
+}
+
+.message.error {
+  background: var(--error-100);
+  color: var(--error-800);
+  border: 1px solid var(--error-200);
+}
+
+.message.warning {
+  background: var(--warning-100);
+  color: var(--warning-800);
+  border: 1px solid var(--warning-200);
+}
+
+/* Spinning Animation */
+.spinning {
+  animation: spin 1s linear infinite;
 }
 
 /* Print Styles */

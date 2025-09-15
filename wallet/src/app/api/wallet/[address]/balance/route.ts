@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server.js';
-import BlockchainClient from '../../../../../lib/blockchain-client.js';
-
-const blockchainClient = new BlockchainClient('http://localhost:8545');
 
 export async function GET(
   request: NextRequest,
@@ -9,29 +6,51 @@ export async function GET(
 ) {
   try {
     const { address } = await params;
+    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001/rpc';
     
-    // Check if main blockchain server is running
-    const isServerRunning = await blockchainClient.isServerRunning();
+    // Get wallet balance using blockchain RPC
+    const requestBody = {
+      jsonrpc: '2.0',
+      method: 'topay_getBalance',
+      params: [address],
+      id: 1
+    };
     
-    if (!isServerRunning) {
+    const response = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!response.ok) {
       return NextResponse.json(
         { 
-          error: 'Can not connect to mainnet',
-          suggestion: 'Run: node src/blockchain-rpc-server.js in the main project directory'
+          error: 'Cannot connect to blockchain',
+          suggestion: 'Make sure the blockchain server is running on port 3001'
         },
         { status: 503 }
       );
     }
+
+    const result = await response.json();
     
-    // Get balance from main workspace
-    const balance = await blockchainClient.getBalance(address);
+    if (result.error) {
+      throw new Error(result.error.message);
+    }
     
-    return NextResponse.json({ balance });
+    return NextResponse.json({
+      address: result.result.address,
+      balance: result.result.balance,
+      found: result.result.found
+    });
+    
   } catch (error) {
     console.error('Error getting balance:', error);
     return NextResponse.json(
       { 
-        error: 'Failed to get balance from main blockchain workspace',
+        error: 'Failed to get wallet balance',
         details: (error as Error).message
       },
       { status: 500 }

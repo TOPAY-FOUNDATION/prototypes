@@ -1,7 +1,4 @@
 import { NextResponse } from 'next/server.js';
-import BlockchainClient from '../../../../../lib/blockchain-client.js';
-
-const blockchainClient = new BlockchainClient('http://localhost:8545');
 
 export async function GET(
   request: Request,
@@ -9,29 +6,51 @@ export async function GET(
 ) {
   try {
     const { address } = await params;
+    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001/rpc';
     
-    // Check if main blockchain server is running
-    const isServerRunning = await blockchainClient.isServerRunning();
+    // Get transaction history using blockchain RPC
+    const requestBody = {
+      jsonrpc: '2.0',
+      method: 'topay_getTransactionHistory',
+      params: [address],
+      id: 1
+    };
     
-    if (!isServerRunning) {
+    const response = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!response.ok) {
       return NextResponse.json(
         { 
-          error: 'Can not connect to mainnet',
-          suggestion: 'Run: node src/blockchain-rpc-server.js in the main project directory'
+          error: 'Cannot connect to blockchain',
+          suggestion: 'Make sure the blockchain server is running on port 3001'
         },
         { status: 503 }
       );
     }
+
+    const result = await response.json();
     
-    // Get transaction history from main blockchain workspace
-    const transactions = await blockchainClient.getTransactionHistory(address);
+    if (result.error) {
+      throw new Error(result.error.message);
+    }
     
-    return NextResponse.json({ transactions });
+    return NextResponse.json({
+      transactions: result.result.transactions || [],
+      count: result.result.count || 0,
+      address: address
+    });
+    
   } catch (error) {
     console.error('Error getting transactions:', error);
     return NextResponse.json(
       { 
-        error: 'Failed to get transactions from main blockchain workspace',
+        error: 'Failed to get transaction history',
         details: (error as Error).message
       },
       { status: 500 }

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server.js';
 import BlockchainClient from '../../../../lib/blockchain-client.js';
 
-const blockchainClient = new BlockchainClient('http://localhost:8545');
+const blockchainClient = new BlockchainClient('http://localhost:3001');
 
 export async function GET() {
   try {

@@ -4,7 +4,7 @@
  */
 
 class WalletContractUtils {
-  constructor(blockchainUrl = 'http://localhost:8545') {
+  constructor(blockchainUrl = 'http://localhost:3001') {
     this.blockchainUrl = blockchainUrl;
     this.rpcId = 1;
   }

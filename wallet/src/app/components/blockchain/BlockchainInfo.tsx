@@ -6,7 +6,6 @@ import styles from '../../page.module.css';
 interface BlockchainInfo {
   blockCount: number;
   height: number;
-  difficulty: number;
   latestBlock: {
     hash: string;
     timestamp: number;
@@ -107,10 +106,7 @@ export default function BlockchainInfo({ info, onRefresh }: BlockchainInfoProps)
                   <span>Chain Height:</span>
                   <strong>{info.height || 0}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Difficulty:</span>
-                  <strong>{info.difficulty || 1}</strong>
-                </div>
+
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>Pending Transactions:</span>
                   <strong>{mempoolData?.count || 0}</strong>
@@ -158,7 +154,7 @@ export default function BlockchainInfo({ info, onRefresh }: BlockchainInfoProps)
           {mempoolData.transactions && mempoolData.transactions.length > 0 ? (
             <div>
               <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-                {mempoolData.count} pending transaction(s) waiting to be mined
+                {mempoolData.count} pending transaction(s) waiting to be processed
               </p>
               <div className={styles.transactionList}>
                 {mempoolData.transactions.slice(0, 10).map((tx, index) => (
@@ -217,11 +213,11 @@ export default function BlockchainInfo({ info, onRefresh }: BlockchainInfoProps)
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Algorithm:</span>
-                <strong>Proof of Work</strong>
+                <strong>Quantum-Safe Consensus</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Block Time:</span>
-                <strong>~10 minutes</strong>
+                <strong>~30 seconds</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Max Block Size:</span>

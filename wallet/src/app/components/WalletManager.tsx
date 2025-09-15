@@ -83,7 +83,7 @@ export default function WalletManager({ onWalletChange, currentBalance, walletAd
   // Initialize TokenManager
   const initializeTokenManager = useCallback(async () => {
     try {
-      const manager = new TokenManager('http://localhost:8545/rpc', walletAddress ? walletAddress : null) as unknown as TokenManagerInstance;
+      const manager = new TokenManager(undefined, walletAddress ? walletAddress : null) as unknown as TokenManagerInstance;
       await manager.initialize();
       setTokenManager(manager);
       setIsTokenManagerReady(true);

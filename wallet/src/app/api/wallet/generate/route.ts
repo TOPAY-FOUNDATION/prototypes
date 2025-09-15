@@ -30,38 +30,19 @@ async function generateWalletFallback() {
   }
 }
 
-// Submit wallet registration transaction to blockchain
-async function registerWalletOnBlockchain(walletData: {
-  address: string;
-  publicKey: string;
-  privateKey: string;
-}) {
+// Create wallet using blockchain RPC
+async function createWalletOnBlockchain(options = {}) {
   try {
-    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:8545/rpc';
+    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001/rpc';
     
-    // Create wallet registration transaction
-    const registrationTransaction = {
-      from: 'SYSTEM', // System transaction
-      to: walletData.address,
-      amount: 1, // Minimal amount for validation
-      data: {
-        type: 'WALLET_REGISTRATION',
-        publicKey: walletData.publicKey,
-        timestamp: Date.now(),
-        version: '1.0.0'
-      },
-      signature: 'system_signature_' + Date.now() // System signature for registration
-    };
-
-    // Submit transaction to blockchain
-    console.log('🔗 Sending registration transaction:', registrationTransaction);
     const requestBody = {
       jsonrpc: '2.0',
-      method: 'topay_sendTransaction',
-      params: [registrationTransaction],
+      method: 'topay_createWallet',
+      params: [options],
       id: 1
     };
-    console.log('🔗 Full RPC request:', requestBody);
+    
+    console.log('🔗 Creating wallet on blockchain:', requestBody);
     
     const response = await fetch(rpcUrl, {
       method: 'POST',
@@ -71,8 +52,6 @@ async function registerWalletOnBlockchain(walletData: {
       body: JSON.stringify(requestBody)
     });
     
-    console.log('🔗 Response status:', response.status, response.statusText);
-
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -80,64 +59,70 @@ async function registerWalletOnBlockchain(walletData: {
     const result = await response.json();
     
     if (result.error) {
-      console.log('🔍 Full RPC error response:', result.error);
-      const errorMessage = result.error.data || result.error.message;
-      throw new Error(`RPC error: ${errorMessage}`);
+      console.log('🔍 RPC error response:', result.error);
+      throw new Error(`RPC error: ${result.error.message}`);
     }
 
-    console.log(`✅ Wallet ${walletData.address} registered on blockchain`);
+    console.log(`✅ Wallet created on blockchain:`, result.result);
     return result.result;
     
   } catch (error) {
-    console.error('Failed to register wallet on blockchain:', error);
-    // Don't throw error - wallet creation should succeed even if blockchain registration fails
-    return null;
+    console.error('Failed to create wallet on blockchain:', error);
+    throw error;
   }
 }
 
 export async function POST() {
   try {
-    let walletData;
-    
-    // Try to use the main Wallet class first
+    // Try to create wallet using blockchain RPC first
     try {
-      const { Wallet } = await import('../../../../lib/wallet.js');
-      const wallet = new Wallet();
-      await wallet.generateWallet();
+      const walletData = await createWalletOnBlockchain({
+        label: `Wallet ${Date.now().toString().slice(-4)}`
+      });
       
-      walletData = {
-        address: wallet.address,
-        privateKey: wallet.privateKey,
-        publicKey: wallet.publicKey
-      };
-    } catch (walletError) {
-      console.warn('Main wallet generation failed, using fallback:', walletError);
+      console.log(`✅ Wallet ${walletData.address} created successfully via blockchain`);
       
-      // Use fallback implementation
-      walletData = await generateWalletFallback();
-    }
-    
-    // Register wallet on blockchain
-    console.log(`🔗 Registering wallet ${walletData.address} on blockchain...`);
-    const registrationResult = await registerWalletOnBlockchain(walletData);
-    
-    // Add registration info to response
-    const response = {
-      ...walletData,
-      blockchainRegistration: {
-        registered: registrationResult !== null,
-        transactionHash: registrationResult?.hash || null,
-        timestamp: Date.now()
+      return NextResponse.json({
+        address: walletData.address,
+        publicKey: walletData.publicKey,
+        // Don't return private key for security
+        blockchainRegistration: {
+          registered: true,
+          timestamp: Date.now()
+        },
+        message: walletData.message
+      });
+      
+    } catch (blockchainError) {
+      console.warn('Blockchain wallet creation failed, using fallback:', blockchainError);
+      
+      // Fallback to local wallet generation
+      let walletData;
+      
+      try {
+        const { Wallet } = await import('../../../../lib/wallet.js');
+        const wallet = new Wallet();
+        await wallet.generateWallet();
+        
+        walletData = {
+          address: wallet.address,
+          privateKey: wallet.privateKey,
+          publicKey: wallet.publicKey
+        };
+      } catch (walletError) {
+        console.warn('Main wallet generation failed, using Web Crypto fallback:', walletError);
+        walletData = await generateWalletFallback();
       }
-    };
-    
-    if (registrationResult) {
-      console.log(`✅ Wallet ${walletData.address} successfully registered on blockchain`);
-    } else {
-      console.log(`⚠️ Wallet ${walletData.address} created but blockchain registration failed`);
+      
+      return NextResponse.json({
+        ...walletData,
+        blockchainRegistration: {
+          registered: false,
+          error: 'Blockchain connection failed',
+          timestamp: Date.now()
+        }
+      });
     }
-    
-    return NextResponse.json(response);
     
   } catch (error) {
     console.error('Error generating wallet:', error);

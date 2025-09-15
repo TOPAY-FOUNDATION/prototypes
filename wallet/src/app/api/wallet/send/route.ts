@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Connect to blockchain client
-    const blockchainUrl = process.env.BLOCKCHAIN_URL || 'http://localhost:8545';
+    const blockchainUrl = process.env.BLOCKCHAIN_URL || 'http://localhost:3001';
     
     try {
       // Determine transaction type and method
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Connect to blockchain client
-  const blockchainUrl = process.env.BLOCKCHAIN_URL || 'http://localhost:8545';
+  const blockchainUrl = process.env.BLOCKCHAIN_URL || 'http://localhost:3001';
   
   try {
     const response = await fetch(`${blockchainUrl}/rpc`, {

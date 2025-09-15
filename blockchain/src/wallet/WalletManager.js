@@ -72,7 +72,7 @@ export class WalletManager {
         
         console.log(`👑 Creating genesis wallet with ${genesisBalance} TOPAY...`);
         
-        this.genesisWallet = Wallet.createGenesisWallet(genesisBalance, 'TOPAY Genesis Wallet');
+        this.genesisWallet = await Wallet.createGenesisWallet(genesisBalance, 'TOPAY Genesis Wallet');
         this.wallets.set(this.genesisWallet.address, this.genesisWallet);
         
         // Set as default wallet if no default exists
@@ -93,7 +93,7 @@ export class WalletManager {
      * @returns {Wallet} - New wallet instance
      */
     async createWallet(options = {}) {
-        const wallet = new Wallet(options);
+        const wallet = await Wallet.create(options);
         
         // Add to collection
         this.wallets.set(wallet.address, wallet);

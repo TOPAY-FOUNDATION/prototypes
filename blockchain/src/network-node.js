@@ -238,19 +238,20 @@ class TOPAYNetworkNode {
     console.log('\n🌐 Starting RPC server...');
     await this.rpcServer.start();
     
-    // Now initialize remote persistence with validators (RPC server is available)
+    // Initialize remote persistence in background (non-blocking)
     if (this.enableRemoteStorage) {
-      console.log('\n🔄 Initializing remote persistence...');
-      try {
-        await this.remotePersistence.initialize();
+      console.log('\n🔄 Initializing remote persistence in background...');
+      // Don't wait for remote persistence - let it initialize asynchronously
+      this.remotePersistence.initialize().then(() => {
         console.log('✅ Remote persistence initialized successfully!');
-        
-        // Sync with remote storage
-        await this.syncWithRemoteStorage();
-      } catch (error) {
+        // Sync with remote storage once available
+        this.syncWithRemoteStorage().catch(error => {
+          console.warn('⚠️  Background sync failed:', error.message);
+        });
+      }).catch(error => {
         console.warn('⚠️  Remote persistence initialization failed:', error.message);
         console.log('🔄 Continuing with local storage only...');
-      }
+      });
     }
     
     // Start auto-mining if enabled

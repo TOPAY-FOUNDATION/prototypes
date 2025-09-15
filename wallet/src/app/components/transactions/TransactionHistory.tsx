@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Clock, ArrowUpRight, ArrowDownLeft, ExternalLink, Search, RefreshCw } from 'lucide-react';
-import styles from '../../page.module.css';
+import styles from './TransactionHistory.module.css';
 
 interface Transaction {
   hash: string;
@@ -45,7 +45,7 @@ export default function TransactionHistory({ walletAddress }: TransactionHistory
       }
 
       const { TokenManager } = await import('../../../lib/token-manager.js');
-      const tokenManager = new TokenManager('http://localhost:8545');
+      const tokenManager = new TokenManager();
       await tokenManager.initialize();
       
       (window as unknown as { tokenManager: unknown }).tokenManager = tokenManager;

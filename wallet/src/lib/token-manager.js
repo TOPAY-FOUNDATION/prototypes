@@ -3,13 +3,13 @@
  * High-level interface for managing tokens and token operations
  */
 
-import WalletContractUtils from './contract-utils.js';
+import BrowserContractUtils from './browser-contract-utils.js';
 import BlockchainClient from './blockchain-client.js';
 import WalletStorage from './wallet-storage.js';
 
 export class TokenManager {
-  constructor(rpcUrl = 'http://localhost:8545', walletAddress = null) {
-    this.contractUtils = new WalletContractUtils(rpcUrl);
+  constructor(rpcUrl = 'http://localhost:3001/rpc', walletAddress = null) {
+    this.contractUtils = new BrowserContractUtils();
     this.blockchainClient = new BlockchainClient(rpcUrl);
     this.walletAddress = walletAddress;
     this.storage = walletAddress ? new WalletStorage(walletAddress) : null;

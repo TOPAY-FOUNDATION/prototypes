@@ -320,9 +320,7 @@ export class GovernanceSystems {
     return {
       blockchain: {
         totalBlocks: this.blockchain.chain.length,
-        totalTransactions: this.blockchain.chain.reduce((sum, block) => sum + block.transactions.length, 0),
-        difficulty: this.blockchain.difficulty,
-        miningReward: this.blockchain.miningReward
+        totalTransactions: this.blockchain.chain.reduce((sum, block) => sum + block.transactions.length, 0)
       },
       reversal: this.getReversalStats(),
       voting: this.getVotingStats(),

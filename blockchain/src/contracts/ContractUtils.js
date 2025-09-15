@@ -4,9 +4,13 @@
  */
 
 import fetch from 'node-fetch';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 export class ContractUtils {
-  constructor(rpcUrl = 'http://localhost:8545/rpc') {
+  constructor(rpcUrl = process.env.CONTRACT_RPC_URL || 'http://localhost:8545/rpc') {
     this.rpcUrl = rpcUrl;
     this.requestId = 0;
   }

@@ -4,7 +4,7 @@
  */
 
 class BlockchainClient {
-  constructor(rpcUrl = 'http://localhost:8545') {
+  constructor(rpcUrl = 'http://localhost:3001') {
     this.rpcUrl = rpcUrl;
     this.requestId = 1;
   }
@@ -57,8 +57,6 @@ class BlockchainClient {
         chainId: 1337,
         networkName: 'TOPAY Testnet',
         blockHeight: Math.floor(Math.random() * 1000000) + 500000,
-        difficulty: Math.floor(Math.random() * 1000000) + 100000,
-        hashRate: Math.floor(Math.random() * 1000) + 100,
         peers: Math.floor(Math.random() * 10) + 5,
         mock: true
       };
@@ -195,8 +193,6 @@ class BlockchainClient {
         hash: `0x${Math.random().toString(16).substr(2, 64)}`,
         timestamp: Date.now(),
         transactions: Math.floor(Math.random() * 100),
-        miner: `0x${Math.random().toString(16).substr(2, 40)}`,
-        difficulty: Math.floor(Math.random() * 1000000) + 100000,
         mock: true
       };
     }
@@ -266,26 +262,6 @@ class BlockchainClient {
     
     console.warn(`❌ Blockchain server not available after ${maxAttempts} attempts`);
     return false;
-  }
-
-  /**
-   * Get mining info
-   */
-  async getMiningInfo() {
-    try {
-      return await this.rpcCall('topay_getMiningInfo');
-    } catch (error) {
-      console.error('Failed to get mining info:', error);
-      // Return mock mining info for development
-      return {
-        isActive: Math.random() > 0.5,
-        hashRate: Math.floor(Math.random() * 1000) + 100,
-        difficulty: Math.floor(Math.random() * 1000000) + 100000,
-        blocksFound: Math.floor(Math.random() * 100),
-        lastBlockTime: Date.now() - Math.random() * 600000,
-        mock: true
-      };
-    }
   }
 
   /**

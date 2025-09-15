@@ -2,8 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import { Blockchain } from './blockchain/blockchain.js';
 import { Transaction } from './blockchain/transaction.js';
-import { PersistenceManager } from './storage/persistence.js';
-import { ValidatorRegistry } from './storage/validator-registry.js';
 import { ContractEngine } from './contracts/ContractEngine.js';
 
 /**
@@ -15,21 +13,9 @@ class BlockchainRPCServer {
     this.app = express();
     this.port = port;
     this.blockchain = new Blockchain();
-    this.persistence = new PersistenceManager();
-    this.validatorRegistry = new ValidatorRegistry({
-      enableRPC: true,
-      registryFile: 'validator-registry.json'
-    });
-    this.isMining = false;
-    this.coinbaseAddress = null;
-    this.autoMining = false;
-    this.miningTimer = null;
-    this.miningInterval = 10000; // 10 seconds
-    this.defaultMinerAddress = 'TOPAYminer234567890abcdef1234567890abcdef12345678';
     this.contractEngine = new ContractEngine(this.blockchain);
     this.setupMiddleware();
     this.setupRoutes();
-    this.setupValidatorRoutes();
   }
 
   setupMiddleware() {
@@ -114,8 +100,6 @@ class BlockchainRPCServer {
           'topay_sendTransaction',
           'topay_sendRawTransaction',
           'topay_getMempool',
-          'topay_mine',
-          'topay_submitBlock',
           'topay_getChainInfo',
           'topay_validateChain',
           'topay_getTransactionHistory',
@@ -128,13 +112,15 @@ class BlockchainRPCServer {
           'topay_call',
           // Network and node management
           'topay_syncing',
-          'topay_mining',
-          'topay_hashrate',
-          'topay_coinbase',
-          // Auto-mining methods
-          'topay_startAutoMining',
-          'topay_stopAutoMining',
-          'topay_getAutoMiningStatus',
+          // Wallet methods
+          'topay_createWallet',
+          'topay_getWallet',
+          'topay_getWalletBalance',
+          'topay_listWallets',
+          'topay_fundWallet',
+          'topay_getGenesisWallet',
+          'topay_exportWallet',
+          'topay_importWallet',
           // Smart contract methods
           'topay_deployContract',
           'topay_callContract',
@@ -158,13 +144,7 @@ class BlockchainRPCServer {
     });
   }
 
-  setupValidatorRoutes() {
-    // Setup validator registry RPC routes
-    if (this.validatorRegistry && this.validatorRegistry.getRPCSystem()) {
-      this.validatorRegistry.setupRPCRoutes(this.app);
-      console.log('✅ Validator Registry RPC routes enabled');
-    }
-  }
+
 
   async handleRPCMethod(method, params) {
     
@@ -268,13 +248,9 @@ class BlockchainRPCServer {
         if (publicKey) transaction.publicKey = publicKey;
         
         await this.blockchain.addTransaction(transaction);
-        await this.persistence.saveBlockchain(this.blockchain);
+        // No central persistence - miners handle their own data storage
         
-        // Trigger auto-mining if enabled and this is the first transaction in mempool
-        if (this.autoMining && this.blockchain.mempool.length === 1) {
-          console.log('🚀 Auto-mining triggered by new transaction');
-          this.triggerMining();
-        }
+
         
         return {
           transactionHash: transaction.hash,
@@ -288,99 +264,9 @@ class BlockchainRPCServer {
           count: this.blockchain.mempool.length
         };
 
-      case 'topay_mine':
-        const minerAddress = params[0];
-        if (!minerAddress) throw new Error('Miner address required');
-        
-        if (this.blockchain.mempool.length === 0) {
-          throw new Error('No transactions to mine');
-        }
-        
-        console.log(`🚀 Mining block for ${minerAddress}...`);
-        this.isMining = true;
-        this.coinbaseAddress = minerAddress;
-        
-        try {
-          const minedBlock = await this.blockchain.minePendingTransactions(minerAddress);
-          await this.persistence.saveBlockchain(this.blockchain);
-          
-          return {
-            blockIndex: minedBlock.index,
-            blockHash: minedBlock.hash,
-            transactions: minedBlock.transactions.length,
-            reward: this.blockchain.miningReward,
-            difficulty: minedBlock.difficulty
-          };
-        } finally {
-          this.isMining = false;
-        }
 
-      case 'topay_submitBlock':
-        const blockData = params[0];
-        if (!blockData) throw new Error('Block data required');
-        
-        console.log(`📥 Received mined block #${blockData.index} from external miner`);
-        
-        try {
-          // Validate the submitted block
-          if (!blockData.hash || !blockData.previousHash || !blockData.transactions) {
-            throw new Error('Invalid block structure');
-          }
-          
-          // Check if block already exists
-          const existingBlock = this.blockchain.getBlock(blockData.index);
-          if (existingBlock) {
-            console.log(`⚠️ Block #${blockData.index} already exists`);
-            return { success: false, message: 'Block already exists' };
-          }
-          
-          // Validate block connects to chain
-          const latestBlock = this.blockchain.getLatestBlock();
-          if (blockData.index !== latestBlock.index + 1) {
-            throw new Error(`Invalid block index. Expected ${latestBlock.index + 1}, got ${blockData.index}`);
-          }
-          
-          if (blockData.previousHash !== latestBlock.hash) {
-            throw new Error('Block does not connect to latest block');
-          }
-          
-          // Import the block into blockchain
-          const { Block } = await import('./blockchain/block.js');
-          const newBlock = Block.fromJSON(blockData);
-          
-          // Add block to chain
-          this.blockchain.chain.push(newBlock);
-          
-          // Remove mined transactions from mempool
-          for (const tx of blockData.transactions) {
-            const txIndex = this.blockchain.mempool.findIndex(mempoolTx => 
-              mempoolTx.id === tx.id || mempoolTx.hash === tx.hash
-            );
-            if (txIndex !== -1) {
-              this.blockchain.mempool.splice(txIndex, 1);
-            }
-          }
-          
-          // Save blockchain
-          await this.persistence.saveBlockchain(this.blockchain);
-          
-          console.log(`✅ Block #${blockData.index} successfully added to blockchain`);
-          console.log(`📊 Chain now has ${this.blockchain.chain.length} blocks`);
-          
-          return {
-            success: true,
-            message: 'Block successfully added to blockchain',
-            blockIndex: blockData.index,
-            chainLength: this.blockchain.chain.length
-          };
-          
-        } catch (error) {
-          console.error(`❌ Failed to submit block #${blockData.index}:`, error.message);
-          return {
-            success: false,
-            message: error.message
-          };
-        }
+
+
 
       case 'topay_getChainInfo':
         const totalTransactions = this.blockchain.chain.reduce(
@@ -391,8 +277,6 @@ class BlockchainRPCServer {
           blockCount: this.blockchain.chain.length,
           totalTransactions,
           mempoolSize: this.blockchain.mempool.length,
-          difficulty: this.blockchain.difficulty,
-          miningReward: this.blockchain.miningReward,
           latestBlock: this.blockchain.getLatestBlock(),
           isValid: await this.blockchain.isChainValid()
         };
@@ -424,10 +308,7 @@ class BlockchainRPCServer {
           blocks: this.blockchain.chain.length,
           transactions: this.blockchain.chain.reduce((sum, block) => sum + block.transactions.length, 0),
           mempool: this.blockchain.mempool.length,
-          difficulty: this.blockchain.difficulty,
-          miningReward: this.blockchain.miningReward,
-          averageBlockTime: this.calculateAverageBlockTime(),
-          estimatedHashRate: this.estimateHashRate()
+          averageBlockTime: this.calculateAverageBlockTime()
         };
 
       case 'topay_addTestData':
@@ -531,39 +412,138 @@ class BlockchainRPCServer {
           startingBlock: 0
         };
 
-      case 'topay_mining':
-        // Return mining status
-        return this.isMining || false;
 
-      case 'topay_hashrate':
-        // Return estimated hashrate
-        return this.estimateHashRate();
-
-      case 'topay_coinbase':
-        // Return coinbase address (miner address)
-        return this.coinbaseAddress || '0x0000000000000000000000000000000000000000';
 
       case 'topay_resetChain':
         this.blockchain = new Blockchain();
-        await this.persistence.saveBlockchain(this.blockchain);
+        // No central persistence - miners handle their own data storage
         return {
           message: 'Blockchain reset successfully',
           blocks: this.blockchain.chain.length
         };
 
-      case 'topay_startAutoMining':
-        const autoMinerAddress = params[0] || this.defaultMinerAddress;
-        return this.startAutoMining(autoMinerAddress);
 
-      case 'topay_stopAutoMining':
-        return this.stopAutoMining();
 
-      case 'topay_getAutoMiningStatus':
+      // Wallet RPC Methods
+      case 'topay_createWallet':
+        const walletOptions = params[0] || {};
+        const newWallet = await this.blockchain.createWallet(walletOptions);
         return {
-          autoMining: this.autoMining,
-          minerAddress: this.coinbaseAddress,
-          miningInterval: this.miningInterval,
-          mempoolSize: this.blockchain.mempool.length
+          address: newWallet.address,
+          publicKey: newWallet.publicKey,
+          label: newWallet.metadata.label,
+          isGenesis: newWallet.isGenesis,
+          createdAt: newWallet.createdAt,
+          message: 'Wallet created successfully'
+        };
+
+      case 'topay_getWallet':
+        const walletAddress = params[0];
+        if (!walletAddress) throw new Error('Wallet address required');
+        
+        const wallet = this.blockchain.getWallet(walletAddress);
+        if (!wallet) throw new Error('Wallet not found');
+        
+        return {
+          address: wallet.address,
+          publicKey: wallet.publicKey,
+          label: wallet.metadata.label,
+          isGenesis: wallet.isGenesis,
+          balance: wallet.getBalance(this.blockchain),
+          createdAt: wallet.createdAt,
+          lastUsed: wallet.metadata.lastUsed
+        };
+
+      case 'topay_getWalletBalance':
+        const balanceAddress = params[0];
+        if (!balanceAddress) throw new Error('Wallet address required');
+        
+        const balanceWallet = this.blockchain.getWallet(balanceAddress);
+        if (!balanceWallet) {
+          // Return 0 balance for unknown addresses
+          return {
+            address: balanceAddress,
+            balance: 0,
+            found: false
+          };
+        }
+        
+        return {
+          address: balanceAddress,
+          balance: balanceWallet.getBalance(this.blockchain),
+          found: true
+        };
+
+      case 'topay_listWallets':
+        const walletManager = this.blockchain.getWalletManager();
+        const allWallets = walletManager.listWallets();
+        const walletBalances = walletManager.getWalletBalances(this.blockchain);
+        
+        return {
+          wallets: allWallets.map(w => ({
+            address: w.address,
+            label: w.metadata.label,
+            isGenesis: w.isGenesis,
+            balance: walletBalances[w.address]?.balance || 0,
+            createdAt: w.createdAt
+          })),
+          count: allWallets.length
+        };
+
+      case 'topay_fundWallet':
+        const { targetAddress, amount: fundAmount } = params[0] || {};
+        if (!targetAddress || !fundAmount) {
+          throw new Error('Target address and amount required');
+        }
+        
+        const fundingTx = await this.blockchain.fundWalletFromGenesis(targetAddress, fundAmount);
+        await this.blockchain.addTransaction(fundingTx);
+        
+        return {
+          transactionHash: fundingTx.hash,
+          from: fundingTx.from,
+          to: fundingTx.to,
+          amount: fundingTx.amount,
+          status: 'pending',
+          message: 'Wallet funded successfully'
+        };
+
+      case 'topay_getGenesisWallet':
+        const genesisWallet = this.blockchain.getGenesisWallet();
+        if (!genesisWallet) throw new Error('Genesis wallet not found');
+        
+        return {
+          address: genesisWallet.address,
+          publicKey: genesisWallet.publicKey,
+          label: genesisWallet.metadata.label,
+          balance: genesisWallet.getBalance(this.blockchain),
+          isGenesis: true,
+          createdAt: genesisWallet.createdAt
+        };
+
+      case 'topay_exportWallet':
+        const exportAddress = params[0];
+        const includePrivateKey = params[1] || false;
+        
+        if (!exportAddress) throw new Error('Wallet address required');
+        
+        const exportWallet = this.blockchain.getWallet(exportAddress);
+        if (!exportWallet) throw new Error('Wallet not found');
+        
+        return exportWallet.exportWallet(includePrivateKey);
+
+      case 'topay_importWallet':
+        const walletData = params[0];
+        if (!walletData) throw new Error('Wallet data required');
+        
+        const walletManager2 = this.blockchain.getWalletManager();
+        const importedWallet = await walletManager2.importWallet(walletData);
+        
+        return {
+          address: importedWallet.address,
+          label: importedWallet.metadata.label,
+          isGenesis: importedWallet.isGenesis,
+          message: 'Wallet imported successfully'
         };
 
       case 'topay_deployContract':
@@ -709,7 +689,7 @@ class BlockchainRPCServer {
       await this.blockchain.addTransaction(tx);
     }
     
-    await this.persistence.saveBlockchain(this.blockchain);
+    // No central persistence - miners handle their own data storage
     
     return {
       message: 'Test data added successfully',
@@ -737,114 +717,15 @@ class BlockchainRPCServer {
     return Math.round(totalTime / (recentBlocks.length - 1) / 1000);
   }
 
-  estimateHashRate() {
-    return Math.pow(2, this.blockchain.difficulty) / 10;
-  }
 
-  startAutoMining(minerAddress) {
-    if (this.autoMining) {
-      return {
-        success: false,
-        message: 'Auto-mining is already running',
-        minerAddress: this.coinbaseAddress
-      };
-    }
-
-    this.autoMining = true;
-    this.coinbaseAddress = minerAddress;
-    
-    console.log(`🤖 Auto-mining started for ${minerAddress}`);
-    
-    // Start mining timer
-    this.miningTimer = setInterval(async () => {
-      if (this.blockchain.mempool.length > 0 && !this.isMining) {
-        try {
-          console.log(`⛏️  Auto-mining block with ${this.blockchain.mempool.length} transactions...`);
-          await this.blockchain.minePendingTransactions(this.coinbaseAddress);
-          await this.persistence.saveBlockchain(this.blockchain);
-          console.log(`✅ Auto-mined block ${this.blockchain.chain.length - 1}`);
-        } catch (error) {
-          console.error('❌ Auto-mining error:', error);
-        }
-      }
-    }, this.miningInterval);
-
-    return {
-      success: true,
-      message: 'Auto-mining started successfully',
-      minerAddress: this.coinbaseAddress,
-      interval: this.miningInterval
-    };
-  }
-
-  stopAutoMining() {
-    if (!this.autoMining) {
-      return {
-        success: false,
-        message: 'Auto-mining is not running'
-      };
-    }
-
-    this.autoMining = false;
-    
-    if (this.miningTimer) {
-      clearInterval(this.miningTimer);
-      this.miningTimer = null;
-    }
-
-    console.log('🛑 Auto-mining stopped');
-
-    return {
-      success: true,
-      message: 'Auto-mining stopped successfully'
-    };
-  }
-
-  triggerMining() {
-    if (this.autoMining && !this.isMining && this.blockchain.mempool.length > 0) {
-      setTimeout(async () => {
-        try {
-          console.log(`⚡ Triggered mining for ${this.blockchain.mempool.length} transactions`);
-          await this.blockchain.minePendingTransactions(this.coinbaseAddress);
-          await this.persistence.saveBlockchain(this.blockchain);
-          console.log(`✅ Triggered block ${this.blockchain.chain.length - 1} mined`);
-        } catch (error) {
-          console.error('❌ Triggered mining error:', error);
-        }
-      }, 1000); // Small delay to allow transaction to be fully processed
-    }
-  }
 
   async initialize() {
     console.log('🚀 Initializing TOPAY Blockchain RPC Server...');
     
-    await this.persistence.initialize();
-    
-    const existingBlockchain = await this.persistence.loadBlockchain();
-    if (existingBlockchain) {
-      console.log('📂 Loading existing blockchain...');
-      try {
-        this.blockchain.importChain(existingBlockchain);
-        console.log(`✅ Blockchain loaded: ${this.blockchain.chain.length} blocks`);
-      } catch (error) {
-        console.error('❌ Failed to load blockchain, creating new one:', error);
-        this.blockchain = new Blockchain();
-        await this.persistence.saveBlockchain(this.blockchain);
-      }
-    } else {
-      console.log('🆕 Creating new blockchain...');
-      await this.persistence.saveBlockchain(this.blockchain);
-    }
-
-    // Auto-save every 30 seconds
-    setInterval(async () => {
-      try {
-        await this.persistence.saveBlockchain(this.blockchain);
-        console.log('💾 Auto-saved blockchain state');
-      } catch (error) {
-        console.error('❌ Auto-save failed:', error);
-      }
-    }, 30000);
+    // Create fresh blockchain instance
+    console.log('🆕 Creating new blockchain instance...');
+    this.blockchain = new Blockchain();
+    console.log(`✅ Blockchain initialized: ${this.blockchain.chain.length} blocks`);
   }
 
   async start() {
@@ -862,7 +743,6 @@ class BlockchainRPCServer {
       console.log(`   topay_getTransaction(hash)`);
       console.log(`   topay_sendTransaction(txData)`);
       console.log(`   topay_getMempool()`);
-        console.log(`   topay_mine(minerAddress)`);
         console.log(`   topay_getChainInfo()`);
         console.log(`   topay_validateChain()`);
         console.log(`   topay_getTransactionHistory(address)`);

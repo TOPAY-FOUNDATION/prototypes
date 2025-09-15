@@ -25,9 +25,7 @@ export class Blockchain {
     });
     
     this.chain = [this.createGenesisBlock()];
-    this.difficulty = 2;
     this.pendingTransactions = [];
-    this.miningReward = 100;
     this.mempool = []; // Transaction pool
     this.validators = new Set(); // For future PoS
     this.networkNodes = new Set(); // For network simulation
@@ -124,31 +122,27 @@ export class Blockchain {
   }
 
   /**
-   * Mine pending transactions
+   * Process pending transactions into a new block
    */
-  async minePendingTransactions(miningRewardAddress) {
-    console.log('\n🚀 Starting mining process...');
+  async processPendingTransactions() {
+    console.log('\n🚀 Processing pending transactions...');
     
     // Select transactions from mempool
-    const transactionsToMine = this.mempool.splice(0, 10); // Take up to 10 transactions
+    const transactionsToProcess = this.mempool.splice(0, 10); // Take up to 10 transactions
     
-    // Add mining reward transaction
-    const rewardTransaction = new Transaction(null, miningRewardAddress, this.miningReward);
-    await rewardTransaction.signTransaction('system');
-    transactionsToMine.push(rewardTransaction);
+    if (transactionsToProcess.length === 0) {
+      console.log('⚠️ No transactions to process');
+      return null;
+    }
 
     // Create new block
-    const block = new Block(Date.now(), transactionsToMine, this.getLatestBlock().hash);
+    const block = new Block(Date.now(), transactionsToProcess, this.getLatestBlock().hash);
     block.index = this.chain.length;
-    block.difficulty = this.difficulty;
-
-    // Mine the block
-    await block.mineBlock(this.difficulty);
 
     // Add to chain
     this.chain.push(block);
 
-    console.log(`✅ Block #${block.index} mined and added to chain!`);
+    console.log(`✅ Block #${block.index} processed and added to chain!`);
     console.log(`   Transactions: ${block.transactions.length}`);
     console.log(`   Block size: ${block.getSize()} bytes`);
 
@@ -156,9 +150,6 @@ export class Blockchain {
     if (block.getSize() > 2048) {
       await this.fragmentBlock(block);
     }
-
-    // Adjust difficulty
-    this.adjustDifficulty();
 
     return block;
   }
@@ -198,26 +189,7 @@ export class Blockchain {
     }
   }
 
-  /**
-   * Adjust mining difficulty based on block time
-   */
-  adjustDifficulty() {
-    if (this.chain.length < 2) return;
 
-    const lastBlock = this.getLatestBlock();
-    const previousBlock = this.chain[this.chain.length - 2];
-    const timeDiff = (lastBlock.timestamp - previousBlock.timestamp) / 1000; // seconds
-
-    const targetTime = 10; // Target 10 seconds per block
-
-    if (timeDiff < targetTime / 2) {
-      this.difficulty++;
-      console.log(`⬆️ Difficulty increased to ${this.difficulty}`);
-    } else if (timeDiff > targetTime * 2 && this.difficulty > 1) {
-      this.difficulty--;
-      console.log(`⬇️ Difficulty decreased to ${this.difficulty}`);
-    }
-  }
 
   /**
    * Get balance for address (including genesis pre-allocation)
@@ -354,8 +326,6 @@ export class Blockchain {
       totalTransactions,
       totalSize,
       averageBlockSize: this.chain.length > 0 ? Math.round(totalSize / this.chain.length) : 0,
-      difficulty: this.difficulty,
-      miningReward: this.miningReward,
       mempoolSize: this.mempool.length,
       fragmentedBlocks: fragmentedBlockCount,
       networkNodes: this.networkNodes.size,

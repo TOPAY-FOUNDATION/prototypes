@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import BlockchainClient from '../../../lib/blockchain-client.js';
 
-const blockchainClient = new BlockchainClient('http://localhost:8545');
+const blockchainClient = new BlockchainClient('http://localhost:3001');
 
 /**
  * Test API endpoint to verify connections between wallet, blockchain, and validator
@@ -16,8 +16,8 @@ export async function GET() {
     },
     blockchain: {
       status: 'unknown' as 'unknown' | 'running' | 'stopped' | 'error',
-      port: 8545,
-      url: 'http://localhost:8545',
+      port: 3001,
+      url: 'http://localhost:3001',
       connected: false,
       blockCount: 0,
       error: null as string | null

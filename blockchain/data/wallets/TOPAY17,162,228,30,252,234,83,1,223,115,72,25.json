@@ -1,0 +1,21 @@
+{
+  "address": "TOPAY17,162,228,30,252,234,83,1,223,115,72,25",
+  "publicKey": "04fb311fa30003c2400b1472e7165424eacb01a488d9884a19e7bd8945f5eeb4b1b6a1d3a318625010575844f639a6d1a654064f7957954f39986082a00e4e5b09",
+  "isGenesis": true,
+  "genesisBalance": 1000000,
+  "metadata": {
+    "label": "TOPAY Genesis Wallet",
+    "description": "Genesis wallet with 1000000 TOPAY pre-allocated funds",
+    "tags": [
+      "genesis",
+      "system",
+      "foundation"
+    ],
+    "createdAt": 1757967543108,
+    "lastUsed": null,
+    "transactionCount": 0
+  },
+  "version": "1.0.0",
+  "exportedAt": 1757967543110,
+  "privateKey": "1c93add7077e2f19c9651d7faea6973f44b905d9f9dfa45ea72184012f34e787"
+}

@@ -29,11 +29,8 @@ export class Wallet {
             this.publicKey = options.publicKey;
             this.address = options.address;
             console.log(`📂 Loaded existing wallet: ${this.address.substring(0, 10)}...`);
-        } else {
-            // Generate new wallet
-            this.generateKeyPair();
-            console.log(`🆕 Created new wallet: ${this.address.substring(0, 10)}...`);
         }
+        // Note: For new wallets, use Wallet.create() static method instead
         
         // Initialize wallet metadata
         this.metadata = {
@@ -53,7 +50,7 @@ export class Wallet {
     /**
      * Generate new cryptographic key pair
      */
-    generateKeyPair() {
+    async generateKeyPair() {
         // Generate private key (256-bit)
         this.privateKey = crypto.randomBytes(32).toString('hex');
         
@@ -63,7 +60,19 @@ export class Wallet {
         this.publicKey = keyPair.getPublicKey('hex');
         
         // Generate address from public key
-        this.address = this.generateAddress(this.publicKey);
+        this.address = await this.generateAddress(this.publicKey);
+    }
+
+    /**
+     * Static factory method to create a new wallet
+     */
+    static async create(options = {}) {
+        const wallet = new Wallet(options);
+        if (!options.privateKey && !options.publicKey && !options.address) {
+            await wallet.generateKeyPair();
+            console.log(`🆕 Created new wallet: ${wallet.address.substring(0, 10)}...`);
+        }
+        return wallet;
     }
     
     /**
@@ -71,11 +80,12 @@ export class Wallet {
      * @param {string} publicKey - Public key in hex format
      * @returns {string} - Wallet address
      */
-    generateAddress(publicKey) {
+    async generateAddress(publicKey) {
         // Create address using quantum-safe hash
-        const hash = computeHash(publicKey);
-        // Take first 40 characters and add TOPAY prefix
-        return 'TOPAY' + hash.substring(0, 40);
+        const hash = await computeHash(publicKey);
+        // Ensure hash is a string and take first 40 characters
+        const hashStr = typeof hash === 'string' ? hash : hash.toString();
+        return 'TOPAY' + hashStr.substring(0, 40);
     }
     
     /**
@@ -206,8 +216,8 @@ export class Wallet {
      * @param {string} label - Optional label for the wallet
      * @returns {Wallet} - Genesis wallet instance
      */
-    static createGenesisWallet(initialBalance = 1000000, label = 'Genesis Wallet') {
-        return new Wallet({
+    static async createGenesisWallet(initialBalance = 1000000, label = 'Genesis Wallet') {
+        return await Wallet.create({
             isGenesis: true,
             genesisBalance: initialBalance,
             label: label,
@@ -258,10 +268,11 @@ export class Wallet {
      * Generate a random wallet address (for testing)
      * @returns {string} - Random valid address
      */
-    static generateRandomAddress() {
+    static async generateRandomAddress() {
         const randomData = crypto.randomBytes(32).toString('hex');
-        const hash = computeHash(randomData);
-        return 'TOPAY' + hash.substring(0, 40);
+        const hash = await computeHash(randomData);
+        const hashStr = typeof hash === 'string' ? hash : hash.toString();
+        return 'TOPAY' + hashStr.substring(0, 40);
     }
     
     /**
