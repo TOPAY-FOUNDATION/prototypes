@@ -8,7 +8,7 @@ import BlockchainClient from './blockchain-client.js';
 import WalletStorage from './wallet-storage.js';
 
 export class TokenManager {
-  constructor(rpcUrl = 'http://localhost:3001/rpc', walletAddress = null) {
+  constructor(rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3000/rpc', walletAddress = null) {
     this.contractUtils = new BrowserContractUtils();
     this.blockchainClient = new BlockchainClient(rpcUrl);
     this.walletAddress = walletAddress;

@@ -33,7 +33,7 @@ async function generateWalletFallback() {
 // Create wallet using blockchain RPC
 async function createWalletOnBlockchain(options = {}) {
   try {
-    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001/rpc';
+    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3000/rpc';
     
     const requestBody = {
       jsonrpc: '2.0',

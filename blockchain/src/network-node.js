@@ -456,7 +456,7 @@ function parseArgs() {
         console.log('  --mining-interval <sec>   Mining interval in seconds (default: 30)');
         console.log('  --node-id <id>            Custom node identifier');
         console.log('  --validators <urls>       Comma-separated validator node URLs');
-        console.log('                            (default: http://localhost:8547)');
+        console.log(`                            (default: ${process.env.VALIDATOR_URLS?.split(',')[0] || 'http://localhost:8547'})`);
         console.log('  --help                    Show this help');
         process.exit(0);
     }

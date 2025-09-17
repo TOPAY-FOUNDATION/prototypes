@@ -57,8 +57,8 @@ This will start both the blockchain RPC server and the wallet application.
 ## 🌐 Access Points
 
 - **Wallet Application**: <http://localhost:3000>
-- **Blockchain RPC Server**: <http://localhost:3001/rpc>
-- **Health Check**: <http://localhost:3001/health>
+- **Blockchain RPC Server**: <http://localhost:3000/rpc>
+- **Health Check**: <http://localhost:3000/health>
 
 ## 📁 Project Structure
 
@@ -91,9 +91,9 @@ The wallet is configured to connect to the main blockchain workspace. All URLs a
 
 ```bash
 # Blockchain RPC Server Configuration
-NEXT_PUBLIC_BLOCKCHAIN_RPC_URL=http://localhost:3001/rpc
-NEXT_PUBLIC_BLOCKCHAIN_HEALTH_URL=http://localhost:3001/health
-NEXT_PUBLIC_BLOCKCHAIN_API_URL=http://localhost:3001/api
+NEXT_PUBLIC_BLOCKCHAIN_RPC_URL=http://localhost:3000/rpc
+NEXT_PUBLIC_BLOCKCHAIN_HEALTH_URL=http://localhost:3000/health
+NEXT_PUBLIC_BLOCKCHAIN_API_URL=http://localhost:3000/api
 
 # Wallet Configuration
 NEXT_PUBLIC_WALLET_URL=http://localhost:3000
@@ -105,8 +105,8 @@ NEXT_PUBLIC_CHAINGPT_API_URL=https://api.chaingpt.org/chat/stream
 
 ### Default Settings (when environment variables are not set)
 
-- **RPC Server**: `http://localhost:3001/rpc`
-- **Health Check**: `http://localhost:3001/health`
+- **RPC Server**: `http://localhost:3000/rpc`
+- **Health Check**: `http://localhost:3000/health`
 - **Refresh Interval**: 5 seconds
 - **Request Timeout**: 10 seconds
 
@@ -169,7 +169,7 @@ The wallet integrates with the main blockchain workspace through:
 
 1. **Connection Failed**:
    - Ensure blockchain server is running
-   - Check if ports 3000 and 3001 are available
+   - Check if ports 3000 and 3000 are available
    - Verify firewall settings
 
 2. **Wallet Not Loading**:

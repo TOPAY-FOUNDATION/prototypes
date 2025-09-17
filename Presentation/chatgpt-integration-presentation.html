@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Integration Capabilities - Interactive Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            overflow-x: hidden;
+        }
+
+        .presentation-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            animation: slideInDown 1s ease;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            animation: fadeIn 1s ease 0.3s both;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 3px solid #667eea;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: 200px;
+        }
+
+        .nav-tab:hover {
+            background: #e9ecef;
+            color: #667eea;
+        }
+
+        .nav-tab.active {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            padding: 3rem;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 2.2rem;
+            color: #333;
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        /* Architecture Diagrams */
+        .architecture-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .diagram-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .flow-node {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            min-width: 150px;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .flow-node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .flow-node.active {
+            background: #667eea;
+            color: white;
+            animation: pulse 1s ease-in-out;
+        }
+
+        .flow-arrow {
+            font-size: 2rem;
+            color: #667eea;
+            margin: 0 1rem;
+            animation: slideRight 2s ease-in-out infinite;
+        }
+
+        /* Interactive Elements */
+        .interactive-demo {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .demo-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .demo-button:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .demo-button.active {
+            background: #ff6b6b;
+            border-color: #ff6b6b;
+        }
+
+        .demo-output {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 2rem;
+            min-height: 200px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.8;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        /* Permission Matrix */
+        .permission-matrix {
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .matrix-table th,
+        .matrix-table td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .matrix-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .matrix-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .permission-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0.2rem;
+        }
+
+        .permission-view {
+            background: #28a745;
+            color: white;
+        }
+
+        .permission-edit {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .permission-approve {
+            background: #dc3545;
+            color: white;
+        }
+
+        .permission-none {
+            background: #6c757d;
+            color: white;
+        }
+
+        /* Case Studies */
+        .case-study {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #667eea;
+        }
+
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .before,
+        .after {
+            padding: 1.5rem;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .before {
+            background: #ffe6e6;
+            border: 2px solid #ff6b6b;
+        }
+
+        .after {
+            background: #e6ffe6;
+            border: 2px solid #28a745;
+        }
+
+        .before::before {
+            content: "BEFORE";
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: #ff6b6b;
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .after::before {
+            content: "AFTER";
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: #28a745;
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Toggleable Details */
+        .expandable-section {
+            margin: 2rem 0;
+        }
+
+        .expand-toggle {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .expand-toggle:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .expand-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #f8f9fa;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .expand-content.open {
+            max-height: 1000px;
+            padding: 2rem;
+        }
+
+        /* Progress Indicators */
+        .progress-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 2rem 0;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #6c757d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .step-number.active {
+            background: #667eea;
+            animation: pulse 1s ease-in-out;
+        }
+
+        .step-number.completed {
+            background: #28a745;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        /* Tooltips */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted #667eea;
+            cursor: help;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 300px;
+            background-color: #333;
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -150px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .presentation-container {
+                margin: 0;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .content-section {
+                padding: 2rem 1rem;
+            }
+
+            .diagram-flow {
+                flex-direction: column;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+                margin: 1rem 0;
+            }
+
+            .before-after {
+                grid-template-columns: 1fr;
+            }
+
+            .demo-controls {
+                flex-direction: column;
+            }
+
+            .nav-tab {
+                min-width: 150px;
+                padding: 1rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideRight {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-online {
+            background: #28a745;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-processing {
+            background: #ffc107;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .status-offline {
+            background: #dc3545;
+        }
+
+        /* Price Ticker */
+        .price-ticker {
+            background: #333;
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .price-item {
+            display: inline-block;
+            margin-right: 2rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-up {
+            color: #28a745;
+        }
+
+        .price-down {
+            color: #dc3545;
+        }
+
+        /* Workflow Simulation */
+        .workflow-sim {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 2px solid #e9ecef;
+        }
+
+        .workflow-step {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .workflow-step:hover {
+            background: #f8f9fa;
+        }
+
+        .workflow-step.active {
+            background: #667eea;
+            color: white;
+            transform: translateX(10px);
+        }
+
+        .workflow-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .workflow-step.active .workflow-icon {
+            background: white;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Header -->
+        <header class="header">
+            <h1>ChatGPT Integration Capabilities</h1>
+            <p>Advanced AI Solutions for Report Processing & Wallet Support</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" onclick="showSection('overview')">Overview</button>
+            <button class="nav-tab" onclick="showSection('report-processing')">Report Processing</button>
+            <button class="nav-tab" onclick="showSection('wallet-support')">Wallet Support</button>
+            <button class="nav-tab" onclick="showSection('architecture')">Architecture</button>
+            <button class="nav-tab" onclick="showSection('permissions')">Permissions</button>
+            <button class="nav-tab" onclick="showSection('case-studies')">Case Studies</button>
+            <button class="nav-tab" onclick="showSection('demo')">Live Demo</button>
+        </nav>
+
+        <!-- Overview Section -->
+        <section id="overview" class="content-section active">
+            <h2 class="section-title">Integration Overview</h2>
+            
+            <div class="architecture-container">
+                <h3>Core Integration Modules</h3>
+                <div class="diagram-flow">
+                    <div class="flow-node" onclick="highlightNode(this)">
+                        <div class="workflow-icon">📄</div>
+                        <h4>Report Processing</h4>
+                        <p>Automated document analysis</p>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node" onclick="highlightNode(this)">
+                        <div class="workflow-icon">🤖</div>
+                        <h4>ChatGPT Engine</h4>
+                        <p>AI processing core</p>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node" onclick="highlightNode(this)">
+                        <div class="workflow-icon">💼</div>
+                        <h4>Wallet Support</h4>
+                        <p>Customer service automation</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="expandable-section">
+                <button class="expand-toggle" onclick="toggleExpand(this)">
+                    Technical Specifications
+                    <span>▼</span>
+                </button>
+                <div class="expand-content">
+                    <h4>API Integration Details</h4>
+                    <ul>
+                        <li><strong>Authentication:</strong> OAuth 2.0 with JWT tokens</li>
+                        <li><strong>Rate Limiting:</strong> 1000 requests/minute per API key</li>
+                        <li><strong>Response Format:</strong> JSON with structured data schemas</li>
+                        <li><strong>Latency:</strong> Average 200ms response time</li>
+                        <li><strong>Availability:</strong> 99.9% uptime SLA</li>
+                    </ul>
+                    
+                    <h4>Security Features</h4>
+                    <ul>
+                        <li>End-to-end encryption for all data transmission</li>
+                        <li>Role-based access control (RBAC) implementation</li>
+                        <li>Audit logging for all system interactions</li>
+                        <li>Data anonymization for sensitive information</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Report Processing Section -->
+        <section id="report-processing" class="content-section">
+            <h2 class="section-title">Report Processing Module</h2>
+            
+            <div class="workflow-sim">
+                <h3>Document Analysis Workflow</h3>
+                <div class="progress-container">
+                    <div class="progress-step">
+                        <div class="step-number active">1</div>
+                        <div class="step-content">
+                            <h4>Document Ingestion</h4>
+                            <p>Automated upload and format detection (PDF, DOCX, TXT, CSV)</p>
+                        </div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Content Extraction</h4>
+                            <p>OCR processing and text extraction with metadata preservation</p>
+                        </div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>AI Analysis</h4>
+                            <p>ChatGPT-powered content analysis and categorization</p>
+                        </div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Report Generation</h4>
+                            <p>Structured output with insights and recommendations</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="demo-button" onclick="simulateReportProcessing()">Simulate Processing</button>
+            </div>
+
+            <div class="case-study">
+                <h3>Financial Report Analysis Case Study</h3>
+                <div class="before-after">
+                    <div class="before">
+                        <h4>Manual Process</h4>
+                        <ul>
+                            <li>⏱️ 4-6 hours per report</li>
+                            <li>👥 Requires 2-3 analysts</li>
+                            <li>❌ 15% error rate</li>
+                            <li>📊 Limited insight depth</li>
+                            <li>💰 High operational cost</li>
+                        </ul>
+                    </div>
+                    <div class="after">
+                        <h4>AI-Powered Process</h4>
+                        <ul>
+                            <li>⚡ 15-30 minutes per report</li>
+                            <li>🤖 Fully automated analysis</li>
+                            <li>✅ 2% error rate</li>
+                            <li>🔍 Deep analytical insights</li>
+                            <li>💡 85% cost reduction</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="expandable-section">
+                <button class="expand-toggle" onclick="toggleExpand(this)">
+                    Advanced Features
+                    <span>▼</span>
+                </button>
+                <div class="expand-content">
+                    <h4>Multi-Language Support</h4>
+                    <p>Process documents in 50+ languages with automatic translation capabilities.</p>
+                    
+                    <h4>Custom Templates</h4>
+                    <p>Create industry-specific analysis templates for consistent reporting.</p>
+                    
+                    <h4>Integration APIs</h4>
+                    <p>Connect with existing document management systems and workflows.</p>
+                    
+                    <h4>Compliance Checking</h4>
+                    <p>Automated verification against regulatory requirements and standards.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Wallet Support Section -->
+        <section id="wallet-support" class="content-section">
+            <h2 class="section-title">Wallet Support Integration</h2>
+            
+            <div class="interactive-demo">
+                <h3>AI-Powered Customer Support</h3>
+                <div class="demo-controls">
+                    <button class="demo-button" onclick="simulateCustomerQuery()">Customer Query</button>
+                    <button class="demo-button" onclick="simulatePriceQuery()">Price Information</button>
+                    <button class="demo-button" onclick="simulateTicketGeneration()">Ticket Generation</button>
+                    <button class="demo-button" onclick="simulateTransactionHelp()">Transaction Help</button>
+                </div>
+                <div class="demo-output" id="walletDemoOutput">
+                    Select a demo scenario above to see ChatGPT in action...
+                </div>
+            </div>
+
+            <div class="price-ticker">
+                <h4>Live Cryptocurrency Prices</h4>
+                <div id="priceTicker">
+                    <span class="price-item">BTC: <span class="price-up">$43,250.00 (+2.3%)</span></span>
+                    <span class="price-item">ETH: <span class="price-down">$2,680.50 (-1.2%)</span></span>
+                    <span class="price-item">BNB: <span class="price-up">$315.75 (+0.8%)</span></span>
+                    <span class="price-item">ADA: <span class="price-up">$0.485 (+3.1%)</span></span>
+                </div>
+                <p style="font-size: 0.8rem; margin-top: 1rem; opacity: 0.7;">
+                    Data aggregated from Binance, Coinbase, and Kraken APIs
+                </p>
+            </div>
+
+            <div class="workflow-sim">
+                <h3>Support Ticket Workflow</h3>
+                <div class="workflow-step active" onclick="activateWorkflowStep(this)">
+                    <div class="workflow-icon">📝</div>
+                    <div>
+                        <h4>Query Reception</h4>
+                        <p>Customer submits support request via chat or email</p>
+                    </div>
+                </div>
+                <div class="workflow-step" onclick="activateWorkflowStep(this)">
+                    <div class="workflow-icon">🔍</div>
+                    <div>
+                        <h4>AI Classification</h4>
+                        <p>ChatGPT analyzes and categorizes the query type</p>
+                    </div>
+                </div>
+                <div class="workflow-step" onclick="activateWorkflowStep(this)">
+                    <div class="workflow-icon">🎯</div>
+                    <div>
+                        <h4>Priority Assignment</h4>
+                        <p>Automatic priority setting based on urgency and complexity</p>
+                    </div>
+                </div>
+                <div class="workflow-step" onclick="activateWorkflowStep(this)">
+                    <div class="workflow-icon">👥</div>
+                    <div>
+                        <h4>Agent Routing</h4>
+                        <p>Intelligent assignment to appropriate support specialist</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="case-study">
+                <h3>Customer Support Transformation</h3>
+                <div class="before-after">
+                    <div class="before">
+                        <h4>Traditional Support</h4>
+                        <ul>
+                            <li>⏰ 24-48 hour response time</li>
+                            <li>📞 Limited to business hours</li>
+                            <li>❓ Generic responses</li>
+                            <li>📈 High escalation rate (35%)</li>
+                            <li>😞 Customer satisfaction: 72%</li>
+                        </ul>
+                    </div>
+                    <div class="after">
+                        <h4>AI-Enhanced Support</h4>
+                        <ul>
+                            <li>⚡ Instant response (< 30 seconds)</li>
+                            <li>🌍 24/7 availability</li>
+                            <li>🎯 Personalized assistance</li>
+                            <li>📉 Escalation rate: 8%</li>
+                            <li>😊 Customer satisfaction: 94%</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Architecture Section -->
+        <section id="architecture" class="content-section">
+            <h2 class="section-title">System Architecture</h2>
+            
+            <div class="architecture-container">
+                <h3>Data Flow Architecture</h3>
+                <div class="diagram-flow">
+                    <div class="flow-node" onclick="highlightNode(this)">
+                        <div class="workflow-icon">🌐</div>
+                        <h4>Client Interface</h4>
+                        <p>Web/Mobile Apps</p>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node" onclick="highlightNode(this)">
+                        <div class="workflow-icon">🔒</div>
+                        <h4>API Gateway</h4>
+                        <p>Authentication & Routing</p>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node" onclick="highlightNode(this)">
+                        <div class="workflow-icon">⚙️</div>
+                        <h4>Processing Engine</h4>
+                        <p>ChatGPT Integration</p>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node" onclick="highlightNode(this)">
+                        <div class="workflow-icon">💾</div>
+                        <h4>Data Storage</h4>
+                        <p>Secure Database</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="expandable-section">
+                <button class="expand-toggle" onclick="toggleExpand(this)">
+                    Technical Architecture Details
+                    <span>▼</span>
+                </button>
+                <div class="expand-content">
+                    <h4>Microservices Architecture</h4>
+                    <ul>
+                        <li><strong>API Gateway:</strong> Kong/AWS API Gateway for request routing</li>
+                        <li><strong>Authentication Service:</strong> OAuth 2.0 with JWT tokens</li>
+                        <li><strong>Document Processing Service:</strong> Python-based with OCR capabilities</li>
+                        <li><strong>ChatGPT Integration Service:</strong> Node.js with OpenAI API</li>
+                        <li><strong>Notification Service:</strong> Real-time updates via WebSocket</li>
+                    </ul>
+                    
+                    <h4>Infrastructure</h4>
+                    <ul>
+                        <li><strong>Container Orchestration:</strong> Kubernetes for scalability</li>
+                        <li><strong>Database:</strong> PostgreSQL for structured data, MongoDB for documents</li>
+                        <li><strong>Caching:</strong> Redis for session management and API responses</li>
+                        <li><strong>Message Queue:</strong> RabbitMQ for asynchronous processing</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="workflow-sim">
+                <h3>API Integration Points</h3>
+                <div class="workflow-step" onclick="activateWorkflowStep(this)">
+                    <div class="workflow-icon">📡</div>
+                    <div>
+                        <h4>OpenAI ChatGPT API</h4>
+                        <p>Primary AI processing endpoint with GPT-4 integration</p>
+                        <div class="status-indicator status-online"></div>
+                        <span class="tooltip">Status: Online
+                            <span class="tooltip-text">API is responding normally with average latency of 180ms</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="workflow-step" onclick="activateWorkflowStep(this)">
+                    <div class="workflow-icon">💱</div>
+                    <div>
+                        <h4>Exchange APIs</h4>
+                        <p>Binance, Coinbase, Kraken price feeds</p>
+                        <div class="status-indicator status-online"></div>
+                        <span class="tooltip">Status: Online
+                            <span class="tooltip-text">All exchange APIs are operational with real-time data feeds</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="workflow-step" onclick="activateWorkflowStep(this)">
+                    <div class="workflow-icon">📄</div>
+                    <div>
+                        <h4>Document Processing API</h4>
+                        <p>OCR and text extraction services</p>
+                        <div class="status-indicator status-processing"></div>
+                        <span class="tooltip">Status: Processing
+                            <span class="tooltip-text">Currently processing 15 documents in queue</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Permissions Section -->
+        <section id="permissions" class="content-section">
+            <h2 class="section-title">Role-Based Access Control</h2>
+            
+            <div class="permission-matrix">
+                <table class="matrix-table">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>View Reports</th>
+                            <th>Edit Reports</th>
+                            <th>Approve Reports</th>
+                            <th>Delete Reports</th>
+                            <th>Manage Users</th>
+                            <th>System Config</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Viewer</strong></td>
+                            <td><span class="permission-badge permission-view">VIEW</span></td>
+                            <td><span class="permission-badge permission-none">NONE</span></td>
+                            <td><span class="permission-badge permission-none">NONE</span></td>
+                            <td><span class="permission-badge permission-none">NONE</span></td>
+                            <td><span class="permission-badge permission-none">NONE</span></td>
+                            <td><span class="permission-badge permission-none">NONE</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Analyst</strong></td>
+                            <td><span class="permission-badge permission-view">VIEW</span></td>
+                            <td><span class="permission-badge permission-edit">EDIT</span></td>
+                            <td><span class="permission-badge permission-none">NONE</span></td>
+                            <td><span class="permission-badge permission-none">NONE</span></td>
+                            <td><span class="permission-badge permission-none">NONE</span></td>
+                            <td><span class="permission-badge permission-none">NONE</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Manager</strong></td>
+                            <td><span class="permission-badge permission-view">VIEW</span></td>
+                            <td><span class="permission-badge permission-edit">EDIT</span></td>
+                            <td><span class="permission-badge permission-approve">APPROVE</span></td>
+                            <td><span class="permission-badge permission-edit">DELETE</span></td>
+                            <td><span class="permission-badge permission-none">NONE</span></td>
+                            <td><span class="permission-badge permission-none">NONE</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Administrator</strong></td>
+                            <td><span class="permission-badge permission-view">VIEW</span></td>
+                            <td><span class="permission-badge permission-edit">EDIT</span></td>
+                            <td><span class="permission-badge permission-approve">APPROVE</span></td>
+                            <td><span class="permission-badge permission-approve">DELETE</span></td>
+                            <td><span class="permission-badge permission-approve">MANAGE</span></td>
+                            <td><span class="permission-badge permission-approve">CONFIG</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="interactive-demo">
+                <h3>Authorization Workflow Simulation</h3>
+                <div class="demo-controls">
+                    <button class="demo-button" onclick="simulateAuth('viewer')">Viewer Access</button>
+                    <button class="demo-button" onclick="simulateAuth('analyst')">Analyst Access</button>
+                    <button class="demo-button" onclick="simulateAuth('manager')">Manager Access</button>
+                    <button class="demo-button" onclick="simulateAuth('admin')">Admin Access</button>
+                </div>
+                <div class="demo-output" id="authDemoOutput">
+                    Select a role above to simulate authorization workflow...
+                </div>
+            </div>
+
+            <div class="expandable-section">
+                <button class="expand-toggle" onclick="toggleExpand(this)">
+                    Advanced Permission Features
+                    <span>▼</span>
+                </button>
+                <div class="expand-content">
+                    <h4>Granular Permissions</h4>
+                    <ul>
+                        <li><strong>Document-Level Access:</strong> Control access to specific document types</li>
+                        <li><strong>Time-Based Permissions:</strong> Temporary access grants with expiration</li>
+                        <li><strong>IP Restrictions:</strong> Location-based access controls</li>
+                        <li><strong>Audit Trail:</strong> Complete logging of all permission changes</li>
+                    </ul>
+                    
+                    <h4>Integration Features</h4>
+                    <ul>
+                        <li><strong>LDAP/AD Integration:</strong> Sync with existing directory services</li>
+                        <li><strong>SSO Support:</strong> SAML and OAuth integration</li>
+                        <li><strong>Multi-Factor Authentication:</strong> Enhanced security options</li>
+                        <li><strong>API Key Management:</strong> Programmatic access control</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Case Studies Section -->
+        <section id="case-studies" class="content-section">
+            <h2 class="section-title">Implementation Case Studies</h2>
+            
+            <div class="case-study">
+                <h3>Case Study 1: Financial Services Company</h3>
+                <p><strong>Challenge:</strong> Processing 500+ regulatory reports monthly with high accuracy requirements</p>
+                
+                <div class="before-after">
+                    <div class="before">
+                        <h4>Previous Solution</h4>
+                        <ul>
+                            <li>Manual review process taking 2-3 days per report</li>
+                            <li>Team of 12 analysts working full-time</li>
+                            <li>Inconsistent quality and formatting</li>
+                            <li>High risk of regulatory compliance issues</li>
+                            <li>Annual cost: $2.4M in labor</li>
+                        </ul>
+                    </div>
+                    <div class="after">
+                        <h4>ChatGPT Integration Results</h4>
+                        <ul>
+                            <li>Automated processing in 2-4 hours per report</li>
+                            <li>Team reduced to 4 analysts for oversight</li>
+                            <li>Standardized output with 99.2% accuracy</li>
+                            <li>Zero compliance violations in 12 months</li>
+                            <li>Annual savings: $1.8M (75% reduction)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="expandable-section">
+                    <button class="expand-toggle" onclick="toggleExpand(this)">
+                        Implementation Details
+                        <span>▼</span>
+                    </button>
+                    <div class="expand-content">
+                        <h4>Technical Implementation</h4>
+                        <ul>
+                            <li>Custom ChatGPT fine-tuning for financial terminology</li>
+                            <li>Integration with existing document management system</li>
+                            <li>Automated workflow triggers based on document type</li>
+                            <li>Real-time compliance checking against regulatory databases</li>
+                        </ul>
+                        
+                        <h4>Key Success Factors</h4>
+                        <ul>
+                            <li>Comprehensive training data from historical reports</li>
+                            <li>Iterative refinement based on analyst feedback</li>
+                            <li>Robust error handling and fallback procedures</li>
+                            <li>Change management and staff retraining programs</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="case-study">
+                <h3>Case Study 2: Cryptocurrency Exchange</h3>
+                <p><strong>Challenge:</strong> Handling 10,000+ daily customer support tickets with 24/7 availability</p>
+                
+                <div class="before-after">
+                    <div class="before">
+                        <h4>Previous Support Model</h4>
+                        <ul>
+                            <li>Average response time: 18 hours</li>
+                            <li>Support team of 45 agents across time zones</li>
+                            <li>Customer satisfaction: 68%</li>
+                            <li>High agent turnover (40% annually)</li>
+                            <li>Escalation rate: 28%</li>
+                        </ul>
+                    </div>
+                    <div class="after">
+                        <h4>AI-Enhanced Support Results</h4>
+                        <ul>
+                            <li>Average response time: 45 seconds</li>
+                            <li>Support team reduced to 15 specialists</li>
+                            <li>Customer satisfaction: 91%</li>
+                            <li>Agent turnover reduced to 12%</li>
+                            <li>Escalation rate: 7%</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="workflow-sim">
+                    <h3>Support Ticket Resolution Flow</h3>
+                    <div class="workflow-step" onclick="activateWorkflowStep(this)">
+                        <div class="workflow-icon">📨</div>
+                        <div>
+                            <h4>Ticket Received</h4>
+                            <p>Customer query captured via chat, email, or form</p>
+                        </div>
+                    </div>
+                    <div class="workflow-step" onclick="activateWorkflowStep(this)">
+                        <div class="workflow-icon">🔍</div>
+                        <div>
+                            <h4>AI Analysis</h4>
+                            <p>ChatGPT categorizes query and determines complexity</p>
+                        </div>
+                    </div>
+                    <div class="workflow-step" onclick="activateWorkflowStep(this)">
+                        <div class="workflow-icon">⚡</div>
+                        <div>
+                            <h4>Automated Response</h4>
+                            <p>85% of queries resolved instantly with AI-generated solutions</p>
+                        </div>
+                    </div>
+                    <div class="workflow-step" onclick="activateWorkflowStep(this)">
+                        <div class="workflow-icon">👨‍💼</div>
+                        <div>
+                            <h4>Human Escalation</h4>
+                            <p>Complex cases routed to specialized agents with context</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Demo Section -->
+        <section id="demo" class="content-section">
+            <h2 class="section-title">Interactive Live Demo</h2>
+            
+            <div class="interactive-demo">
+                <h3>Scenario Selection</h3>
+                <div class="demo-controls">
+                    <button class="demo-button" onclick="setDemoScenario('report')">Report Analysis</button>
+                    <button class="demo-button" onclick="setDemoScenario('support')">Customer Support</button>
+                    <button class="demo-button" onclick="setDemoScenario('price')">Price Inquiry</button>
+                    <button class="demo-button" onclick="setDemoScenario('transaction')">Transaction Help</button>
+                </div>
+                <div class="demo-output" id="liveDemoOutput">
+                    Select a scenario above to begin the interactive demonstration...
+                </div>
+            </div>
+
+            <div class="workflow-sim">
+                <h3>Real-Time System Status</h3>
+                <div class="workflow-step">
+                    <div class="workflow-icon">🤖</div>
+                    <div>
+                        <h4>ChatGPT API</h4>
+                        <p>Response time: 180ms | Success rate: 99.8%</p>
+                        <div class="status-indicator status-online"></div>
+                        <span>Operational</span>
+                    </div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-icon">📊</div>
+                    <div>
+                        <h4>Price Data Feeds</h4>
+                        <p>Last update: 2 seconds ago | Sources: 3/3 active</p>
+                        <div class="status-indicator status-online"></div>
+                        <span>Operational</span>
+                    </div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-icon">💾</div>
+                    <div>
+                        <h4>Database Systems</h4>
+                        <p>Query time: 45ms | Connections: 127/200</p>
+                        <div class="status-indicator status-online"></div>
+                        <span>Operational</span>
+                    </div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-icon">🔒</div>
+                    <div>
+                        <h4>Security Services</h4>
+                        <p>Auth success: 99.9% | Threats blocked: 23 today</p>
+                        <div class="status-indicator status-online"></div>
+                        <span>Operational</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="expandable-section">
+                <button class="expand-toggle" onclick="toggleExpand(this)">
+                    Performance Metrics
+                    <span>▼</span>
+                </button>
+                <div class="expand-content">
+                    <h4>Current System Performance</h4>
+                    <ul>
+                        <li><strong>API Response Time:</strong> 180ms average (target: <200ms)</li>
+                        <li><strong>Throughput:</strong> 1,250 requests/minute</li>
+                        <li><strong>Error Rate:</strong> 0.2% (target: <1%)</li>
+                        <li><strong>Uptime:</strong> 99.97% (30-day average)</li>
+                        <li><strong>Customer Satisfaction:</strong> 4.7/5.0 stars</li>
+                    </ul>
+                    
+                    <h4>Resource Utilization</h4>
+                    <ul>
+                        <li><strong>CPU Usage:</strong> 45% average across all nodes</li>
+                        <li><strong>Memory Usage:</strong> 62% of allocated resources</li>
+                        <li><strong>Storage:</strong> 1.2TB used of 5TB capacity</li>
+                        <li><strong>Network:</strong> 2.3Gbps peak traffic</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Global variables
+        let currentSection = 'overview';
+        let demoScenario = null;
+        let processingSteps = [];
+        let currentStep = 0;
+
+        // Section Navigation
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            currentSection = sectionId;
+        }
+
+        // Expandable Sections
+        function toggleExpand(button) {
+            const content = button.nextElementSibling;
+            const arrow = button.querySelector('span');
+            
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                arrow.textContent = '▼';
+            } else {
+                content.classList.add('open');
+                arrow.textContent = '▲';
+            }
+        }
+
+        // Node Highlighting
+        function highlightNode(node) {
+            // Remove active class from all nodes
+            document.querySelectorAll('.flow-node').forEach(n => {
+                n.classList.remove('active');
+            });
+            
+            // Add active class to clicked node
+            node.classList.add('active');
+            
+            // Remove active class after 2 seconds
+            setTimeout(() => {
+                node.classList.remove('active');
+            }, 2000);
+        }
+
+        // Workflow Step Activation
+        function activateWorkflowStep(step) {
+            // Remove active class from all steps
+            step.parentElement.querySelectorAll('.workflow-step').forEach(s => {
+                s.classList.remove('active');
+            });
+            
+            // Add active class to clicked step
+            step.classList.add('active');
+            
+            // Remove active class after 3 seconds
+            setTimeout(() => {
+                step.classList.remove('active');
+            }, 3000);
+        }
+
+        // Report Processing Simulation
+        function simulateReportProcessing() {
+            const steps = document.querySelectorAll('.progress-step .step-number');
+            let currentStep = 0;
+            
+            // Reset all steps
+            steps.forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+            
+            function processNextStep() {
+                if (currentStep > 0) {
+                    steps[currentStep - 1].classList.remove('active');
+                    steps[currentStep - 1].classList.add('completed');
+                }
+                
+                if (currentStep < steps.length) {
+                    steps[currentStep].classList.add('active');
+                    currentStep++;
+                    setTimeout(processNextStep, 1500);
+                }
+            }
+            
+            processNextStep();
+        }
+
+        // Customer Support Simulations
+        function simulateCustomerQuery() {
+            const output = document.getElementById('walletDemoOutput');
+            output.innerHTML = `
+                <div style="color: #4CAF50; margin-bottom: 1rem;">
+                    <strong>Customer:</strong> "I can't access my wallet, it says my password is incorrect but I'm sure it's right."
+                </div>
+                <div style="color: #2196F3; margin-bottom: 1rem;">
+                    <strong>ChatGPT Analysis:</strong> Password authentication issue detected. Checking common causes...
+                </div>
+                <div style="color: #FF9800; margin-bottom: 1rem;">
+                    <strong>AI Response:</strong> "I understand your frustration. Let me help you resolve this login issue. Based on your description, here are the most likely solutions:
+                    
+                    1. **Caps Lock Check**: Ensure Caps Lock is off as passwords are case-sensitive
+                    2. **Browser Cache**: Try clearing your browser cache and cookies
+                    3. **Password Reset**: If the issue persists, I can initiate a secure password reset
+                    
+                    Would you like me to send you a password reset link to your registered email?"
+                </div>
+                <div style="color: #9C27B0;">
+                    <strong>Ticket Status:</strong> Auto-resolved | Satisfaction: ⭐⭐⭐⭐⭐
+                </div>
+            `;
+        }
+
+        function simulatePriceQuery() {
+            const output = document.getElementById('walletDemoOutput');
+            output.innerHTML = `
+                <div style="color: #4CAF50; margin-bottom: 1rem;">
+                    <strong>Customer:</strong> "What's the current price of Bitcoin and Ethereum?"
+                </div>
+                <div style="color: #2196F3; margin-bottom: 1rem;">
+                    <strong>ChatGPT Processing:</strong> Fetching real-time prices from multiple exchanges...
+                </div>
+                <div style="color: #FF9800; margin-bottom: 1rem;">
+                    <strong>AI Response:</strong> "Here are the current cryptocurrency prices:
+                    
+                    **Bitcoin (BTC):**
+                    • Binance: $43,250.00 (+2.3%)
+                    • Coinbase: $43,245.50 (+2.2%)
+                    • Kraken: $43,255.75 (+2.4%)
+                    • Average: $43,250.42
+                    
+                    **Ethereum (ETH):**
+                    • Binance: $2,680.50 (-1.2%)
+                    • Coinbase: $2,682.25 (-1.1%)
+                    • Kraken: $2,679.80 (-1.3%)
+                    • Average: $2,680.85
+                    
+                    Prices updated 15 seconds ago. Would you like price alerts for these cryptocurrencies?"
+                </div>
+                <div style="color: #9C27B0;">
+                    <strong>Data Sources:</strong> 3 exchanges | <strong>Latency:</strong> 120ms
+                </div>
+            `;
+        }
+
+        function simulateTicketGeneration() {
+            const output = document.getElementById('walletDemoOutput');
+            output.innerHTML = `
+                <div style="color: #4CAF50; margin-bottom: 1rem;">
+                    <strong>Customer:</strong> "My transaction has been pending for 3 hours. Transaction ID: 0x1a2b3c4d..."
+                </div>
+                <div style="color: #2196F3; margin-bottom: 1rem;">
+                    <strong>ChatGPT Analysis:</strong> Transaction delay issue detected. Analyzing blockchain status...
+                </div>
+                <div style="color: #FF9800; margin-bottom: 1rem;">
+                    <strong>Ticket Generated:</strong>
+                    • **Ticket ID:** #TXN-2024-001247
+                    • **Category:** Transaction Delay
+                    • **Priority:** High (3+ hour delay)
+                    • **Assigned to:** Blockchain Specialist Team
+                    • **SLA:** 2 hours response time
+                    
+                    **Initial Analysis:**
+                    - Transaction found on blockchain
+                    - Status: Pending (12 confirmations needed)
+                    - Network congestion detected
+                    - Estimated completion: 45 minutes
+                </div>
+                <div style="color: #9C27B0;">
+                    <strong>Auto-Actions:</strong> Customer notified | Specialist alerted | Monitoring enabled
+                </div>
+            `;
+        }
+
+        function simulateTransactionHelp() {
+            const output = document.getElementById('walletDemoOutput');
+            output.innerHTML = `
+                <div style="color: #4CAF50; margin-bottom: 1rem;">
+                    <strong>Customer:</strong> "How do I send Bitcoin to another wallet? I'm new to this."
+                </div>
+                <div style="color: #2196F3; margin-bottom: 1rem;">
+                    <strong>ChatGPT Analysis:</strong> New user requesting transaction guidance. Providing step-by-step instructions...
+                </div>
+                <div style="color: #FF9800; margin-bottom: 1rem;">
+                    <strong>AI Response:</strong> "I'll guide you through sending Bitcoin safely:
+                    
+                    **Step-by-Step Process:**
+                    1. **Open your wallet** and navigate to 'Send' or 'Transfer'
+                    2. **Enter recipient address** - Double-check this carefully!
+                    3. **Specify amount** - You can enter in BTC or USD equivalent
+                    4. **Set transaction fee** - Higher fee = faster confirmation
+                    5. **Review details** - Verify address and amount
+                    6. **Confirm transaction** - Enter your wallet password/PIN
+                    
+                    **Important Safety Tips:**
+                    ⚠️ Always verify the recipient address
+                    ⚠️ Start with a small test transaction
+                    ⚠️ Bitcoin transactions are irreversible
+                    
+                    Would you like me to walk you through each step in detail?"
+                </div>
+                <div style="color: #9C27B0;">
+                    <strong>Follow-up:</strong> Educational content sent | Tutorial video linked
+                </div>
+            `;
+        }
+
+        // Authorization Simulation
+        function simulateAuth(role) {
+            const output = document.getElementById('authDemoOutput');
+            const permissions = {
+                viewer: {
+                    allowed: ['View reports', 'Export data'],
+                    denied: ['Edit reports', 'Delete reports', 'Approve reports', 'Manage users']
+                },
+                analyst: {
+                    allowed: ['View reports', 'Edit reports', 'Create reports', 'Export data'],
+                    denied: ['Delete reports', 'Approve reports', 'Manage users', 'System config']
+                },
+                manager: {
+                    allowed: ['View reports', 'Edit reports', 'Approve reports', 'Delete reports', 'Manage team'],
+                    denied: ['Manage all users', 'System configuration', 'Security settings']
+                },
+                admin: {
+                    allowed: ['All system functions', 'User management', 'System configuration', 'Security settings'],
+                    denied: []
+                }
+            };
+            
+            const roleData = permissions[role];
+            const roleName = role.charAt(0).toUpperCase() + role.slice(1);
+            
+            output.innerHTML = `
+                <div style="color: #2196F3; margin-bottom: 1rem;">
+                    <strong>Authorization Check for ${roleName} Role:</strong>
+                </div>
+                <div style="color: #4CAF50; margin-bottom: 1rem;">
+                    <strong>✅ Allowed Actions:</strong>
+                    ${roleData.allowed.map(action => `<br>• ${action}`).join('')}
+                </div>
+                ${roleData.denied.length > 0 ? `
+                <div style="color: #F44336; margin-bottom: 1rem;">
+                    <strong>❌ Restricted Actions:</strong>
+                    ${roleData.denied.map(action => `<br>• ${action}`).join('')}
+                </div>
+                ` : ''}
+                <div style="color: #FF9800;">
+                    <strong>Session Info:</strong> Token valid for 8 hours | Last login: 2 minutes ago
+                </div>
+            `;
+        }
+
+        // Live Demo Scenarios
+        function setDemoScenario(scenario) {
+            const output = document.getElementById('liveDemoOutput');
+            demoScenario = scenario;
+            
+            const scenarios = {
+                report: {
+                    title: "Report Analysis Demo",
+                    description: "Upload a financial report for AI-powered analysis",
+                    simulation: simulateReportAnalysis
+                },
+                support: {
+                    title: "Customer Support Demo",
+                    description: "Experience AI-powered customer service",
+                    simulation: simulateCustomerQuery
+                },
+                price: {
+                    title: "Price Inquiry Demo",
+                    description: "Get real-time cryptocurrency prices",
+                    simulation: simulatePriceQuery
+                },
+                transaction: {
+                    title: "Transaction Help Demo",
+                    description: "Receive step-by-step transaction guidance",
+                    simulation: simulateTransactionHelp
+                }
+            };
+            
+            const selectedScenario = scenarios[scenario];
+            
+            output.innerHTML = `
+                <div style="color: #2196F3; margin-bottom: 1rem;">
+                    <strong>${selectedScenario.title}</strong>
+                </div>
+                <div style="margin-bottom: 2rem;">
+                    ${selectedScenario.description}
+                </div>
+                <button class="demo-button" onclick="${selectedScenario.simulation.name}()">
+                    Start ${selectedScenario.title}
+                </button>
+            `;
+        }
+
+        function simulateReportAnalysis() {
+            const output = document.getElementById('liveDemoOutput');
+            output.innerHTML = `
+                <div style="color: #4CAF50; margin-bottom: 1rem;">
+                    <strong>📄 Document Uploaded:</strong> Q4_Financial_Report.pdf (2.3 MB)
+                </div>
+                <div style="color: #2196F3; margin-bottom: 1rem;">
+                    <strong>🔍 AI Analysis in Progress...</strong>
+                    <br>• Extracting text and tables... ✅
+                    <br>• Identifying key financial metrics... ✅
+                    <br>• Analyzing trends and patterns... ✅
+                    <br>• Generating insights and recommendations... ✅
+                </div>
+                <div style="color: #FF9800; margin-bottom: 1rem;">
+                    <strong>📊 Analysis Results:</strong>
+                    <br><strong>Revenue Growth:</strong> +12.5% YoY
+                    <br><strong>Profit Margin:</strong> 18.3% (industry avg: 15.2%)
+                    <br><strong>Risk Assessment:</strong> Low-Medium
+                    <br><strong>Key Recommendations:</strong>
+                    <br>• Increase R&D investment by 8%
+                    <br>• Optimize operational costs in Q1
+                    <br>• Consider market expansion opportunities
+                </div>
+                <div style="color: #9C27B0;">
+                    <strong>Processing Time:</strong> 2.3 seconds | <strong>Confidence:</strong> 94%
+                </div>
+            `;
+        }
+
+        // Price Ticker Updates
+        function updatePriceTicker() {
+            const prices = [
+                { symbol: 'BTC', price: 43250 + (Math.random() - 0.5) * 1000, change: (Math.random() - 0.5) * 5 },
+                { symbol: 'ETH', price: 2680 + (Math.random() - 0.5) * 100, change: (Math.random() - 0.5) * 3 },
+                { symbol: 'BNB', price: 315 + (Math.random() - 0.5) * 20, change: (Math.random() - 0.5) * 2 },
+                { symbol: 'ADA', price: 0.485 + (Math.random() - 0.5) * 0.05, change: (Math.random() - 0.5) * 4 }
+            ];
+            
+            const ticker = document.getElementById('priceTicker');
+            if (ticker) {
+                ticker.innerHTML = prices.map(p => {
+                    const changeClass = p.change >= 0 ? 'price-up' : 'price-down';
+                    const changeSymbol = p.change >= 0 ? '+' : '';
+                    return `<span class="price-item">${p.symbol}: <span class="${changeClass}">$${p.price.toFixed(p.symbol === 'ADA' ? 3 : 2)} (${changeSymbol}${p.change.toFixed(1)}%)</span></span>`;
+                }).join('');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update price ticker every 5 seconds
+            setInterval(updatePriceTicker, 5000);
+            
+            // Add keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                const sections = ['overview', 'report-processing', 'wallet-support', 'architecture', 'permissions', 'case-studies', 'demo'];
+                const currentIndex = sections.indexOf(currentSection);
+                
+                if (e.key === 'ArrowRight' && currentIndex < sections.length - 1) {
+                    showSection(sections[currentIndex + 1]);
+                    document.querySelector(`[onclick="showSection('${sections[currentIndex + 1]}')"]`).click();
+                } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                    showSection(sections[currentIndex - 1]);
+                    document.querySelector(`[onclick="showSection('${sections[currentIndex - 1]}')"]`).click();
+                }
+            });
+            
+            // Add smooth scrolling for better UX
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelector('.presentation-container').scrollTop = 0;
+                });
+            });
+        });
+
+        // Offline functionality check
+        function checkOfflineCapability() {
+            if (!navigator.onLine) {
+                document.body.insertAdjacentHTML('afterbegin', `
+                    <div style="background: #ff6b6b; color: white; padding: 1rem; text-align: center; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;">
+                        ⚠️ Offline Mode: All interactive features are available without internet connection
+                    </div>
+                `);
+            }
+        }
+
+        // Check offline status on load
+        window.addEventListener('load', checkOfflineCapability);
+        window.addEventListener('online', () => location.reload());
+        window.addEventListener('offline', checkOfflineCapability);
+    </script>
+</body>
+</html>

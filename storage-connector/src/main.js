@@ -21,7 +21,7 @@ const configPath = path.join(os.homedir(), '.topay-storage-config.json');
 
 // Default configuration
 const defaultConfig = {
-  port: 3002,
+  port: 3003,
   dataPath: path.join(os.homedir(), 'topay-storage-data'),
   maxStorageSize: '10GB',
   blockchainUrl: 'http://localhost:3000',

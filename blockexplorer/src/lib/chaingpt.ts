@@ -58,7 +58,7 @@ export class ChainGPTService {
 
   constructor(config: ChainGPTConfig) {
     this.config = config;
-    this.baseUrl = config.baseUrl || 'https://api.chaingpt.org';
+    this.baseUrl = config.baseUrl || process.env.NEXT_PUBLIC_CHAINGPT_API_URL || 'https://api.chaingpt.org';
   }
 
   /**

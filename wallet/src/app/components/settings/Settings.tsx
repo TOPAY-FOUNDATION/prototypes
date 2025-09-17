@@ -45,7 +45,7 @@ export default function Settings() {
     },
     network: {
       autoConnect: true,
-      nodeUrl: 'https://mainnet.topay.org',
+      nodeUrl: process.env.NEXT_PUBLIC_TOPAY_MAINNET_URL || 'https://mainnet.topay.org',
       syncMode: 'light',
     },
     privacy: {
@@ -90,7 +90,7 @@ export default function Settings() {
       },
       network: {
         autoConnect: true,
-        nodeUrl: 'https://mainnet.topay.org',
+        nodeUrl: process.env.NEXT_PUBLIC_TOPAY_MAINNET_URL || 'https://mainnet.topay.org',
         syncMode: 'light',
       },
       privacy: {
@@ -268,7 +268,7 @@ export default function Settings() {
               value={settings.network.nodeUrl}
               onChange={(e) => updateSettings('network', 'nodeUrl', e.target.value)}
               className={styles.input}
-              placeholder="https://mainnet.topay.org"
+              placeholder={process.env.NEXT_PUBLIC_TOPAY_MAINNET_URL || "https://mainnet.topay.org"}
             />
           </div>
           <div className={styles.settingItem}>

@@ -39,7 +39,7 @@ class BlockchainClient {
 
   constructor(config?: Partial<BlockchainConfig>) {
     this.config = {
-      rpcUrl: config?.rpcUrl || 'http://localhost:8545/rpc',
+      rpcUrl: config?.rpcUrl || process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3000/rpc',
       networkName: config?.networkName || 'TOPAY Network',
       chainId: config?.chainId || 1
     };

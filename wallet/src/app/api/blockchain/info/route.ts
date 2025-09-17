@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server.js';
 
 export async function GET() {
   try {
-    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001/rpc';
+    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3000/rpc';
     
     // Get blockchain info using RPC calls
     const chainInfoRequest = {
@@ -37,7 +37,7 @@ export async function GET() {
       return NextResponse.json(
         { 
           error: 'Cannot connect to blockchain',
-          suggestion: 'Make sure the blockchain server is running on port 3001'
+          suggestion: 'Make sure the blockchain server is running on port 3000'
         },
         { status: 503 }
       );

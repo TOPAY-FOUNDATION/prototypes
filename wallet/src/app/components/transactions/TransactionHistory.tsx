@@ -319,7 +319,7 @@ export default function TransactionHistory({ walletAddress }: TransactionHistory
               }}
               onClick={() => {
                 // Open transaction in block explorer
-                window.open(`https://explorer.topay.org/tx/${tx.hash}`, '_blank');
+                window.open(`${process.env.NEXT_PUBLIC_TOPAY_EXPLORER_URL || 'https://explorer.topay.org'}/tx/${tx.hash}`, '_blank');
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>

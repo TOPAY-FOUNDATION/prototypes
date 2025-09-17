@@ -45,7 +45,7 @@ class UnifiedBlockchainSystem {
             console.log('\n✅ All blockchain services started successfully!');
             console.log('🌐 System Endpoints:');
             console.log('  📡 RPC Server: http://localhost:3001/rpc');
-            console.log('  💾 Storage Client: http://localhost:3002');
+  console.log(`  💾 Storage Client: ${process.env.STORAGE_URL || 'http://localhost:3002'}`);
             console.log('\n🎉 TOPAY Blockchain System is ready!');
             
             // Setup graceful shutdown
@@ -64,7 +64,7 @@ class UnifiedBlockchainSystem {
             this.services.storageClient = new StorageClient({
                 port: 3002,
                 dataPath: './storage-data',
-                blockchainUrl: 'http://localhost:3001',
+                blockchainUrl: process.env.BLOCKCHAIN_URL || 'http://localhost:3001',
                 registrationInterval: 5000 // Register every 5 seconds
             });
             

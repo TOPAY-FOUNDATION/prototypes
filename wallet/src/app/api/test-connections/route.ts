@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import BlockchainClient from '../../../lib/blockchain-client.js';
 
-const blockchainClient = new BlockchainClient('http://localhost:3001');
+const blockchainClient = new BlockchainClient(process.env.BLOCKCHAIN_URL || 'http://localhost:3000');
 
 /**
  * Test API endpoint to verify connections between wallet, blockchain, and validator
@@ -11,21 +11,21 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     wallet: {
       status: 'running',
-      port: 3000,
-      url: 'http://localhost:3000'
+      port: parseInt(process.env.NEXT_PUBLIC_WALLET_URL?.split(':')[2] || '3001'),
+      url: process.env.NEXT_PUBLIC_WALLET_URL || 'http://localhost:3001'
     },
     blockchain: {
       status: 'unknown' as 'unknown' | 'running' | 'stopped' | 'error',
-      port: 3001,
-      url: 'http://localhost:3001',
+      port: parseInt(process.env.BLOCKCHAIN_URL?.split(':')[2] || '3000'),
+      url: process.env.BLOCKCHAIN_URL || 'http://localhost:3000',
       connected: false,
       blockCount: 0,
       error: null as string | null
     },
     validator: {
       status: 'unknown' as 'unknown' | 'running' | 'error',
-      port: 8547,
-      url: 'http://localhost:8547',
+      port: parseInt(process.env.VALIDATOR_URL?.split(':')[2] || '8547'),
+      url: process.env.VALIDATOR_URL || 'http://localhost:8547',
       connected: false,
       error: null as string | null
     },
@@ -58,7 +58,7 @@ export async function GET() {
 
   // Test validator connection
   try {
-    const validatorResponse = await fetch('http://localhost:8547/api/status', {
+    const validatorResponse = await fetch(`${process.env.VALIDATOR_URL || 'http://localhost:8547'}/api/status`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(5000)

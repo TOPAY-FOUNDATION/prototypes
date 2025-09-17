@@ -6,7 +6,7 @@ export async function GET(
 ) {
   try {
     const { address } = await params;
-    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001/rpc';
+    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3000/rpc';
     
     // Get transaction history using blockchain RPC
     const requestBody = {
@@ -28,7 +28,7 @@ export async function GET(
       return NextResponse.json(
         { 
           error: 'Cannot connect to blockchain',
-          suggestion: 'Make sure the blockchain server is running on port 3001'
+          suggestion: 'Make sure the blockchain server is running on port 3000'
         },
         { status: 503 }
       );

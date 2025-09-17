@@ -24,8 +24,8 @@ import axios from 'axios';
 dotenv.config();
 
 // Configuration
-const DEFAULT_PORT = process.env.STORAGE_PORT || 3002;
-const DEFAULT_BLOCKCHAIN_URL = process.env.BLOCKCHAIN_URL || 'http://localhost:3000';
+const DEFAULT_PORT = process.env.STORAGE_PORT || 3003;
+const DEFAULT_BLOCKCHAIN_URL = process.env.BLOCKCHAIN_URL || 'http://localhost:3001';
 const DEFAULT_DATA_DIR = process.env.STORAGE_DATA_DIR || './storage-data';
 const DEFAULT_MAX_STORAGE = process.env.MAX_STORAGE_SIZE || 10 * 1024 * 1024 * 1024; // 10GB
 const DEFAULT_CAPABILITIES = process.env.STORAGE_CAPABILITIES ? process.env.STORAGE_CAPABILITIES.split(',') : ['store', 'retrieve', 'backup'];
@@ -44,7 +44,7 @@ class StorageClient {
         this.maxStorageSize = options.maxStorageSize || DEFAULT_MAX_STORAGE;
         
         // Blockchain server connection settings
-        this.blockchainUrl = options.blockchainUrl || DEFAULT_BLOCKCHAIN_URL;
+        this.blockchainUrl = options.blockchainUrl || 'http://localhost:3000'; // Remote storage server
         this.registrationInterval = options.registrationInterval || 30000; // 30 seconds
         this.isRegistered = false;
         this.registrationTimer = null;

@@ -82,7 +82,7 @@ export default function Account({ walletAddress }: AccountProps) {
   // Generate avatar URL based on wallet address
   const getAvatarUrl = (address: string) => {
     if (!address) return '';
-    return `https://api.dicebear.com/9.x/identicon/svg?seed=${address}`;
+    return `${process.env.NEXT_PUBLIC_DICEBEAR_API_URL || 'https://api.dicebear.com/9.x/identicon/svg'}?seed=${address}`;
   };
 
   const showMessage = (text: string) => {

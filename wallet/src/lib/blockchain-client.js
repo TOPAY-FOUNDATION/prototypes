@@ -4,7 +4,7 @@
  */
 
 class BlockchainClient {
-  constructor(rpcUrl = 'http://localhost:3001') {
+  constructor(rpcUrl = process.env.BLOCKCHAIN_URL || 'http://localhost:3000') {
     this.rpcUrl = rpcUrl;
     this.requestId = 1;
   }

@@ -182,7 +182,7 @@ export class PersistenceManager {
   getDefaultConfig() {
     return {
       network: {
-        port: 3001,
+        port: 3000,
         peers: [],
         maxPeers: 10
       },

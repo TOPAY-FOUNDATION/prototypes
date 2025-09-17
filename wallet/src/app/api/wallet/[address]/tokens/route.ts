@@ -37,7 +37,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Connect to blockchain client
-    const blockchainUrl = process.env.BLOCKCHAIN_URL || 'http://localhost:3001';
+    const blockchainUrl = process.env.BLOCKCHAIN_URL || 'http://localhost:3000';
     
     try {
       const response = await fetch(`${blockchainUrl}/rpc`, {
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Connect to blockchain client
-    const blockchainUrl = process.env.BLOCKCHAIN_URL || 'http://localhost:3001';
+    const blockchainUrl = process.env.BLOCKCHAIN_URL || 'http://localhost:3000';
     
     let method = '';
     let rpcParams = [];

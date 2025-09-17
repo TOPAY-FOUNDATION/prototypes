@@ -521,9 +521,15 @@ class RemoteBlockchainServer {
                 console.error('💥 Storage error:', error.message);
             });
             
-            // Store genesis block
+            // Store genesis block (skip if no storage devices available)
             if (this.blockchain.chain.length > 0) {
-                await this.storageAdapter.storeBlock(this.blockchain.chain[0]);
+                try {
+                    await this.storageAdapter.storeBlock(this.blockchain.chain[0]);
+                    console.log('✅ Genesis block stored successfully');
+                } catch (error) {
+                    console.log('⚠️ Genesis block storage skipped - no storage devices available yet');
+                    console.log('   Storage devices can register after server startup');
+                }
             }
             
             this.isInitialized = true;
