@@ -46,7 +46,7 @@ export async function GET() {
       
       // Get blockchain info
       const chainInfo = await blockchainClient.getChainInfo();
-      results.blockchain.blockCount = chainInfo.blockCount || 0;
+      results.blockchain.blockCount = chainInfo.blockHeight || 0;
     } else {
       results.blockchain.status = 'stopped';
       results.blockchain.error = 'Blockchain server not responding';
@@ -79,12 +79,13 @@ export async function GET() {
   // Test blockchain-validator connection
   if (results.blockchain.connected) {
     try {
-      const networkStats = await blockchainClient.rpcCall('topay_getNetworkStats');
-      if (networkStats && networkStats.validators) {
-        results.connections.blockchainToValidator = networkStats.validators.active > 0;
+      // Try to get blockchain info to test connection
+      const blockchainInfo = await blockchainClient.getBlockchainInfo();
+      if (blockchainInfo && blockchainInfo.chainValid !== false) {
+        results.connections.blockchainToValidator = true;
       }
     } catch (error) {
-      console.log('Could not get validator stats from blockchain:', (error as Error).message);
+      console.log('Could not get blockchain info for validator test:', (error as Error).message);
     }
   }
 

@@ -1,18 +1,17 @@
 interface BlockchainConfig {
-  rpcUrl: string;
+  apiUrl: string;
   networkName: string;
   chainId: number;
 }
 
 interface Block {
-  number: number;
+  index: number;
   hash: string;
-  parentHash: string;
+  previousHash: string;
   timestamp: number;
-  transactions: Transaction[];
-  miner: string;
-  gasUsed: number;
-  gasLimit: number;
+  data: string | object | null;
+  nonce: number;
+  difficulty: number;
 }
 
 interface Transaction {
@@ -20,11 +19,7 @@ interface Transaction {
   from: string;
   to: string;
   value: string;
-  gas: number;
-  gasPrice: string;
-  blockNumber: number;
-  blockHash: string;
-  transactionIndex: number;
+  blockIndex: number;
   timestamp: number;
 }
 
@@ -34,92 +29,169 @@ interface Address {
   transactionCount: number;
 }
 
+interface BlockchainStats {
+  totalBlocks: number;
+  difficulty: number;
+  hashRate: string;
+  networkName: string;
+  version: string;
+}
+
 class BlockchainClient {
   private config: BlockchainConfig;
 
   constructor(config?: Partial<BlockchainConfig>) {
     this.config = {
-      rpcUrl: config?.rpcUrl || process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3000/rpc',
+      apiUrl: config?.apiUrl || process.env.NEXT_PUBLIC_BLOCKCHAIN_API_URL || 'http://localhost:3002',
       networkName: config?.networkName || 'TOPAY Network',
       chainId: config?.chainId || 1
     };
+    console.log(`[DEBUG] BlockchainClient initialized with apiUrl: ${this.config.apiUrl}`);
   }
 
-  private async makeRPCCall(method: string, params: unknown[] = []): Promise<unknown> {
+  private async makeAPICall(endpoint: string, options?: RequestInit): Promise<unknown> {
     try {
-      const response = await fetch(this.config.rpcUrl, {
-        method: 'POST',
+      const url = `${this.config.apiUrl}${endpoint}`;
+      console.log(`[DEBUG] Making API call to URL: ${url}`);
+      const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          method,
-          params,
-          id: Date.now()
-        })
+        ...options
       });
 
       if (!response.ok) {
+        console.error(`[DEBUG] API call failed: ${response.status} ${response.statusText} for URL: ${url}`);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log(`[DEBUG] API call successful for URL: ${url}`);
       
       if (data.error) {
-        throw new Error(data.error.message || 'RPC call failed');
+        throw new Error(data.error || 'API call failed');
       }
 
-      return data.result;
+      return data;
     } catch (error) {
-      console.error('RPC call failed:', error);
+      console.error(`[DEBUG] API call error for endpoint ${endpoint}:`, error);
       throw error;
     }
   }
 
   async getLatestBlock(): Promise<Block> {
-    const blockData = await this.makeRPCCall('topay_getBlock', ['latest']);
-    return this.formatBlock(blockData);
+    const data = await this.makeAPICall('/topay/blocks') as unknown[];
+    if (Array.isArray(data) && data.length > 0) {
+      return this.formatBlock(data[data.length - 1]);
+    }
+    throw new Error('No blocks found');
   }
 
-  async getBlockByNumber(blockNumber: number): Promise<Block> {
-    const blockData = await this.makeRPCCall('topay_getBlock', [blockNumber]);
-    return this.formatBlock(blockData);
+  async getBlockByNumber(blockIndex: number): Promise<Block> {
+    const data = await this.makeAPICall(`/topay/blocks/${blockIndex}`) as { block: unknown };
+    return this.formatBlock(data.block);
   }
 
   async getBlockByHash(blockHash: string): Promise<Block> {
-    const blockData = await this.makeRPCCall('topay_getBlockByHash', [blockHash]);
-    return this.formatBlock(blockData);
+    // Search for block by hash using the search endpoint
+    const data = await this.makeAPICall(`/topay/search?q=${blockHash}`) as { results?: unknown[] };
+    if (data.results && data.results.length > 0) {
+      return this.formatBlock(data.results[0]);
+    }
+    throw new Error('Block not found');
+  }
+
+  async getBlocks(limit: number = 10): Promise<Block[]> {
+    const data = await this.makeAPICall('/topay/blocks') as { blocks?: unknown[] } | unknown[];
+    if (Array.isArray(data)) {
+      return data.slice(-limit).map((block: unknown) => this.formatBlock(block));
+    } else if (data && typeof data === 'object' && 'blocks' in data && Array.isArray(data.blocks)) {
+      return data.blocks.slice(-limit).map((block: unknown) => this.formatBlock(block));
+    }
+    return [];
+  }
+
+  async getBlockchainStats(): Promise<BlockchainStats> {
+    const data = await this.makeAPICall('/topay/stats') as {
+      totalBlocks?: number;
+      difficulty?: number;
+      hashRate?: string;
+      version?: string;
+    };
+    return {
+      totalBlocks: data.totalBlocks || 0,
+      difficulty: data.difficulty || 1,
+      hashRate: data.hashRate || '0 H/s',
+      networkName: this.config.networkName,
+      version: data.version || '1.0.0'
+    };
+  }
+
+  async searchBlocks(query: string): Promise<Block[]> {
+    const data = await this.makeAPICall(`/topay/search?q=${encodeURIComponent(query)}`) as { results?: unknown[] };
+    if (data && typeof data === 'object' && 'results' in data && Array.isArray(data.results)) {
+      return data.results.map((block: unknown) => this.formatBlock(block));
+    }
+    return [];
+  }
+
+  async addTransaction(transactionData: { from: string; to: string; value: string; data?: string }): Promise<Block> {
+    const data = await this.makeAPICall('/topay/transaction', {
+      method: 'POST',
+      body: JSON.stringify({ data: transactionData })
+    }) as { block: unknown };
+    return this.formatBlock(data.block);
+  }
+
+  async validateBlockchain(): Promise<boolean> {
+    const data = await this.makeAPICall('/topay/validate') as { valid?: boolean };
+    return data.valid || false;
   }
 
   async getTransaction(txHash: string): Promise<Transaction> {
-    const txData = await this.makeRPCCall('topay_getTransactionByHash', [txHash]);
-    return this.formatTransaction(txData);
+    // Since the blockchain service doesn't have individual transaction endpoints,
+    // we'll search for the transaction in blocks
+    const blocks = await this.getBlocks(50); // Get recent blocks
+    for (const block of blocks) {
+      if (block.data && typeof block.data === 'object' && 'hash' in block.data) {
+        const txData = block.data as { hash?: string; from?: string; to?: string; value?: string };
+        if (txData.hash === txHash) {
+          return this.formatTransaction({
+            hash: txHash,
+            from: txData.from || 'unknown',
+            to: txData.to || 'unknown',
+            value: txData.value || '0',
+            blockIndex: block.index,
+            timestamp: block.timestamp
+          });
+        }
+      }
+    }
+    throw new Error('Transaction not found');
   }
 
-  async getAddressBalance(address: string): Promise<string> {
-    const balance = await this.makeRPCCall('topay_getBalance', [address]);
-    return balance as string;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getAddressBalance(_address: string): Promise<string> {
+    // Since the blockchain service doesn't have address-specific endpoints,
+    // we'll return a placeholder for now
+    return '0';
   }
 
-  async getAddressTransactionCount(address: string): Promise<number> {
-    const count = await this.makeRPCCall('topay_getTransactionCount', [address]);
-    return typeof count === 'number' ? count : parseInt(count as string, 10);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getAddressTransactionCount(_address: string): Promise<number> {
+    // Since the blockchain service doesn't have address-specific endpoints,
+    // we'll return 0 for now
+    return 0;
   }
 
   async getNetworkInfo() {
     try {
-      const [chainInfo, blockNumber] = await Promise.all([
-        this.makeRPCCall('topay_getChainInfo'),
-        this.makeRPCCall('topay_getBlockNumber')
-      ]);
-      
-      const chainData = chainInfo as { chainId?: number; networkName?: string };
+      const stats = await this.getBlockchainStats();
       
       return {
-        chainId: chainData.chainId || this.config.chainId,
-        latestBlock: typeof blockNumber === 'number' ? blockNumber : parseInt(blockNumber as string, 10),
-        networkName: chainData.networkName || this.config.networkName
+        chainId: this.config.chainId,
+        latestBlock: stats.totalBlocks - 1, // Latest block index
+        networkName: this.config.networkName
       };
     } catch (error) {
       console.error('Failed to get network info:', error);
@@ -147,43 +219,33 @@ class BlockchainClient {
         return false;
       }
       
-      // Check if address has any transaction history or balance
-      const [balance, txCount] = await Promise.all([
-        this.getAddressBalance(address),
-        this.getAddressTransactionCount(address)
-      ]);
-      
-      // Address exists if it has balance > 0 or transaction count > 0
-      const hasBalance = balance && balance !== '0';
-      const hasTxHistory = txCount > 0;
-      
-      return hasBalance || hasTxHistory;
+      // For now, we'll consider any non-empty address as valid
+      // since the blockchain service doesn't have address validation
+      return address.length > 0;
     } catch (error) {
       console.error('Address validation failed:', error);
       return false;
     }
   }
-
   private formatBlock(blockData: unknown): Block {
-    const block = blockData as {
-      number: string | number;
-      hash: string;
-      parentHash: string;
-      timestamp: string | number;
-      transactions: unknown[];
-      miner: string;
-      gasUsed: string | number;
-      gasLimit: string | number;
+    const data = blockData as {
+      index?: number;
+      hash?: string;
+      previousHash?: string;
+      timestamp?: number;
+      data?: string | object | null;
+      nonce?: number;
+      difficulty?: number;
     };
+    
     return {
-      number: typeof block.number === 'number' ? block.number : (block.number ? parseInt(block.number, 16) : 0),
-      hash: block.hash || '',
-      parentHash: block.parentHash || '',
-      timestamp: typeof block.timestamp === 'number' ? block.timestamp : (block.timestamp ? parseInt(block.timestamp, 16) : Date.now()),
-      transactions: (block.transactions || []).map((tx: unknown) => this.formatTransaction(tx)),
-      miner: block.miner || '',
-      gasUsed: typeof block.gasUsed === 'number' ? block.gasUsed : (block.gasUsed ? parseInt(block.gasUsed, 16) : 0),
-      gasLimit: typeof block.gasLimit === 'number' ? block.gasLimit : (block.gasLimit ? parseInt(block.gasLimit, 16) : 0)
+      index: data.index || 0,
+      hash: data.hash || '',
+      previousHash: data.previousHash || '',
+      timestamp: data.timestamp || Date.now(),
+      data: data.data || null,
+      nonce: data.nonce || 0,
+      difficulty: data.difficulty || 1
     };
   }
 
@@ -193,26 +255,19 @@ class BlockchainClient {
       from: string;
       to: string;
       value: string;
-      gas: string | number;
-      gasPrice: string;
-      blockNumber: string | number;
-      blockHash: string;
-      transactionIndex: string | number;
+      blockIndex: number;
+      timestamp: number;
     };
     return {
       hash: tx.hash || '',
       from: tx.from || '',
       to: tx.to || '',
       value: tx.value || '0',
-      gas: typeof tx.gas === 'number' ? tx.gas : (tx.gas ? parseInt(tx.gas, 16) : 0),
-      gasPrice: tx.gasPrice || '0',
-      blockNumber: typeof tx.blockNumber === 'number' ? tx.blockNumber : (tx.blockNumber ? parseInt(tx.blockNumber, 16) : 0),
-      blockHash: tx.blockHash || '',
-      transactionIndex: typeof tx.transactionIndex === 'number' ? tx.transactionIndex : (tx.transactionIndex ? parseInt(tx.transactionIndex, 16) : 0),
-      timestamp: 0 // Will be filled from block data
+      blockIndex: tx.blockIndex || 0,
+      timestamp: tx.timestamp || Date.now()
     };
   }
 }
 
-export { BlockchainClient, type Block, type Transaction, type Address };
+export { BlockchainClient, type Block, type Transaction, type Address, type BlockchainStats };
 export default BlockchainClient;

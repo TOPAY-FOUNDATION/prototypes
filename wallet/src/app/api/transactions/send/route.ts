@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Check balance using main blockchain
-    const balance = await blockchainClient.getBalance(from);
+    const balance = await blockchainClient.getBalance();
     if (balance < amount) {
       return NextResponse.json(
         { error: 'Insufficient balance' },

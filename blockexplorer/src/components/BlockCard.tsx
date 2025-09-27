@@ -1,9 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Block } from '@/lib/blockchain';
-import { formatHash, formatTimeAgo, formatNumber, formatGas } from '@/lib/utils';
+import { formatHash, formatTimeAgo, formatNumber } from '@/lib/utils';
 import styles from './block-card.module.css';
 
 interface BlockCardProps {
@@ -12,7 +11,6 @@ interface BlockCardProps {
 }
 
 export default function BlockCard({ block, className = '' }: BlockCardProps) {
-  const gasPercentage = (block.gasUsed / block.gasLimit) * 100;
   const router = useRouter();
   
   const handleCardClick = (e: React.MouseEvent) => {
@@ -20,7 +18,7 @@ export default function BlockCard({ block, className = '' }: BlockCardProps) {
     if ((e.target as HTMLElement).closest('a, button')) {
       return;
     }
-    router.push(`/block/${block.number}`);
+    router.push(`/block/${block.index}`);
   };
   
   return (
@@ -37,7 +35,7 @@ export default function BlockCard({ block, className = '' }: BlockCardProps) {
           </div>
           <div>
             <span className={styles['block-number-link']}>
-              {formatNumber(block.number)}
+              Block #{formatNumber(block.index)}
             </span>
             <p className={styles['timestamp']}>
               {formatTimeAgo(block.timestamp)}
@@ -46,40 +44,28 @@ export default function BlockCard({ block, className = '' }: BlockCardProps) {
         </div>
         <div className={styles['transaction-count']}>
           <p className={styles['transaction-count-value']}>
-            {formatNumber(block.transactions.length)} txns
+            Difficulty: {block.difficulty}
           </p>
           <p className={styles['transaction-time']}>
-            in {formatTimeAgo(block.timestamp)}
+            {formatTimeAgo(block.timestamp)}
           </p>
         </div>
       </div>
       
       <div className={styles['details-grid']}>
         <div>
-          <p className={styles['detail-label']}>Miner</p>
-          <Link 
-            href={`/address/${block.miner}`}
-            className={styles['miner-link']}
-          >
-            {formatHash(block.miner)}
-          </Link>
+          <p className={styles['detail-label']}>Previous Hash</p>
+          <span className={styles['hash-value']}>
+            {formatHash(block.previousHash)}
+          </span>
         </div>
         
         <div>
-          <p className={styles['detail-label']}>Gas Used</p>
-          <div className={styles['gas-info']}>
-            <span className={styles['gas-value']}>
-              {formatGas(block.gasUsed)}
+          <p className={styles['detail-label']}>Nonce</p>
+          <div className={styles['nonce-info']}>
+            <span className={styles['nonce-value']}>
+              {formatNumber(block.nonce)}
             </span>
-            <span className={styles['gas-percentage']}>
-              ({gasPercentage.toFixed(1)}%)
-            </span>
-          </div>
-          <div className={styles['gas-bar-container']}>
-            <div 
-              className={styles['gas-bar']}
-              style={{ width: `${gasPercentage}%` }}
-            ></div>
           </div>
         </div>
       </div>

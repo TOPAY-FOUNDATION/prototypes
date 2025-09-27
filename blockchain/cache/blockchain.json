@@ -1,0 +1,50 @@
+{
+  "chain": [
+    {
+      "index": 0,
+      "timestamp": 1759002924681,
+      "data": "Genesis Block",
+      "previousHash": "0",
+      "hash": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "nonce": 0
+    },
+    {
+      "index": 1,
+      "timestamp": 1759002934796,
+      "data": "First test block",
+      "previousHash": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "hash": "00de1fff4c40c5f91ce1477c8cde5ad34f5ac6dfdbf42303b1c03a379ee2f01672cfb5c3959622cced27b6f4a9d85a58c105c7b3d8ffc545bf7df91fdfc6b89a",
+      "nonce": 335
+    },
+    {
+      "index": 2,
+      "timestamp": 1759002934806,
+      "data": "Second test block",
+      "previousHash": "00de1fff4c40c5f91ce1477c8cde5ad34f5ac6dfdbf42303b1c03a379ee2f01672cfb5c3959622cced27b6f4a9d85a58c105c7b3d8ffc545bf7df91fdfc6b89a",
+      "hash": "00ba61358c1e39d93b31417faeaf124145886fbc01c4d9681aad053842e2b044f5dc7e22de05a129f84fead23dd89e121b8a2f317b09b02a90c11e313e6df6ff",
+      "nonce": 495
+    },
+    {
+      "index": 3,
+      "timestamp": 1759002934817,
+      "data": {
+        "message": "Third block with JSON data",
+        "timestamp": 1759002934817
+      },
+      "previousHash": "00ba61358c1e39d93b31417faeaf124145886fbc01c4d9681aad053842e2b044f5dc7e22de05a129f84fead23dd89e121b8a2f317b09b02a90c11e313e6df6ff",
+      "hash": "0075c4c48d7ffa5bcdcbf01750f426d65476a1050c071f906b9d15e828072048570642c04ce1cdd21bc3f67a951a068ef759fe47008d6344ea9156f39a9703b9",
+      "nonce": 107
+    },
+    {
+      "index": 4,
+      "timestamp": 1759004255870,
+      "data": "Test transaction via new /topay API",
+      "previousHash": "0075c4c48d7ffa5bcdcbf01750f426d65476a1050c071f906b9d15e828072048570642c04ce1cdd21bc3f67a951a068ef759fe47008d6344ea9156f39a9703b9",
+      "hash": "003b920c05ec7e289b3a50e1ac71b462c0c077fc63b748803cf4c888fadc48ea63312671bdd71bb2b8a46a7737454cab59ae9d38820140ea905dfa8a56f9008c",
+      "nonce": 47
+    }
+  ],
+  "difficulty": 2,
+  "lastUpdated": 1759016393600,
+  "version": "2.0.0"
+}

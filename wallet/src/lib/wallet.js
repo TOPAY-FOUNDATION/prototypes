@@ -123,42 +123,136 @@ export class Wallet {
   }
 
   /**
-   * Get wallet balance from blockchain
+   * Get balance from blockchain
    */
   async getBalance(blockchain) {
     if (!this.address) {
       throw new Error('Wallet not initialized');
     }
     
-    this.balance = blockchain.getBalance(this.address);
-    return this.balance;
+    try {
+      this.balance = await blockchain.getBalance(this.address);
+      return this.balance;
+    } catch (error) {
+      console.error('Failed to get balance:', error);
+      throw new Error('Failed to retrieve balance from blockchain');
+    }
   }
 
   /**
-   * Get transaction history
+   * Get transaction history from blockchain
    */
-  async getTransactionHistory(blockchain) {
+  async getTransactionHistory(blockchain, limit = 10, offset = 0) {
     if (!this.address) {
       throw new Error('Wallet not initialized');
     }
     
-    this.transactionHistory = blockchain.getTransactionHistory(this.address);
-    return this.transactionHistory;
+    try {
+      this.transactionHistory = await blockchain.getTransactionHistory(this.address, limit, offset);
+      return this.transactionHistory;
+    } catch (error) {
+      console.error('Failed to get transaction history:', error);
+      throw new Error('Failed to retrieve transaction history from blockchain');
+    }
   }
 
   /**
-   * Create and sign a transaction
+   * Send transaction to blockchain
    */
-  async createTransaction(to, amount, data = null) {
+  async sendTransaction(blockchain, to, amount, data = null) {
     if (!this.privateKey) {
       throw new Error('Private key not available');
     }
 
-    const { Transaction } = await import('./transaction.js');
-    const transaction = new Transaction(this.address, to, amount, data);
-    
-    await transaction.signTransaction(this.privateKey);
-    return transaction;
+    if (!this.address) {
+      throw new Error('Wallet not initialized');
+    }
+
+    try {
+      // Create transaction data
+      const transactionData = {
+        from: this.address,
+        to: to,
+        amount: amount,
+        data: data,
+        timestamp: Date.now(),
+        nonce: Math.floor(Math.random() * 1000000) // Simple nonce for now
+      };
+
+      // Sign the transaction (simplified signing for now)
+      const transactionHash = await this.signTransactionData(transactionData);
+      transactionData.signature = transactionHash;
+
+      // Send to blockchain
+      const result = await blockchain.sendTransaction(transactionData);
+      
+      // Update local balance if transaction was successful
+      if (result && !result.error) {
+        this.balance = Math.max(0, this.balance - amount);
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Failed to send transaction:', error);
+      throw new Error('Transaction failed: ' + error.message);
+    }
+  }
+
+  /**
+   * Sign transaction data
+   */
+  async signTransactionData(transactionData) {
+    if (!this.privateKey) {
+      throw new Error('Private key not available for signing');
+    }
+
+    try {
+      // Create a hash of the transaction data for signing
+      const dataString = JSON.stringify({
+        from: transactionData.from,
+        to: transactionData.to,
+        amount: transactionData.amount,
+        data: transactionData.data,
+        timestamp: transactionData.timestamp,
+        nonce: transactionData.nonce
+      });
+
+      const encoder = new TextEncoder();
+      const dataBytes = encoder.encode(dataString);
+      
+      // Use TOPAY-Z512 hash function for signing
+      const signature = await computeHash(dataBytes);
+      
+      return Array.from(signature);
+    } catch (error) {
+      console.error('Failed to sign transaction:', error);
+      throw new Error('Transaction signing failed');
+    }
+  }
+
+  /**
+   * Verify transaction signature
+   */
+  async verifyTransactionSignature(transactionData, signature) {
+    try {
+      const expectedSignature = await this.signTransactionData(transactionData);
+      
+      // Compare signatures
+      if (signature.length !== expectedSignature.length) {
+        return false;
+      }
+
+      for (let i = 0; i < signature.length; i++) {
+        if (signature[i] !== expectedSignature[i]) {
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to verify signature:', error);
+      return false;
+    }
   }
 
   /**
@@ -288,6 +382,22 @@ export class Wallet {
     // privateKey remains null for read-only wallet
     
     return wallet;
+  }
+
+  /**
+   * Get wallet statistics and information
+   */
+  getStats() {
+    return {
+      address: this.address,
+      publicKey: this.publicKey ? Array.from(this.publicKey).slice(0, 32).map(b => b.toString(16).padStart(2, '0')).join('') + '...' : null,
+      balance: this.balance,
+      hasPrivateKey: !!this.privateKey,
+      hasSeed: !!this.seed,
+      isHDWallet: !!this.seed,
+      createdAt: this.createdAt || new Date().toISOString(),
+      lastBalanceUpdate: this.lastBalanceUpdate || null
+    };
   }
 
   /**

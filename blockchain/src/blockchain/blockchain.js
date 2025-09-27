@@ -1,311 +1,131 @@
 /**
- * TOPAY Foundation Quantum-Safe Blockchain Prototype
- * Main Blockchain Class
- * 
- * Implements the core blockchain with quantum-safe features
+ * TOPAY Foundation Simple Blockchain
+ * Basic blockchain implementation with 512-bit hashing using TOPAY-Z512
  */
 
-import { computeHash, fragmentData, reconstructData } from '@topayfoundation/topayz512';
 import { Block } from './block.js';
-import { Transaction } from './transaction.js';
-import { GovernanceSystems } from './governance-systems.js';
-import { WalletManager } from '../wallet/WalletManager.js';
+import { BlockchainCache } from '../cache/BlockchainCache.js';
 
 export class Blockchain {
-  constructor(options = {}) {
-    // Genesis wallet configuration
-    this.genesisBalance = options.genesisBalance || 1000000;
-    this.genesisWalletAddress = options.genesisWalletAddress || null;
+  constructor() {
+    this.cache = new BlockchainCache();
+    this.difficulty = 2; // Mining difficulty (number of leading zeros required)
     
-    // Initialize wallet manager
-    this.walletManager = new WalletManager({
-      dataPath: options.walletDataPath || './data/wallets',
-      autoCreateGenesis: options.autoCreateGenesis !== false,
-      genesisBalance: this.genesisBalance
-    });
+    // Try to load from cache first
+    this.loadFromCache();
     
-    this.chain = [this.createGenesisBlock()];
-    this.pendingTransactions = [];
-    this.mempool = []; // Transaction pool
-    this.validators = new Set(); // For future PoS
-    this.networkNodes = new Set(); // For network simulation
-    this.fragmentedBlocks = new Map(); // For mobile optimization
-    
-    // Initialize governance systems
-    this.governance = new GovernanceSystems(this);
-    
-    // Initialize genesis wallet system
-    this.initializeGenesisWallet();
+    // Start auto-save every 30 seconds
+    this.cache.startAutoSave(() => ({
+      chain: this.chain,
+      difficulty: this.difficulty
+    }), 30000);
   }
 
   /**
-   * Initialize genesis wallet system
+   * Load blockchain from cache or create genesis block
    */
-  async initializeGenesisWallet() {
-    try {
-      await this.walletManager.initialize();
+  loadFromCache() {
+    const cachedData = this.cache.loadBlockchain();
+    
+    if (cachedData && cachedData.chain && cachedData.chain.length > 0) {
+      // Reconstruct blocks from cached data
+      this.chain = cachedData.chain.map(blockData => {
+        const block = new Block(
+          blockData.index,
+          blockData.timestamp,
+          blockData.data,
+          blockData.previousHash
+        );
+        block.hash = blockData.hash;
+        block.nonce = blockData.nonce;
+        return block;
+      });
       
-      const genesisWallet = this.walletManager.getGenesisWallet();
-      if (genesisWallet) {
-        this.genesisWalletAddress = genesisWallet.address;
-        console.log(`👑 Genesis wallet initialized: ${this.genesisWalletAddress}`);
-        console.log(`💰 Genesis balance: ${this.genesisBalance} TOPAY`);
-      }
-    } catch (error) {
-      console.error('❌ Failed to initialize genesis wallet:', error.message);
+      this.difficulty = cachedData.difficulty || 2;
+      console.log(`🔄 Restored blockchain from cache: ${this.chain.length} blocks`);
+    } else {
+      // Create fresh blockchain with genesis block
+      this.chain = [this.createGenesisBlock()];
+      console.log('🆕 Created new blockchain with genesis block');
+      
+      // Save initial state to cache
+      this.saveToCache();
     }
   }
 
   /**
-   * Create the genesis block with pre-allocated funds
+   * Save current blockchain state to cache
+   */
+  saveToCache() {
+    this.cache.saveBlockchain(this.chain, this.difficulty);
+  }
+
+  /**
+   * Create the genesis block
+   * @returns {Block} Genesis block
    */
   createGenesisBlock() {
-    const genesisTransactions = [];
-    
-    // Create genesis funding transaction if genesis wallet exists
-    if (this.genesisWalletAddress && this.genesisBalance > 0) {
-      const genesisTransaction = new Transaction(
-        'GENESIS', // Special genesis sender
-        this.genesisWalletAddress,
-        this.genesisBalance,
-        'Genesis block pre-allocation'
-      );
-      
-      // Set special genesis transaction properties
-      genesisTransaction.timestamp = Date.now();
-      genesisTransaction.signature = 'GENESIS_SIGNATURE';
-      genesisTransaction.id = computeHash(`GENESIS${this.genesisWalletAddress}${this.genesisBalance}`);
-      
-      genesisTransactions.push(genesisTransaction);
-      
-      console.log(`🎯 Genesis block will pre-allocate ${this.genesisBalance} TOPAY to ${this.genesisWalletAddress}`);
-    }
-    
-    const genesisBlock = new Block(Date.now(), genesisTransactions, '0');
-    genesisBlock.index = 0;
-    genesisBlock.hash = '000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000';
-    genesisBlock.merkleRoot = genesisTransactions.length > 0 ? 
-      computeHash(JSON.stringify(genesisTransactions)) : 
-      '0'.repeat(128);
-    
-    console.log(`🏗️ Genesis block created with ${genesisTransactions.length} pre-allocation transactions`);
+    const genesisBlock = new Block(0, Date.now(), 'Genesis Block', '0');
+    genesisBlock.hash = '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000';
     return genesisBlock;
   }
 
   /**
-   * Get the latest block
+   * Get the latest block in the chain
    */
   getLatestBlock() {
     return this.chain[this.chain.length - 1];
   }
 
   /**
-   * Add transaction to mempool
+   * Add a new block to the blockchain
+   * @param {*} data - Data to store in the block
+   * @returns {Block} The newly added block
    */
-  async addTransaction(transaction) {
-    // Validate transaction
-    if (!(await transaction.isValid())) {
-      throw new Error('Invalid transaction');
-    }
+  async addBlock(data) {
+    const previousBlock = this.getLatestBlock();
+    const newBlock = new Block(
+      previousBlock.index + 1,
+      Date.now(),
+      data,
+      previousBlock.hash
+    );
 
-    // Skip balance check for mining reward transactions (from: null) and system transactions
-    if (transaction.from !== null && transaction.from !== 'SYSTEM') {
-      // Check if sender has sufficient balance (simplified)
-      const senderBalance = this.getBalance(transaction.from);
-      if (senderBalance < transaction.amount) {
-        throw new Error('Insufficient balance');
-      }
-    }
-
-    this.mempool.push(transaction);
-    console.log(`📝 Transaction added to mempool: ${transaction.amount} TOPAY from ${transaction.from ? transaction.from.substring(0, 10) + '...' : 'SYSTEM'} to ${transaction.to.substring(0, 10)}...`);
-  }
-
-  /**
-   * Process pending transactions into a new block
-   */
-  async processPendingTransactions() {
-    console.log('\n🚀 Processing pending transactions...');
+    // Mine the block
+    await newBlock.mineBlock(this.difficulty);
     
-    // Select transactions from mempool
-    const transactionsToProcess = this.mempool.splice(0, 10); // Take up to 10 transactions
-    
-    if (transactionsToProcess.length === 0) {
-      console.log('⚠️ No transactions to process');
-      return null;
-    }
-
-    // Create new block
-    const block = new Block(Date.now(), transactionsToProcess, this.getLatestBlock().hash);
-    block.index = this.chain.length;
-
     // Add to chain
-    this.chain.push(block);
-
-    console.log(`✅ Block #${block.index} processed and added to chain!`);
-    console.log(`   Transactions: ${block.transactions.length}`);
-    console.log(`   Block size: ${block.getSize()} bytes`);
-
-    // Fragment large blocks for mobile optimization
-    if (block.getSize() > 2048) {
-      await this.fragmentBlock(block);
-    }
-
-    return block;
-  }
-
-  /**
-   * Fragment block for mobile optimization
-   */
-  async fragmentBlock(block) {
-    console.log(`📦 Fragmenting block #${block.index} for mobile optimization...`);
+    this.chain.push(newBlock);
     
-    const fragmentResult = await block.fragmentBlock();
+    // Save to cache
+    this.saveToCache();
     
-    if (fragmentResult.isFragmented) {
-      this.fragmentedBlocks.set(block.index, fragmentResult);
-      console.log(`   Block fragmented into ${fragmentResult.fragments.length} pieces`);
-    }
-  }
-
-  /**
-   * Reconstruct block from fragments
-   */
-  async reconstructBlock(blockIndex) {
-    const fragmentData = this.fragmentedBlocks.get(blockIndex);
-    
-    if (!fragmentData || !fragmentData.isFragmented) {
-      return this.chain[blockIndex]; // Return original block if not fragmented
-    }
-
-    console.log(`🔧 Reconstructing block #${blockIndex} from fragments...`);
-    
-    try {
-      const reconstructedBlock = await Block.reconstructFromFragments(fragmentData.fragments);
-      return reconstructedBlock;
-    } catch (error) {
-      console.error(`❌ Failed to reconstruct block #${blockIndex}:`, error);
-      throw error;
-    }
-  }
-
-
-
-  /**
-   * Get balance for address (including genesis pre-allocation)
-   */
-  getBalance(address) {
-    let balance = 0;
-
-    for (const block of this.chain) {
-      for (const transaction of block.transactions) {
-        // Handle genesis transactions (from 'GENESIS')
-        if (transaction.from === 'GENESIS' && transaction.to === address) {
-          balance += transaction.amount;
-        }
-        // Handle regular transactions
-        else if (transaction.from === address) {
-          balance -= transaction.amount;
-        }
-        else if (transaction.to === address) {
-          balance += transaction.amount;
-        }
-      }
-    }
-
-    return balance;
-  }
-  
-  /**
-   * Get wallet manager instance
-   */
-  getWalletManager() {
-    return this.walletManager;
-  }
-  
-  /**
-   * Get genesis wallet
-   */
-  getGenesisWallet() {
-    return this.walletManager.getGenesisWallet();
-  }
-  
-  /**
-   * Create a new wallet
-   */
-  async createWallet(options = {}) {
-    return await this.walletManager.createWallet(options);
-  }
-  
-  /**
-   * Get wallet by address
-   */
-  getWallet(address) {
-    return this.walletManager.getWallet(address);
-  }
-  
-  /**
-   * Fund wallet from genesis
-   */
-  async fundWalletFromGenesis(targetAddress, amount) {
-    const transaction = await this.walletManager.fundWalletFromGenesis(targetAddress, amount);
-    await this.addTransaction(transaction);
-    return transaction;
-  }
-  
-  /**
-   * Get all wallet balances
-   */
-  getWalletBalances() {
-    return this.walletManager.getWalletBalances(this);
-  }
-
-  /**
-   * Get transaction history for an address
-   */
-  getTransactionHistory(address) {
-    const transactions = [];
-
-    for (const block of this.chain) {
-      for (const transaction of block.transactions) {
-        if (transaction.from === address || transaction.to === address) {
-          transactions.push({
-            ...transaction.toJSON(),
-            blockIndex: block.index,
-            blockTimestamp: block.timestamp,
-            blockHash: block.hash
-          });
-        }
-      }
-    }
-
-    return transactions.sort((a, b) => b.blockTimestamp - a.blockTimestamp);
+    console.log(`⛏️  Block ${newBlock.index} mined and added to blockchain`);
+    return newBlock;
   }
 
   /**
    * Validate the entire blockchain
    */
   async isChainValid() {
-    console.log('🔍 Validating blockchain...');
-
     for (let i = 1; i < this.chain.length; i++) {
       const currentBlock = this.chain[i];
       const previousBlock = this.chain[i - 1];
 
-      // Validate current block
+      // Check if current block is valid
       if (!(await currentBlock.isValid())) {
-        console.log(`❌ Block #${i} is invalid`);
+        console.log(`❌ Block ${i} is invalid`);
         return false;
       }
 
-      // Check if previous hash matches
+      // Check if current block points to previous block
       if (currentBlock.previousHash !== previousBlock.hash) {
-        console.log(`❌ Block #${i} has invalid previous hash`);
+        console.log(`❌ Block ${i} has invalid previous hash`);
         return false;
       }
     }
 
-    console.log('✅ Blockchain is valid!');
+    console.log('✅ Blockchain is valid');
     return true;
   }
 
@@ -313,238 +133,128 @@ export class Blockchain {
    * Get blockchain statistics
    */
   getStats() {
-    const totalTransactions = this.chain.reduce((total, block) => total + block.transactions.length, 0);
-    const totalSize = this.chain.reduce((total, block) => total + block.getSize(), 0);
-    const fragmentedBlockCount = this.fragmentedBlocks.size;
-    
-    // Safely get latest block hash
+    const totalBlocks = this.chain.length;
     const latestBlock = this.getLatestBlock();
-    const latestBlockHash = latestBlock && latestBlock.hash ? latestBlock.hash : 'N/A';
-
+    
     return {
-      blockCount: this.chain.length,
-      totalTransactions,
-      totalSize,
-      averageBlockSize: this.chain.length > 0 ? Math.round(totalSize / this.chain.length) : 0,
-      mempoolSize: this.mempool.length,
-      fragmentedBlocks: fragmentedBlockCount,
-      networkNodes: this.networkNodes.size,
-      latestBlockHash: latestBlockHash,
-      chainValid: null // Will be set by validation
+      totalBlocks,
+      difficulty: this.difficulty,
+      latestBlockIndex: latestBlock.index,
+      latestBlockHash: latestBlock.hash.substring(0, 20) + '...',
+      latestBlockTimestamp: new Date(latestBlock.timestamp).toISOString(),
+      chainValid: null // Will be set when validation is called
     };
   }
 
   /**
-   * Simulate network node
+   * Get a specific block by index
    */
-  addNetworkNode(nodeId) {
-    this.networkNodes.add(nodeId);
-    console.log(`🌐 Network node added: ${nodeId}`);
+  getBlock(index) {
+    if (index >= 0 && index < this.chain.length) {
+      return this.chain[index];
+    }
+    return null;
   }
 
   /**
-   * Remove network node
+   * Get all blocks
    */
-  removeNetworkNode(nodeId) {
-    this.networkNodes.delete(nodeId);
-    console.log(`🌐 Network node removed: ${nodeId}`);
+  getAllBlocks() {
+    return this.chain.map(block => block.toJSON());
   }
 
   /**
-   * Broadcast transaction to network (simulation)
+   * Search for blocks containing specific data
    */
-  async broadcastTransaction(transaction) {
-    console.log(`📡 Broadcasting transaction to ${this.networkNodes.size} nodes...`);
-    
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Add to mempool
-    await this.addTransaction(transaction);
-    
-    console.log('✅ Transaction broadcasted successfully');
+  searchBlocks(searchTerm) {
+    return this.chain.filter(block => 
+      JSON.stringify(block.data).toLowerCase().includes(searchTerm.toLowerCase())
+    ).map(block => block.toJSON());
   }
 
   /**
-   * Get mempool transactions
-   */
-  getMempoolTransactions() {
-    return this.mempool.map(tx => tx.toJSON());
-  }
-
-  /**
-   * Clear mempool
-   */
-  clearMempool() {
-    this.mempool = [];
-    console.log('🗑️ Mempool cleared');
-  }
-
-  /**
-   * Export blockchain data
+   * Export blockchain to JSON
    */
   exportChain() {
     return {
       chain: this.chain.map(block => block.toJSON()),
-      mempool: this.mempool.map(tx => tx.toJSON()),
       difficulty: this.difficulty,
-      miningReward: this.miningReward,
-      stats: this.getStats(),
-      exportedAt: Date.now()
+      exportTimestamp: Date.now()
     };
   }
 
   /**
-   * Import blockchain data
+   * Import blockchain from external data
+   * @param {Object} chainData - Blockchain data to import
+   * @returns {boolean} Success status
    */
-  importChain(chainData) {
-    console.log('📥 Importing blockchain data...');
-    
+  async importChain(chainData) {
     try {
-      // Import blocks and reconstruct them as Block objects
-      this.chain = chainData.chain.map(blockData => Block.fromJSON(blockData));
-      this.difficulty = chainData.difficulty || 2;
-      this.miningReward = chainData.miningReward || 100;
+      if (!chainData || !chainData.chain || !Array.isArray(chainData.chain)) {
+        return false;
+      }
+
+      // Reconstruct blocks from imported data
+      const importedChain = chainData.chain.map(blockData => {
+        const block = new Block(
+          blockData.index,
+          blockData.timestamp,
+          blockData.data,
+          blockData.previousHash
+        );
+        block.hash = blockData.hash;
+        block.nonce = blockData.nonce;
+        return block;
+      });
+
+      // Validate imported chain
+      const tempBlockchain = new Blockchain();
+      tempBlockchain.chain = importedChain;
       
-      // Import mempool if it exists and reconstruct Transaction objects
-      if (chainData.mempool && Array.isArray(chainData.mempool)) {
-        this.mempool = chainData.mempool.map(txData => Transaction.fromJSON(txData));
+      if (await tempBlockchain.isChainValid()) {
+        this.chain = importedChain;
+        this.difficulty = chainData.difficulty || 2;
+        this.saveToCache(); // Save imported data
+        console.log(`📥 Blockchain imported: ${this.chain.length} blocks`);
+        return true;
       } else {
-        this.mempool = [];
+        console.log('❌ Invalid blockchain data - import rejected');
+        return false;
       }
-      
-      console.log(`✅ Imported ${this.chain.length} blocks and ${this.mempool.length} mempool transactions`);
     } catch (error) {
-      console.error('❌ Failed to import blockchain:', error);
-      throw error;
+      console.error('❌ Import failed:', error.message);
+      return false;
     }
   }
 
   /**
-   * Get block by index
+   * Set mining difficulty
+   * @param {number} difficulty - New difficulty level
    */
-  getBlock(index) {
-    return this.chain[index] || null;
-  }
-
-  /**
-   * Get block by hash
-   */
-  getBlockByHash(hash) {
-    return this.chain.find(block => block.hash === hash) || null;
-  }
-
-  /**
-   * Search transactions by criteria
-   */
-  searchTransactions(criteria) {
-    const results = [];
-    
-    for (const block of this.chain) {
-      for (const transaction of block.transactions) {
-        let matches = true;
-        
-        if (criteria.from && transaction.from !== criteria.from) matches = false;
-        if (criteria.to && transaction.to !== criteria.to) matches = false;
-        if (criteria.minAmount && transaction.amount < criteria.minAmount) matches = false;
-        if (criteria.maxAmount && transaction.amount > criteria.maxAmount) matches = false;
-        
-        if (matches) {
-          results.push({
-            ...transaction.toJSON(),
-            blockIndex: block.index,
-            blockHash: block.hash
-          });
-        }
-      }
+  setDifficulty(difficulty) {
+    if (difficulty >= 1 && difficulty <= 6) {
+      this.difficulty = difficulty;
+      this.saveToCache(); // Save updated difficulty
+      console.log(`⚙️ Mining difficulty set to ${difficulty}`);
+    } else {
+      console.log('❌ Difficulty must be between 1 and 6');
     }
-    
-    return results;
-  }
-
-  // ==================== GOVERNANCE SYSTEM METHODS ====================
-
-  /**
-   * Request transaction reversal
-   */
-  async requestTransactionReversal(transactionId, requesterAddress, reason, evidence = null) {
-    return await this.governance.requestTransactionReversal(transactionId, requesterAddress, reason, evidence);
   }
 
   /**
-   * Approve transaction reversal
+   * Get chain length
    */
-  async approveTransactionReversal(transactionId, approverAddress) {
-    return await this.governance.approveTransactionReversal(transactionId, approverAddress);
+  getChainLength() {
+    return this.chain.length;
   }
 
   /**
-   * Register voter for governance
+   * Clear the blockchain (reset to genesis)
    */
-  async registerVoter(voterAddress) {
-    return await this.governance.registerVoter(voterAddress);
-  }
-
-  /**
-   * Create governance proposal
-   */
-  async createProposal(proposerAddress, title, description, options, votingPeriod) {
-    return await this.governance.createProposal(proposerAddress, title, description, options, votingPeriod);
-  }
-
-  /**
-   * Cast vote on proposal
-   */
-  async castVote(proposalId, voterAddress, optionId, weight = 1) {
-    return await this.governance.castVote(proposalId, voterAddress, optionId, weight);
-  }
-
-  /**
-   * Submit report for suspicious activity
-   */
-  async submitReport(reporterAddress, targetType, targetId, category, description, evidence = null) {
-    return await this.governance.submitReport(reporterAddress, targetType, targetId, category, description, evidence);
-  }
-
-  /**
-   * Moderate submitted report
-   */
-  async moderateReport(reportId, moderatorAddress, action, notes = '') {
-    return await this.governance.moderateReport(reportId, moderatorAddress, action, notes);
-  }
-
-  /**
-   * Check if address is blacklisted
-   */
-  isAddressBlacklisted(address) {
-    return this.governance.isAddressBlacklisted(address);
-  }
-
-  /**
-   * Check if transaction is flagged
-   */
-  isTransactionFlagged(transactionId) {
-    return this.governance.isTransactionFlagged(transactionId);
-  }
-
-  /**
-   * Get governance statistics
-   */
-  getGovernanceStats() {
-    return {
-      reversals: this.governance.getReversalStats(),
-      voting: this.governance.getVotingStats(),
-      reports: this.governance.getReportStats()
-    };
-  }
-
-  /**
-   * Get pending governance items
-   */
-  getPendingGovernanceItems() {
-    return {
-      reversals: this.governance.getPendingReversals(),
-      proposals: this.governance.getActiveProposals()
-    };
+  reset() {
+    this.chain = [this.createGenesisBlock()];
+    this.difficulty = 2;
+    this.saveToCache(); // Save reset state
+    console.log('🔄 Blockchain reset to genesis block');
   }
 }

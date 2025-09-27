@@ -1,55 +1,94 @@
 /**
  * Browser-compatible Blockchain Client
- * Handles communication with the TOPAY blockchain
+ * Handles communication with the TOPAY blockchain using new /topay API endpoints
  */
 
+import { config } from './config.js';
+
 class BlockchainClient {
-  constructor(rpcUrl = process.env.BLOCKCHAIN_URL || 'http://localhost:3000') {
-    this.rpcUrl = rpcUrl;
+  constructor(baseUrl = config.blockchain.baseUrl) {
+    this.baseUrl = baseUrl;
+    this.apiUrl = `${baseUrl}/topay`;
+    this.healthUrl = `${baseUrl}/health`;
     this.requestId = 1;
+    this.retryAttempts = config.blockchain.retryAttempts;
+    this.retryDelay = config.blockchain.retryDelay;
+    this.timeout = config.blockchain.timeout;
   }
 
   /**
-   * Make RPC call to blockchain
+   * Make HTTP request with retry logic and timeout
    */
-  async rpcCall(method, params = []) {
+  async makeRequest(url, options = {}) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    const requestOptions = {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...options.headers
+      }
+    };
+
+    let lastError;
+    
+    for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+      try {
+        const response = await fetch(url, requestOptions);
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        lastError = error;
+        console.warn(`Request attempt ${attempt} failed:`, error.message);
+        
+        if (attempt < this.retryAttempts) {
+          await new Promise(resolve => setTimeout(resolve, this.retryDelay * attempt));
+        }
+      }
+    }
+    
+    clearTimeout(timeoutId);
+    throw lastError;
+  }
+
+  /**
+   * Check server health and connectivity
+   */
+  async isServerRunning() {
     try {
-      const response = await fetch(`${this.rpcUrl}/rpc`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          method,
-          params,
-          id: this.requestId++
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error.message || 'RPC Error');
-      }
-
-      return data.result;
+      const response = await this.makeRequest(this.healthUrl);
+      return response && (response.status === 'healthy' || response.message === 'Server is running');
     } catch (error) {
-      console.error(`RPC call failed for ${method}:`, error);
-      throw error;
+      console.warn('Health check failed:', error.message);
+      return false;
     }
   }
 
   /**
-   * Get blockchain info
+   * Get blockchain statistics
    */
   async getBlockchainInfo() {
     try {
-      return await this.rpcCall('topay_getBlockchainInfo');
+      const response = await this.makeRequest(`${this.apiUrl}/stats`);
+      return {
+        chainId: 1337,
+        networkName: 'TOPAY Blockchain',
+        blockHeight: response.totalBlocks || 0,
+        difficulty: response.difficulty || 1,
+        latestBlockHash: response.latestBlockHash || null,
+        latestBlockTimestamp: response.latestBlockTimestamp || null,
+        chainValid: response.chainValid || false,
+        peers: Math.floor(Math.random() * 10) + 5 // Mock peer count
+      };
     } catch (error) {
       console.error('Failed to get blockchain info:', error);
       // Return mock data for development
@@ -64,41 +103,40 @@ class BlockchainClient {
   }
 
   /**
-   * Get account balance
+   * Send transaction to blockchain
    */
-  async getBalance(address) {
+  async sendTransaction(transactionData) {
     try {
-      const balance = await this.rpcCall('topay_getBalance', [address]);
-      return parseFloat(balance) || 0;
+      const response = await this.makeRequest(`${this.apiUrl}/transaction`, {
+        method: 'POST',
+        body: JSON.stringify(transactionData)
+      });
+      
+      return {
+        success: true,
+        transactionHash: response.blockHash || `0x${Math.random().toString(16).substr(2, 64)}`,
+        blockIndex: response.index || 0,
+        timestamp: response.timestamp || Date.now(),
+        ...response
+      };
     } catch (error) {
-      console.error('Failed to get balance:', error);
-      // Return mock balance for development
-      return Math.random() * 1000;
+      console.error('Failed to send transaction:', error);
+      throw new Error(`Transaction failed: ${error.message}`);
     }
   }
 
   /**
-   * Send transaction
+   * Get account balance
    */
-  async sendTransaction(from, to, amount, gasLimit = 21000, gasPrice = 20) {
+  async getBalance() {
     try {
-      const result = await this.rpcCall('topay_sendTransaction', [
-        from,
-        to,
-        amount,
-        gasLimit,
-        gasPrice
-      ]);
-      
-      return result;
+      // For now, return mock balance since balance endpoint isn't implemented in blockchain
+      // TODO: Implement balance tracking in blockchain server
+      console.warn('Balance endpoint not yet implemented in blockchain server, returning mock data');
+      return Math.random() * 1000;
     } catch (error) {
-      console.error('Failed to send transaction:', error);
-      // Return mock transaction for development
-      return {
-        transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`,
-        success: true,
-        mock: true
-      };
+      console.error('Failed to get balance:', error);
+      return 0;
     }
   }
 
@@ -107,17 +145,16 @@ class BlockchainClient {
    */
   async getTransaction(txHash) {
     try {
-      return await this.rpcCall('topay_getTransaction', [txHash]);
+      const response = await this.makeRequest(`${this.apiUrl}/search?hash=${encodeURIComponent(txHash)}`);
+      return response;
     } catch (error) {
       console.error('Failed to get transaction:', error);
       // Return mock transaction for development
       return {
         hash: txHash,
-        from: `0x${Math.random().toString(16).substr(2, 40)}`,
-        to: `0x${Math.random().toString(16).substr(2, 40)}`,
+        from: '0x' + Math.random().toString(16).substr(2, 40),
+        to: '0x' + Math.random().toString(16).substr(2, 40),
         amount: Math.random() * 100,
-        status: 'confirmed',
-        blockNumber: Math.floor(Math.random() * 1000000) + 500000,
         timestamp: Date.now() - Math.random() * 86400000,
         mock: true
       };
@@ -127,27 +164,28 @@ class BlockchainClient {
   /**
    * Get transaction history for address
    */
-  async getTransactionHistory(address, limit = 10, offset = 0) {
+  async getTransactionHistory(address, limit = 10) {
     try {
-      return await this.rpcCall('topay_getTransactionHistory', [address, limit, offset]);
-    } catch (error) {
-      console.error('Failed to get transaction history:', error);
-      // Return mock transaction history for development
+      // For now, return mock history since transaction history isn't implemented
+      // TODO: Implement transaction history in blockchain server
+      console.warn('Transaction history endpoint not yet implemented, returning mock data');
+      
       const mockTransactions = [];
-      for (let i = 0; i < limit; i++) {
+      for (let i = 0; i < Math.min(limit, 5); i++) {
         mockTransactions.push({
-          hash: `0x${Math.random().toString(16).substr(2, 64)}`,
-          from: Math.random() > 0.5 ? address : `0x${Math.random().toString(16).substr(2, 40)}`,
-          to: Math.random() > 0.5 ? address : `0x${Math.random().toString(16).substr(2, 40)}`,
+          hash: '0x' + Math.random().toString(16).substr(2, 64),
+          from: Math.random() > 0.5 ? address : '0x' + Math.random().toString(16).substr(2, 40),
+          to: Math.random() > 0.5 ? address : '0x' + Math.random().toString(16).substr(2, 40),
           amount: Math.random() * 100,
-          status: Math.random() > 0.1 ? 'confirmed' : 'pending',
-          blockNumber: Math.floor(Math.random() * 1000000) + 500000,
           timestamp: Date.now() - Math.random() * 86400000 * 30,
           type: Math.random() > 0.5 ? 'sent' : 'received',
           mock: true
         });
       }
       return mockTransactions;
+    } catch (error) {
+      console.error('Failed to get transaction history:', error);
+      return [];
     }
   }
 
@@ -156,11 +194,12 @@ class BlockchainClient {
    */
   async getGasPrice() {
     try {
-      const gasPrice = await this.rpcCall('topay_getGasPrice');
-      return parseInt(gasPrice) || 20;
+      // For now, return mock gas price since gas pricing isn't implemented
+      // TODO: Implement gas pricing in blockchain server
+      console.warn('Gas price endpoint not yet implemented, returning mock data');
+      return 20;
     } catch (error) {
       console.error('Failed to get gas price:', error);
-      // Return mock gas price for development
       return 20;
     }
   }
@@ -168,13 +207,14 @@ class BlockchainClient {
   /**
    * Estimate gas for transaction
    */
-  async estimateGas(from, to, amount) {
+  async estimateGas() {
     try {
-      const gasEstimate = await this.rpcCall('topay_estimateGas', [from, to, amount]);
-      return parseInt(gasEstimate) || 21000;
+      // For now, return mock gas estimate since gas estimation isn't implemented
+      // TODO: Implement gas estimation in blockchain server
+      console.warn('Gas estimation endpoint not yet implemented, returning mock data');
+      return 21000;
     } catch (error) {
       console.error('Failed to estimate gas:', error);
-      // Return mock gas estimate for development
       return 21000;
     }
   }
@@ -184,15 +224,28 @@ class BlockchainClient {
    */
   async getLatestBlock() {
     try {
-      return await this.rpcCall('topay_getLatestBlock');
-    } catch (error) {
-      console.error('Failed to get latest block:', error);
-      // Return mock block for development
+      // Use the stats endpoint to get blockchain information
+      const stats = await this.makeRequest(`${this.apiUrl}/stats`);
+      if (stats && stats.latestBlock) {
+        return stats.latestBlock;
+      }
+      
+      // Fallback to mock data
+      console.warn('Latest block not available in stats, returning mock data');
       return {
         number: Math.floor(Math.random() * 1000000) + 500000,
-        hash: `0x${Math.random().toString(16).substr(2, 64)}`,
+        hash: '0x' + Math.random().toString(16).substr(2, 64),
         timestamp: Date.now(),
         transactions: Math.floor(Math.random() * 100),
+        mock: true
+      };
+    } catch (error) {
+      console.error('Failed to get latest block:', error);
+      return {
+        number: 0,
+        hash: '0x0',
+        timestamp: Date.now(),
+        transactions: 0,
         mock: true
       };
     }
@@ -203,39 +256,28 @@ class BlockchainClient {
    */
   async getPeers() {
     try {
-      return await this.rpcCall('topay_getPeers');
-    } catch (error) {
-      console.error('Failed to get peers:', error);
-      // Return mock peers for development
+      // Use the stats endpoint to get peer information
+      const stats = await this.makeRequest(`${this.apiUrl}/stats`);
+      if (stats && stats.peers) {
+        return stats.peers;
+      }
+      
+      // Fallback to mock data
+      console.warn('Peer information not available in stats, returning mock data');
       const mockPeers = [];
       const peerCount = Math.floor(Math.random() * 10) + 5;
       for (let i = 0; i < peerCount; i++) {
         mockPeers.push({
-          id: `peer-${i + 1}`,
-          address: `192.168.1.${Math.floor(Math.random() * 255) + 1}:3000`,
-          version: '1.0.0',
+          id: '0x' + Math.random().toString(16).substr(2, 40),
+          address: `192.168.1.${Math.floor(Math.random() * 255)}:3001`,
           connected: Math.random() > 0.2,
-          lastSeen: Date.now() - Math.random() * 3600000,
           mock: true
         });
       }
       return mockPeers;
-    }
-  }
-
-  /**
-   * Check if server is running
-   */
-  async isServerRunning() {
-    try {
-      const response = await fetch(`${this.rpcUrl}/health`, {
-        method: 'GET',
-        timeout: 5000
-      });
-      return response.ok;
     } catch (error) {
-      console.warn('Blockchain server not available:', error.message);
-      return false;
+      console.error('Failed to get peers:', error);
+      return [];
     }
   }
 
@@ -265,38 +307,36 @@ class BlockchainClient {
   }
 
   /**
-   * Get chain info
+   * Get chain info (alias for getBlockchainInfo)
    */
   async getChainInfo() {
-    try {
-      return await this.rpcCall('topay_getChainInfo');
-    } catch (error) {
-      console.error('Failed to get chain info:', error);
-      // Return mock data for development
-      return {
-        chainId: 1337,
-        networkName: 'TOPAY Testnet',
-        blockHeight: Math.floor(Math.random() * 1000000) + 500000,
-        totalSupply: '1000000000',
-        circulatingSupply: '500000000',
-        version: '1.0.0',
-        mock: true
-      };
-    }
+    return await this.getBlockchainInfo();
   }
 
   /**
-   * Get mempool transactions
+   * Get mempool information
    */
   async getMempool() {
     try {
-      return await this.rpcCall('topay_getMempool');
-    } catch (error) {
-      console.error('Failed to get mempool:', error);
-      // Return mock data for development
+      // Use the stats endpoint to get mempool information
+      const stats = await this.makeRequest(`${this.apiUrl}/stats`);
+      if (stats && stats.mempool) {
+        return stats.mempool;
+      }
+      
+      // Fallback to mock data
+      console.warn('Mempool information not available in stats, returning mock data');
       return {
         pendingTransactions: Math.floor(Math.random() * 50),
         totalSize: Math.floor(Math.random() * 1000000) + 100000,
+        transactions: [],
+        mock: true
+      };
+    } catch (error) {
+      console.error('Failed to get mempool:', error);
+      return {
+        pendingTransactions: 0,
+        totalSize: 0,
         transactions: [],
         mock: true
       };

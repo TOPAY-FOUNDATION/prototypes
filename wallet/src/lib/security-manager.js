@@ -1,15 +1,274 @@
 /**
  * Wallet Security Manager
- * Handles backup, recovery, encryption, and security features
+ * Handles backup, recovery, encryption, security features, and access controls
  */
 
 import QuantumSigner from './quantum-signer.js';
+import { computeHash } from '@topayfoundation/topayz512';
 
 class SecurityManager {
   constructor() {
     this.quantumSigner = new QuantumSigner();
     this.encryptionAlgorithm = 'AES-256-GCM';
     this.keyDerivationRounds = 100000;
+    
+    // Access control properties
+    this.isAuthenticated = false;
+    this.sessionTimeout = 30 * 60 * 1000; // 30 minutes
+    this.lastActivity = null;
+    this.authToken = null;
+    this.failedAttempts = 0;
+    this.maxFailedAttempts = 5;
+    this.lockoutTime = 15 * 60 * 1000; // 15 minutes
+    this.lockoutUntil = null;
+    this.rateLimits = {};
+  }
+
+  /**
+   * Authenticate user with password/PIN
+   */
+  async authenticate(password) {
+    // Check if locked out
+    if (this.isLockedOut()) {
+      const remainingTime = Math.ceil((this.lockoutUntil - Date.now()) / 1000 / 60);
+      throw new Error(`Account locked. Try again in ${remainingTime} minutes.`);
+    }
+
+    try {
+      // Hash the password for verification
+      const encoder = new TextEncoder();
+      const passwordBytes = encoder.encode(password);
+      const hashedPassword = await computeHash(passwordBytes);
+      
+      // For demo purposes, we'll use a simple check
+      // In production, this should verify against a stored hash
+      const isValid = await this.verifyPassword(hashedPassword);
+      
+      if (isValid) {
+        this.isAuthenticated = true;
+        this.lastActivity = Date.now();
+        this.authToken = this.generateAuthToken();
+        this.failedAttempts = 0;
+        this.lockoutUntil = null;
+        
+        console.log('✅ Authentication successful');
+        return true;
+      } else {
+        this.failedAttempts++;
+        
+        if (this.failedAttempts >= this.maxFailedAttempts) {
+          this.lockoutUntil = Date.now() + this.lockoutTime;
+          console.warn('🔒 Account locked due to too many failed attempts');
+        }
+        
+        throw new Error('Invalid password');
+      }
+    } catch (error) {
+      console.error('Authentication failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Verify password hash (simplified for demo)
+   */
+  async verifyPassword(hashedPassword) {
+    // In production, this would compare against a stored hash
+    // For demo, we'll accept any non-empty password
+    return hashedPassword && hashedPassword.length > 0;
+  }
+
+  /**
+   * Generate authentication token
+   */
+  generateAuthToken() {
+    const tokenData = {
+      timestamp: Date.now(),
+      random: Math.random().toString(36).substr(2, 9)
+    };
+    
+    return btoa(JSON.stringify(tokenData));
+  }
+
+  /**
+   * Check if user is authenticated and session is valid
+   */
+  isValidSession() {
+    if (!this.isAuthenticated || !this.authToken) {
+      return false;
+    }
+
+    // Check session timeout
+    if (this.lastActivity && (Date.now() - this.lastActivity) > this.sessionTimeout) {
+      this.logout();
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Check if account is locked out
+   */
+  isLockedOut() {
+    return this.lockoutUntil && Date.now() < this.lockoutUntil;
+  }
+
+  /**
+   * Update last activity timestamp
+   */
+  updateActivity() {
+    if (this.isAuthenticated) {
+      this.lastActivity = Date.now();
+    }
+  }
+
+  /**
+   * Require authentication for sensitive operations
+   */
+  requireAuth(operation = 'operation') {
+    if (!this.isValidSession()) {
+      throw new Error(`Authentication required for ${operation}`);
+    }
+    
+    this.updateActivity();
+  }
+
+  /**
+   * Logout and clear session
+   */
+  logout() {
+    this.isAuthenticated = false;
+    this.authToken = null;
+    this.lastActivity = null;
+    console.log('🔓 User logged out');
+  }
+
+  /**
+   * Validate transaction parameters for security
+   */
+  validateTransaction(to, amount, data = null) {
+    this.requireAuth('transaction');
+
+    const errors = [];
+
+    // Validate recipient address
+    if (!to || typeof to !== 'string') {
+      errors.push('Invalid recipient address');
+    } else if (!this.isValidAddress(to)) {
+      errors.push('Invalid address format');
+    }
+
+    // Validate amount
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+      errors.push('Invalid transaction amount');
+    }
+
+    // Check for suspicious amounts (very large transactions)
+    if (amount > 1000000) {
+      errors.push('Transaction amount exceeds security limit');
+    }
+
+    // Validate data payload if present
+    if (data !== null && typeof data !== 'string' && typeof data !== 'object') {
+      errors.push('Invalid transaction data format');
+    }
+
+    if (errors.length > 0) {
+      throw new Error('Transaction validation failed: ' + errors.join(', '));
+    }
+
+    return true;
+  }
+
+  /**
+   * Basic address format validation
+   */
+  isValidAddress(address) {
+    // Basic validation - should start with '0x' and be 42 characters long
+    return typeof address === 'string' && 
+           address.startsWith('0x') && 
+           address.length === 42 &&
+           /^0x[a-fA-F0-9]{40}$/.test(address);
+  }
+
+  /**
+   * Rate limiting for operations
+   */
+  checkRateLimit(operation, maxPerMinute = 10) {
+    const now = Date.now();
+    const key = `rateLimit_${operation}`;
+    
+    if (!this.rateLimits) {
+      this.rateLimits = {};
+    }
+
+    if (!this.rateLimits[key]) {
+      this.rateLimits[key] = [];
+    }
+
+    // Remove old entries (older than 1 minute)
+    this.rateLimits[key] = this.rateLimits[key].filter(
+      timestamp => now - timestamp < 60000
+    );
+
+    // Check if limit exceeded
+    if (this.rateLimits[key].length >= maxPerMinute) {
+      throw new Error(`Rate limit exceeded for ${operation}. Try again later.`);
+    }
+
+    // Add current request
+    this.rateLimits[key].push(now);
+    return true;
+  }
+
+  /**
+   * Sanitize input data
+   */
+  sanitizeInput(input) {
+    if (typeof input === 'string') {
+      // Remove potentially dangerous characters
+      return input.replace(/[<>\"'&]/g, '');
+    }
+    
+    if (typeof input === 'object' && input !== null) {
+      const sanitized = {};
+      for (const [key, value] of Object.entries(input)) {
+        sanitized[this.sanitizeInput(key)] = this.sanitizeInput(value);
+      }
+      return sanitized;
+    }
+    
+    return input;
+  }
+
+  /**
+   * Get security status
+   */
+  getSecurityStatus() {
+    return {
+      isAuthenticated: this.isAuthenticated,
+      isValidSession: this.isValidSession(),
+      isLockedOut: this.isLockedOut(),
+      failedAttempts: this.failedAttempts,
+      sessionTimeRemaining: this.lastActivity ? 
+        Math.max(0, this.sessionTimeout - (Date.now() - this.lastActivity)) : 0,
+      lockoutTimeRemaining: this.lockoutUntil ? 
+        Math.max(0, this.lockoutUntil - Date.now()) : 0
+    };
+  }
+
+  /**
+   * Reset security state (for testing/development)
+   */
+  resetSecurityState() {
+    this.isAuthenticated = false;
+    this.lastActivity = null;
+    this.authToken = null;
+    this.failedAttempts = 0;
+    this.lockoutUntil = null;
+    this.rateLimits = {};
+    console.log('Security state reset');
   }
 
   /**

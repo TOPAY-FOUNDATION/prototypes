@@ -9,8 +9,14 @@ export async function GET() {
   
   try {
     const networkInfo = await blockchain.getNetworkInfo();
+    const stats = await blockchain.getBlockchainStats();
 
-    return NextResponse.json({ network: networkInfo });
+    return NextResponse.json({ 
+      network: {
+        ...networkInfo,
+        stats
+      }
+    });
   } catch (error) {
     console.error('Error fetching network info:', error);
     return NextResponse.json(

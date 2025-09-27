@@ -21,37 +21,19 @@ export async function GET(request: NextRequest) {
     if (limit) {
       const maxLimit = Math.min(parseInt(limit, 10), 20); // Cap at 20 blocks
       
-      // Get the latest block first
-      const latestBlock = await blockchain.getLatestBlock();
+      const blocks = await blockchain.getBlocks(maxLimit);
       
-      if (!latestBlock) {
+      if (!blocks || blocks.length === 0) {
         return NextResponse.json(
           { error: 'No blocks found' },
           { status: 404 }
         );
       }
 
-      const blocks = [latestBlock];
-      const latestBlockNumber = latestBlock.number;
-
-      // Fetch previous blocks
-      for (let i = 1; i < maxLimit && (latestBlockNumber - i) >= 0; i++) {
-        try {
-          const blockNum = latestBlockNumber - i;
-          const block = await blockchain.getBlockByNumber(blockNum);
-          if (block) {
-            blocks.push(block);
-          }
-        } catch (error) {
-          console.error(`Error fetching block ${latestBlockNumber - i}:`, error);
-          // Continue with other blocks even if one fails
-        }
-      }
-
       return NextResponse.json({
         blocks,
         total: blocks.length,
-        latestBlock: latestBlockNumber
+        latestBlock: blocks.length > 0 ? blocks[0].index : 0
       });
     }
 

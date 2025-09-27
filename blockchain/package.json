@@ -1,30 +1,15 @@
 {
-  "name": "topay-prototype",
-  "version": "1.0.0",
-  "description": "TOPAY Foundation Quantum-Safe Blockchain Prototype",
-  "main": "src/index.js",
+  "name": "topay-simple-blockchain",
+  "version": "2.0.0",
+  "description": "TOPAY Foundation Simple Quantum-Safe Blockchain with 512-bit Hashing",
+  "main": "src/blockchain-rpc-server.js",
   "type": "module",
   "scripts": {
-    "start": "node main.js",
-    "start:node": "node src/network-node.js",
-    "start:port": "node src/network-node.js --port",
-    "demo": "node src/index.js",
-    "activity:test": "node blockchain-activity-generator.js",
-    "dev": "node --watch src/network-node.js",
-    "storage": "node blockchain-storage-server.js",
-    "storage:dev": "node --watch blockchain-storage-server.js",
-    "storage:port": "node blockchain-storage-server.js 8545",
-    "rpc": "node src/rpc/EnhancedRPCServer.js",
-    "rpc:dev": "node --watch src/rpc/EnhancedRPCServer.js",
-    "storage-client": "node storage-client.js",
-    "storage-client:dev": "nodemon storage-client.js",
-    "blockchain-remote": "node blockchain-remote.js",
-    "blockchain-remote:dev": "nodemon blockchain-remote.js",
-    "remote-setup": "concurrently \"npm run storage-client\" \"npm run blockchain-remote\"",
-    "setup-env": "node -e \"const fs = require('fs'); if (!fs.existsSync('.env')) { fs.copyFileSync('.env.example', '.env'); console.log('✅ .env file created from .env.example'); console.log('📝 Please edit .env file with your configuration'); } else { console.log('⚠️  .env file already exists'); }\"",
-    "env:dev": "npm run setup-env && npm run remote-setup",
-    "env:blockchain": "npm run setup-env && node blockchain-remote.js",
-    "env:storage": "npm run setup-env && node storage-client.js"
+    "start": "node src/blockchain-rpc-server.js",
+    "dev": "node --watch src/blockchain-rpc-server.js",
+    "test": "node test/simple-test.js",
+    "build": "echo 'Build complete - ready for deployment'",
+    "vercel-build": "echo 'Vercel build complete'"
   },
   "keywords": [
     "blockchain",
@@ -37,12 +22,8 @@
   "license": "MIT",
   "dependencies": {
     "@topayfoundation/topayz512": "^0.1.2",
-    "axios": "^1.6.0",
-    "concurrently": "^8.2.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "node-fetch": "^3.3.2"
+    "express": "^4.18.2"
   },
   "engines": {
     "node": ">=16.0.0"
