@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     address: string;
-  };
+  }>;
 }
 
 interface Token {
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const { address } = params;
+    const { address } = await params;
     const body = await request.json();
     const { tokenAddress, action, amount, spender, recipient } = body;
     

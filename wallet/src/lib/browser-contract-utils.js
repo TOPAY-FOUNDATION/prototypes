@@ -96,7 +96,7 @@ class BrowserContractUtils {
   getMockContractResult(functionName, args = []) {
     switch (functionName) {
       case 'balanceOf':
-        return { result: (Math.random() * 1000).toFixed(2) };
+        return { result: args.length > 0 ? (Math.random() * 1000).toFixed(2) : '0' };
       case 'name':
         return { result: 'Mock Token' };
       case 'symbol':

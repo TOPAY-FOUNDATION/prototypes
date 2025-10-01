@@ -9,10 +9,10 @@ type ContractResult = {
 /**
  * Get mock contract result for development
  */
-function getMockContractResult(functionName: string, _args: ContractArg[] = []): ContractResult {
+function getMockContractResult(functionName: string, args: ContractArg[] = []): ContractResult {
   switch (functionName) {
     case 'balanceOf':
-      return { result: (Math.random() * 1000).toFixed(2) };
+      return { result: args.length > 0 ? (Math.random() * 1000).toFixed(2) : '0' };
     case 'name':
       return { result: 'Mock Token' };
     case 'symbol':
