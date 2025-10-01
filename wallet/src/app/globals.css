@@ -2,14 +2,14 @@
 
 /* Color theme variables */
 :root {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
+  --background: #0f172a; /* slate-900 - deep dark blue */
+  --foreground: #f1f5f9; /* slate-100 - light text */
 }
 
 /* Dark mode overrides (controlled by html.dark from ThemeProvider) */
 .dark {
-  --background: #0b1220; /* deep slate */
-  --foreground: #e5e7eb; /* zinc-200 */
+  --background: #020617; /* slate-950 - even deeper dark */
+  --foreground: #e2e8f0; /* slate-200 */
 }
 
 /* Base app styles */
@@ -65,8 +65,8 @@ body {
   --primary-900: #1e3a8a; /* blue-900 */
   --error: #ef4444;      /* red-500 */
   --muted: #6b7280;      /* gray-500 */
-  --border: #e5e7eb;     /* gray-200 */
-  --surface: #ffffff;
+  --border: #475569;     /* slate-600 - darker border for deep theme */
+  --surface: #1e293b; /* slate-800 - dark surface */
   
   /* Additional variables for consistent bluish theme */
   --secondary: #1e40af;  /* blue-800 for secondary elements */
@@ -78,20 +78,20 @@ body {
   --accent-500: #0ea5e9; /* sky-500 for accents */
   --error-light: #fef2f2; /* red-50 */
   --error-border: #fecaca; /* red-200 */
-  --bg-page: #ffffff;
-  --bg-error-light: #fef2f2;
-  --border-error: #fecaca;
-  --text-secondary: #6b7280;
+  --bg-page: #0f172a; /* slate-900 - deep dark blue */
+  --bg-error-light: #1e293b; /* slate-800 */
+  --border-error: #ef4444;
+  --text-secondary: #94a3b8; /* slate-400 */
   --text-error: #ef4444;
   --text-error-secondary: #dc2626;
-  --text-primary: #111827;
-  --text-primary-dark: #374151;
+  --text-primary: #f1f5f9; /* slate-100 */
+  --text-primary-dark: #cbd5e1; /* slate-300 */
   --text-success: #16a34a;
   --bg-primary: #3b82f6;
-  --card-bg: #ffffff;
-  --input-bg: #ffffff;
-  --background-secondary: #f8fafc; /* slate-50 */
-  --surface-hover: #f1f5f9; /* slate-100 */
+  --card-bg: #1e293b; /* slate-800 */
+  --input-bg: #334155; /* slate-700 */
+  --background-secondary: #1e293b; /* slate-800 */
+  --surface-hover: #334155; /* slate-700 */
   --text-inverse: #ffffff;
   --success-50: #f0fdf4; /* green-50 */
   --success-200: #bbf7d0; /* green-200 */

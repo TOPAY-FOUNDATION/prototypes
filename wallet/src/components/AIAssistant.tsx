@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Mic, MicOff, Volume2, VolumeX, Minimize2, Maximize2, Sparkles, Copy } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import chainGPTService from '../lib/chaingpt-service';
 
 interface Message {
@@ -42,7 +44,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
   const [isClient, setIsClient] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
 
@@ -200,6 +202,13 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     navigator.clipboard.writeText(content);
   };
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only close if clicking on the backdrop (not the modal content)
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   const containerClasses = isModal 
@@ -211,20 +220,20 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     : 'w-full h-full ai-assistant-content';
 
   return (
-    <div className={containerClasses}>
+    <div className={containerClasses} onClick={handleBackdropClick}>
       <div className={contentClasses}>
         {/* Header */}
         <div className="ai-assistant-header">
           <div className="ai-assistant-header-left">
             <div className="ai-assistant-icon">
-              <Sparkles className="w-5 h-5 text-white" />
+              <Sparkles className="w-7 h-7 text-white" />
             </div>
             <div className="ai-assistant-title-container">
               <h3 className="ai-assistant-title">TOPAY AI Assistant</h3>
               <p className="ai-assistant-subtitle">Powered by ChainGPT</p>
             </div>
           </div>
-          <div className="ai-assistant-header-right">
+          <div className="ai-header-controls">
             {voiceEnabled && (
               <button
                 onClick={toggleSpeech}
@@ -267,7 +276,36 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
                         : 'ai-message-bubble-assistant'
                     }`}
                   >
-                    <div className="ai-message-content">{message.content}</div>
+                    <div className="ai-message-content">
+                      {message.type === 'assistant' ? (
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            // Custom styling for markdown elements
+                            h1: ({children}) => <h1 className="text-xl font-bold mb-2 text-blue-800">{children}</h1>,
+                            h2: ({children}) => <h2 className="text-lg font-semibold mb-2 text-blue-700">{children}</h2>,
+                            h3: ({children}) => <h3 className="text-base font-medium mb-1 text-blue-600">{children}</h3>,
+                            p: ({children}) => <p className="mb-2 last:mb-0">{children}</p>,
+                            strong: ({children}) => <strong className="font-semibold text-blue-900">{children}</strong>,
+                            em: ({children}) => <em className="italic text-blue-800">{children}</em>,
+                            code: ({children}) => <code className="bg-blue-50 text-blue-900 px-1 py-0.5 rounded text-sm font-mono">{children}</code>,
+                            pre: ({children}) => <pre className="bg-blue-50 border border-blue-200 rounded-lg p-3 my-2 overflow-x-auto">{children}</pre>,
+                            ul: ({children}) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+                            ol: ({children}) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+                            li: ({children}) => <li className="text-sm">{children}</li>,
+                            blockquote: ({children}) => <blockquote className="border-l-4 border-blue-300 pl-4 italic my-2 text-blue-700">{children}</blockquote>,
+                            a: ({href, children}) => <a href={href} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                            table: ({children}) => <table className="border-collapse border border-blue-300 my-2 w-full">{children}</table>,
+                            th: ({children}) => <th className="border border-blue-300 bg-blue-50 px-2 py-1 text-left font-semibold">{children}</th>,
+                            td: ({children}) => <td className="border border-blue-300 px-2 py-1">{children}</td>,
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      ) : (
+                        message.content
+                      )}
+                    </div>
                     <div className="ai-message-meta">
                       <div className="ai-message-time">
                         {isClient ? message.timestamp.toLocaleTimeString() : ''}
@@ -333,15 +371,15 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
             <div className="ai-assistant-input">
               <div className="ai-input-container">
                 <div className="ai-input-wrapper">
-                  <input
+                  <textarea
                     ref={inputRef}
-                    type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
                     placeholder="Ask me anything about TOPAY, your wallet, or blockchain..."
                     className="ai-input-field"
                     disabled={isTyping}
+                    rows={1}
                   />
                   <div className="ai-input-buttons">
                     {voiceEnabled && (
