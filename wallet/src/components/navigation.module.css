@@ -82,6 +82,9 @@
   border-radius: 0.5rem;
   transition: all 0.2s ease;
   white-space: nowrap;
+  border: none;
+  background: transparent;
+  cursor: pointer;
 }
 
 .nav-link:hover {
@@ -93,6 +96,17 @@
   color: var(--primary);
   background: rgba(59, 130, 246, 0.12);
   font-weight: 600;
+}
+
+.nav-logout-button {
+  color: var(--error-color) !important;
+  border: 1px solid transparent;
+}
+
+.nav-logout-button:hover {
+  color: var(--error-color) !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+  border-color: rgba(239, 68, 68, 0.2);
 }
 
 .nav-actions {
@@ -153,6 +167,10 @@
   padding: 0.875rem 1rem;
   border-radius: 0.5rem;
   transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
 }
 
 .nav-mobile-link:hover {
@@ -164,6 +182,18 @@
   color: var(--primary);
   background: rgba(59, 130, 246, 0.12);
   font-weight: 600;
+}
+
+.nav-mobile-link.nav-logout-button {
+  color: var(--error-color) !important;
+  border: 1px solid transparent;
+  margin-top: 0.5rem;
+}
+
+.nav-mobile-link.nav-logout-button:hover {
+  color: var(--error-color) !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+  border-color: rgba(239, 68, 68, 0.2);
 }
 
 /* Responsive breakpoints */

@@ -78,12 +78,16 @@ export default function WalletCreation({ onWalletCreated }: WalletCreationProps)
         privateKey: walletData.privateKey,
         publicKey: walletData.publicKey,
         seedPhrase: seedPhrase,
-        blockchainRegistration: walletData.blockchainRegistration
+        blockchainRegistration: walletData.blockchainRegistration,
+        welcomeTokens: walletData.welcomeTokens
       };
 
-      // Log registration status
+      // Log registration status and token allocation
       if (walletData.blockchainRegistration?.registered) {
         console.log(`✅ Wallet registered on blockchain with transaction hash: ${walletData.blockchainRegistration.transactionHash}`);
+        if (walletData.welcomeTokens) {
+          console.log(`🎁 Welcome tokens allocated: ${walletData.welcomeTokens.amount} ${walletData.welcomeTokens.symbol}`);
+        }
       } else {
         console.log('⚠️ Wallet created but not registered on blockchain');
       }
@@ -116,6 +120,8 @@ export default function WalletCreation({ onWalletCreated }: WalletCreationProps)
             <ul className={styles.stepsList}>
               <li>🔐 Generate quantum-safe private keys</li>
               <li>🏠 Create your unique wallet address</li>
+              <li>🔗 Register wallet on TOPAY blockchain</li>
+              <li>🎁 Receive 1000 welcome tokens automatically</li>
               <li>📝 Generate a 12-word recovery seed phrase</li>
               <li>✅ Prepare your wallet for use</li>
             </ul>
@@ -150,8 +156,12 @@ export default function WalletCreation({ onWalletCreated }: WalletCreationProps)
               <span>Creating wallet address</span>
             </div>
             <div className={styles.progressStep}>
+              <CheckCircle size={16} className={styles.checkIcon} />
+              <span>Registering on blockchain</span>
+            </div>
+            <div className={styles.progressStep}>
               <Loader size={16} className={styles.loadingIcon} />
-              <span>Generating seed phrase</span>
+              <span>Allocating welcome tokens</span>
             </div>
           </div>
         </div>

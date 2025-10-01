@@ -1,49 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server.js';
 
+interface TokenBalance {
+  tokenId: string;
+  balance: number;
+}
+
+interface WalletResponse {
+  address: string;
+  tokenBalances: TokenBalance[];
+  message: string;
+}
+
+interface NativeBalanceResponse {
+  address: string;
+  balance: number;
+  symbol: string;
+  tokenInfo: {
+    name: string;
+    symbol: string;
+    totalSupply: number;
+    owner: string;
+  };
+  message: string;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ address: string }> }
 ) {
   try {
     const { address } = await params;
-    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3000/rpc';
+    const blockchainUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001';
     
-    // Get wallet balance using blockchain RPC
-    const requestBody = {
-      jsonrpc: '2.0',
-      method: 'topay_getBalance',
-      params: [address],
-      id: 1
-    };
-    
-    const response = await fetch(rpcUrl, {
-      method: 'POST',
+    // Get native token balance using the new balance endpoint
+    const balanceResponse = await fetch(`${blockchainUrl}/topay/wallet/${address}/balance`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody)
+      }
     });
     
-    if (!response.ok) {
+    if (!balanceResponse.ok) {
+      if (balanceResponse.status === 404) {
+        // Wallet not found, return zero balance
+        return NextResponse.json({
+          address: address,
+          balance: 0,
+          found: false,
+          tokenBalances: []
+        });
+      }
+      
       return NextResponse.json(
         { 
           error: 'Cannot connect to blockchain',
-          suggestion: 'Make sure the blockchain server is running on port 3000'
+          suggestion: 'Make sure the blockchain server is running on port 3001'
         },
         { status: 503 }
       );
     }
 
-    const result = await response.json();
+    const nativeBalanceResult = await balanceResponse.json() as NativeBalanceResponse;
     
-    if (result.error) {
-      throw new Error(result.error.message);
+    // Get all token balances using the wallet info endpoint
+    const walletResponse = await fetch(`${blockchainUrl}/topay/wallet/${address}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    let tokenBalances: TokenBalance[] = [];
+    if (walletResponse.ok) {
+      const walletResult = await walletResponse.json() as WalletResponse;
+      tokenBalances = walletResult.tokenBalances || [];
     }
     
     return NextResponse.json({
-      address: result.result.address,
-      balance: result.result.balance,
-      found: result.result.found
+      address: address,
+      balance: nativeBalanceResult.balance || 0,
+      symbol: nativeBalanceResult.symbol || 'TPY',
+      found: true,
+      tokenBalances: tokenBalances,
+      nativeTokenInfo: nativeBalanceResult.tokenInfo
     });
     
   } catch (error) {

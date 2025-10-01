@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { BlockchainClient } from '@/lib/blockchain';
 import styles from '../app/market-stats.module.css';
 
 interface MarketStatsProps {
@@ -12,6 +13,7 @@ interface MarketData {
   marketCap: number;
   volume24h: number;
   change24h: number;
+  totalTokens?: number;
 }
 
 export default function MarketStats({ className = '' }: MarketStatsProps) {
@@ -19,22 +21,39 @@ export default function MarketStats({ className = '' }: MarketStatsProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real application, this would fetch from an API
-    // For now, we'll use mock data
-    const mockData: MarketData = {
-      price: 0,
-      marketCap: 0,
-      volume24h: 0,
-      change24h: 0,
+    const fetchMarketData = async () => {
+      try {
+        const client = new BlockchainClient();
+        const stats = await client.getBlockchainStats();
+        
+        // In a real application, this would fetch from an API
+        // For now, we'll use mock data with real token count
+        const mockData: MarketData = {
+          price: 0,
+          marketCap: 0,
+          volume24h: 0,
+          change24h: 0,
+          totalTokens: stats.totalTokens || 0,
+        };
+
+        setMarketData(mockData);
+      } catch (error) {
+        console.error('Failed to fetch market data:', error);
+        // Fallback to mock data
+        const mockData: MarketData = {
+          price: 0,
+          marketCap: 0,
+          volume24h: 0,
+          change24h: 0,
+          totalTokens: 0,
+        };
+        setMarketData(mockData);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // Simulate API fetch delay
-    const timer = setTimeout(() => {
-      setMarketData(mockData);
-      setLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
+    fetchMarketData();
   }, []);
 
   const formatCurrency = (value: number): string => {
@@ -56,7 +75,7 @@ export default function MarketStats({ className = '' }: MarketStatsProps) {
   if (loading) {
     return (
       <div className={`${styles['market-stats-container']} ${className}`}>
-        {[...Array(4)].map((_, i) => (
+        {[...Array(5)].map((_, i) => (
           <div key={i} className={styles['market-stat-card']}>
             <div className={styles['stat-title']}>Loading...</div>
             <div className={styles['stat-value']}>--</div>
@@ -93,13 +112,14 @@ export default function MarketStats({ className = '' }: MarketStatsProps) {
       </div>
 
       <div className={styles['market-stat-card']}>
-        <div className={styles['stat-title']}>24h Trading Volume</div>
+        <div className={styles['stat-title']}>24h Volume</div>
         <div className={styles['stat-value']}>{formatLargeNumber(marketData?.volume24h || 0)}</div>
       </div>
 
       <div className={styles['market-stat-card']}>
-        <div className={styles['stat-title']}>Circulating Supply</div>
-        <div className={styles['stat-value']}>0 TOPAY</div>
+        <div className={styles['stat-title']}>Total Tokens</div>
+        <div className={styles['stat-value']}>{marketData?.totalTokens || 0}</div>
+        <div className={styles['stat-description']}>Active on network</div>
       </div>
     </div>
   );

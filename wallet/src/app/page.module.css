@@ -1,86 +1,491 @@
-/* TOPAY Wallet - Main Page Styles */
-/* Modern design matching block explorer */
-
-.main {
-  padding: 2rem 0;
-  min-height: calc(100vh - 80px);
+.container {
+  min-height: 100vh;
+  background: var(--primary-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.statusBar {
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.wallet {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+}
+
+.header {
+  background: var(--primary-600);
+  color: white;
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.address {
+  font-size: 14px;
+  opacity: 0.9;
+  font-family: monospace;
+}
+
+.logoutButton {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s ease;
 }
 
-.statusBar:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.logoutButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
-.dark .statusBar {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+.aiButton {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  position: relative;
 }
 
-.dark .statusBar:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+.aiButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: white;
+}
+
+.aiButton.hasNotification {
+  background: rgba(34, 197, 94, 0.3);
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+.notificationBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+.nav {
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.nav button {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6c757d;
+  transition: all 0.2s;
+}
+
+.nav button:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.nav button.active {
+  background: white;
+  color: #667eea;
+  border-bottom: 2px solid #667eea;
 }
 
 .content {
-  max-width: 1000px;
-  margin: 0 auto;
+  padding: 24px;
+  min-height: 400px;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .main {
-    padding: 1.5rem 0;
-  }
-  
-  .statusBar {
-    margin-bottom: 1.5rem;
-    padding: 0.75rem;
-  }
+/* Tokens View */
+.tokensView {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
+.balanceCard {
+  background: var(--primary-600);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.balanceCard h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.balance {
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.tokensList h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: #343a40;
+}
+
+.tokenItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.tokenInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.tokenName {
+  font-weight: 500;
+  color: #343a40;
+}
+
+.tokenSymbol {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.tokenBalance {
+  font-weight: 600;
+  color: #495057;
+}
+
+.noTokens {
+  text-align: center;
+  color: #6c757d;
+  padding: 40px 20px;
+  font-style: italic;
+}
+
+/* Receive View */
+.receiveView {
+  text-align: center;
+}
+
+.receiveView h3 {
+  margin: 0 0 24px 0;
+  font-size: 18px;
+  color: #343a40;
+}
+
+.receiveCard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.qrPlaceholder {
+  display: flex;
+  justify-content: center;
+}
+
+.qrCode {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.addressDisplay {
+  text-align: left;
+}
+
+.addressDisplay label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #343a40;
+}
+
+.addressBox {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.addressBox span {
+  flex: 1;
+  font-family: monospace;
+  font-size: 12px;
+  word-break: break-all;
+  color: #495057;
+}
+
+.addressBox button {
+  padding: 6px 12px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.addressBox button:hover {
+  background: #5a6fd8;
+}
+
+/* Send View */
+.sendView h3 {
+  margin: 0 0 24px 0;
+  font-size: 18px;
+  color: #343a40;
+}
+
+.sendForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroup label {
+  font-weight: 500;
+  color: #343a40;
+  font-size: 14px;
+}
+
+.formGroup input,
+.formGroup select {
+  padding: 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.sendButton {
+  padding: 16px;
+  background: var(--primary-600);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.sendButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.sendButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.message {
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 14px;
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 18px;
+  color: #666;
+}
+
+.error {
+  background: #fee;
+  color: #c53030;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 16px;
+  border: 1px solid #fed7d7;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  color: #dc3545;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.modalText {
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.warningBox {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 20px;
+}
+
+.warningBox p {
+  margin: 0;
+  color: #856404;
+  font-weight: 500;
+}
+
+.modalButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.cancelButton {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.confirmButton {
+  background: #dc3545;
+  border: 1px solid #dc3545;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.confirmButton:hover {
+  background: #c82333;
+  border-color: #bd2130;
+}
+
+/* Responsive */
 @media (max-width: 480px) {
-  .main {
-    padding: 1rem 0;
+  .container {
+    padding: 10px;
   }
   
-  .statusBar {
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-  }
-}
-
-/* Animation support */
-.content > div {
-  animation-fill-mode: both;
-}
-
-/* Focus management */
-.content:focus-within .statusBar {
-  border-color: var(--primary);
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  .statusBar {
-    border-width: 2px;
-  }
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .statusBar {
-    transition: none;
+  .wallet {
+    border-radius: 0;
   }
   
-  .content > div {
-    animation: none;
+  .header {
+    padding: 20px;
+  }
+  
+  .content {
+    padding: 20px;
+  }
+  
+  .nav button {
+    padding: 12px;
+    font-size: 13px;
   }
 }

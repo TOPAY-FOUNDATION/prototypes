@@ -40,8 +40,9 @@ class BlockchainCache {
    * Save blockchain data to cache
    * @param {Array} chain - The blockchain array
    * @param {number} difficulty - Current mining difficulty
+   * @param {Object} tokens - Token data
    */
-  saveBlockchain(chain, difficulty = 2) {
+  saveBlockchain(chain, difficulty = 2, tokens = null) {
     try {
       const blockchainData = {
         chain: chain.map(block => ({
@@ -53,6 +54,7 @@ class BlockchainCache {
           nonce: block.nonce
         })),
         difficulty: difficulty,
+        tokens: tokens,
         lastUpdated: Date.now(),
         version: '2.0.0'
       };

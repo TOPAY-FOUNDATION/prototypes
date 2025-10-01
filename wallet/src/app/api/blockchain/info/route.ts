@@ -2,75 +2,51 @@ import { NextResponse } from 'next/server.js';
 
 export async function GET() {
   try {
-    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3000/rpc';
+    const blockchainUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001';
     
-    // Get blockchain info using RPC calls
-    const chainInfoRequest = {
-      jsonrpc: '2.0',
-      method: 'topay_getChainInfo',
-      params: [],
-      id: 1
-    };
-    
-    const mempoolRequest = {
-      jsonrpc: '2.0',
-      method: 'topay_getMempool',
-      params: [],
-      id: 2
-    };
-    
-    // Make parallel requests
-    const [chainResponse, mempoolResponse] = await Promise.all([
-      fetch(rpcUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(chainInfoRequest)
+    // Use the new REST endpoints instead of JSON-RPC
+    const [statsResponse, blocksResponse] = await Promise.all([
+      fetch(`${blockchainUrl}/topay/stats`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
       }),
-      fetch(rpcUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(mempoolRequest)
+      fetch(`${blockchainUrl}/topay/blocks`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
       })
     ]);
     
-    if (!chainResponse.ok || !mempoolResponse.ok) {
-      return NextResponse.json(
-        { 
-          error: 'Cannot connect to blockchain',
-          suggestion: 'Make sure the blockchain server is running on port 3000'
-        },
-        { status: 503 }
-      );
+    if (!statsResponse.ok || !blocksResponse.ok) {
+      throw new Error('Failed to fetch blockchain info');
     }
-    
-    const chainResult = await chainResponse.json();
-    const mempoolResult = await mempoolResponse.json();
-    
-    if (chainResult.error || mempoolResult.error) {
-      throw new Error(chainResult.error?.message || mempoolResult.error?.message);
-    }
-    
-    const info = {
-      blockCount: chainResult.result.blockCount || 0,
-      height: chainResult.result.height || 0,
-      difficulty: chainResult.result.difficulty || 1,
-      latestBlock: chainResult.result.latestBlock || null,
-      mempoolSize: mempoolResult.result.count || 0,
-      totalTransactions: chainResult.result.totalTransactions || 0,
-      networkNodes: chainResult.result.networkNodes || 1,
-      isConnectedToWorkspace: true
-    };
 
-    return NextResponse.json(info);
+    const stats = await statsResponse.json();
+    const blocks = await blocksResponse.json();
+    
+    return NextResponse.json({
+      chainInfo: {
+        blockHeight: stats.blockHeight || blocks.length || 0,
+        difficulty: stats.difficulty || 2,
+        totalTransactions: stats.totalTransactions || 0,
+        networkHashRate: stats.networkHashRate || '0 H/s',
+        lastBlockTime: stats.lastBlockTime || Date.now()
+      },
+      mempool: {
+        size: 0, // Mempool not implemented in current blockchain
+        totalFees: 0
+      },
+      connected: true
+    });
+    
   } catch (error) {
     console.error('Error getting blockchain info:', error);
     return NextResponse.json(
       { 
-        error: 'Failed to get blockchain information',
-        details: (error as Error).message,
-        isConnectedToWorkspace: false
+        error: 'Failed to connect to blockchain',
+        connected: false,
+        suggestion: 'Make sure the blockchain server is running on port 3001'
       },
-      { status: 500 }
+      { status: 503 }
     );
   }
 }

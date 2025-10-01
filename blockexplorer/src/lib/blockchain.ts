@@ -23,6 +23,21 @@ interface Transaction {
   timestamp: number;
 }
 
+interface TokenInfo {
+  tokenId: string;
+  name: string;
+  symbol: string;
+  totalSupply: number;
+  owner: string;
+  holders: number;
+}
+
+interface TokenBalance {
+  tokenId: string;
+  address: string;
+  balance: number;
+}
+
 interface Address {
   address: string;
   balance: string;
@@ -35,6 +50,7 @@ interface BlockchainStats {
   hashRate: string;
   networkName: string;
   version: string;
+  totalTokens?: number;
 }
 
 class BlockchainClient {
@@ -118,12 +134,23 @@ class BlockchainClient {
       hashRate?: string;
       version?: string;
     };
+    
+    // Get token count
+    let totalTokens = 0;
+    try {
+      const tokens = await this.getAllTokens();
+      totalTokens = tokens.length;
+    } catch (error) {
+      console.warn('Failed to get token count:', error);
+    }
+    
     return {
       totalBlocks: data.totalBlocks || 0,
       difficulty: data.difficulty || 1,
       hashRate: data.hashRate || '0 H/s',
       networkName: this.config.networkName,
-      version: data.version || '1.0.0'
+      version: data.version || '1.0.0',
+      totalTokens
     };
   }
 
@@ -182,6 +209,56 @@ class BlockchainClient {
     // Since the blockchain service doesn't have address-specific endpoints,
     // we'll return 0 for now
     return 0;
+  }
+
+  // Token-related methods
+  async getAllTokens(): Promise<TokenInfo[]> {
+    const data = await this.makeAPICall('/topay/tokens') as TokenInfo[] | { tokens?: TokenInfo[] };
+    if (Array.isArray(data)) {
+      return data;
+    } else if (data && typeof data === 'object' && 'tokens' in data && Array.isArray(data.tokens)) {
+      return data.tokens;
+    }
+    return [];
+  }
+
+  async getTokenInfo(tokenId: string): Promise<TokenInfo> {
+    const data = await this.makeAPICall(`/topay/tokens/${tokenId}`) as TokenInfo;
+    return data;
+  }
+
+  async getTokenBalance(tokenId: string, address: string): Promise<TokenBalance> {
+    const data = await this.makeAPICall(`/topay/tokens/${tokenId}/balance/${address}`) as TokenBalance;
+    return data;
+  }
+
+  async getAddressTokenBalances(address: string): Promise<TokenBalance[]> {
+    const data = await this.makeAPICall(`/topay/address/${address}/tokens`) as TokenBalance[] | { balances?: TokenBalance[] };
+    if (Array.isArray(data)) {
+      return data;
+    } else if (data && typeof data === 'object' && 'balances' in data && Array.isArray(data.balances)) {
+      return data.balances;
+    }
+    return [];
+  }
+
+  async createToken(tokenData: { name: string; symbol: string; totalSupply: number; owner: string }): Promise<{ tokenId: string; block: Block }> {
+    const data = await this.makeAPICall('/topay/tokens/create', {
+      method: 'POST',
+      body: JSON.stringify(tokenData)
+    }) as { tokenId: string; block: unknown };
+    return {
+      tokenId: data.tokenId,
+      block: this.formatBlock(data.block)
+    };
+  }
+
+  async transferToken(transferData: { tokenId: string; from: string; to: string; amount: number }): Promise<Block> {
+    const data = await this.makeAPICall('/topay/tokens/transfer', {
+      method: 'POST',
+      body: JSON.stringify(transferData)
+    }) as { block: unknown };
+    return this.formatBlock(data.block);
   }
 
   async getNetworkInfo() {
@@ -269,5 +346,5 @@ class BlockchainClient {
   }
 }
 
-export { BlockchainClient, type Block, type Transaction, type Address, type BlockchainStats };
+export { BlockchainClient, type Block, type Transaction, type Address, type BlockchainStats, type TokenBalance, type TokenInfo };
 export default BlockchainClient;

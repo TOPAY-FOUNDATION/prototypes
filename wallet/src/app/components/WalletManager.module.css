@@ -123,11 +123,12 @@
 }
 
 .balanceSection {
-  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+  background: var(--primary-600);
   color: var(--text-inverse);
   padding: var(--spacing-2xl);
   border-radius: var(--radius-xl);
   margin-bottom: var(--spacing-xl);
+  text-align: center;
   position: relative;
   overflow: hidden;
 }

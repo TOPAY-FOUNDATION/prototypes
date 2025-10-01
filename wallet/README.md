@@ -1,196 +1,107 @@
-# TOPAY Quantum-Safe Blockchain Wallet
+# TOPAY Wallet
 
-A Next.js-based wallet application integrated with the TOPAY Foundation's quantum-safe blockchain workspace.
+A modern, secure cryptocurrency wallet for the TOPAY blockchain ecosystem, featuring an AI-powered assistant.
 
-## 🚀 Features
+## Features
 
-- **Quantum-Safe Security**: Built with TOPAY's quantum-resistant cryptography
-- **Workspace Integration**: Seamlessly connects to the main blockchain RPC server
-- **Real-time Updates**: Live connection status and blockchain data
-- **Modern UI**: Clean, responsive interface built with Next.js and React
-- **Comprehensive API**: Full blockchain interaction capabilities
+- **Secure Wallet Management**: Create, import, and manage TOPAY wallets
+- **Transaction History**: View and track all your transactions
+- **Token Support**: Native TPY token support with extensible token management
+- **AI Assistant**: Powered by ChainGPT for intelligent blockchain assistance
+- **QR Code Support**: Easy address sharing and transaction scanning
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
 
-## 📋 Prerequisites
+## AI Assistant Integration
 
-- Node.js (v18 or higher)
-- npm or yarn package manager
-- TOPAY Blockchain workspace (parent directory)
+The wallet includes an advanced AI assistant powered by ChainGPT that can help with:
 
-## 🛠️ Installation
+- Wallet operations and balance inquiries
+- Transaction analysis and blockchain queries
+- TOPAY ecosystem education and tokenomics
+- Security best practices and guidance
+- Technical support for blockchain interactions
 
-1. **Navigate to the wallet directory:**
+### ChainGPT Setup
 
-   ```bash
-   cd "c:\Users\RealShahriya\Desktop\TOPAY FOUNDATION\Projects\topay-prototype\wallet-nextjs"
+1. **Get API Key**: Sign up at [ChainGPT](https://chaingpt.org/) and obtain your API key
+2. **Configure Environment**: Add your API key to the `.env` file:
+
+   ```env
+   CHAINGPT_API_KEY=your_api_key_here
+   CHAINGPT_API_URL=https://api.chaingpt.org/v1
    ```
 
-2. **Install dependencies:**
+3. **Fallback Mode**: If no API key is provided, the assistant will use intelligent fallback responses
+
+## Quick Start
+
+1. **Install Dependencies**:
 
    ```bash
    npm install
    ```
 
-## 🚀 Quick Start
-
-### Option 1: Start Complete Workspace (Recommended)
-
-```bash
-npm run workspace
-```
-
-This will start both the blockchain RPC server and the wallet application.
-
-### Option 2: Start Services Separately
-
-1. **Start the blockchain server (in parent directory):**
+2. **Environment Setup**:
 
    ```bash
-   npm run blockchain
+   cp .env.example .env
+   # Edit .env with your configuration
    ```
 
-2. **Start the wallet app (in a new terminal):**
+3. **Start Development Server**:
 
    ```bash
    npm run dev
    ```
 
-## 🌐 Access Points
+4. **Open Browser**: Navigate to `http://localhost:3000`
 
-- **Wallet Application**: <http://localhost:3000>
-- **Blockchain RPC Server**: <http://localhost:3000/rpc>
-- **Health Check**: <http://localhost:3000/health>
+## Environment Variables
 
-## 📁 Project Structure
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `NEXT_PUBLIC_BLOCKCHAIN_RPC_URL` | Blockchain RPC server URL | Yes |
+| `NEXT_PUBLIC_EXPLORER_URL` | Block explorer URL | Yes |
+| `CHAINGPT_API_KEY` | ChainGPT API key for AI assistant | No |
+| `CHAINGPT_API_URL` | ChainGPT API endpoint | No |
 
-```tree
-wallet-nextjs/
-├── src/
-│   ├── app/
-│   │   ├── api/                 # API routes
-│   │   │   ├── blockchain/      # Blockchain info & mempool
-│   │   │   ├── transactions/    # Transaction handling
-│   │   │   └── wallet/          # Wallet operations
-│   │   ├── components/          # React components
-│   │   └── page.tsx            # Main wallet interface
-│   └── lib/
-│       ├── blockchain-client.js # RPC client for workspace
-│       ├── blockchain.js        # Local blockchain (fallback)
-│       ├── config.js           # Configuration settings
-│       ├── storage.js          # Data persistence
-│       ├── transaction.js      # Transaction handling
-│       └── wallet.js           # Wallet operations
-├── start-workspace.js          # Startup script
-└── package.json
+## Project Structure
+
+```json
+src/
+├── app/                 # Next.js app router pages
+├── components/          # React components
+│   ├── AIAssistant.tsx  # AI assistant component
+│   └── ...
+├── lib/                 # Utility libraries
+│   ├── chaingpt-service.ts  # ChainGPT API service
+│   ├── wallet-manager.js    # Wallet management
+│   └── ...
+├── styles/              # CSS styles
+└── types/               # TypeScript type definitions
 ```
 
-## 🔧 Configuration
+## AI Assistant Features
 
-The wallet is configured to connect to the main blockchain workspace. All URLs and settings are configurable through environment variables in `.env.local`:
+### Intelligent Responses
 
-### Environment Variables
+- Context-aware conversations with memory
+- Specialized knowledge about TOPAY blockchain
+- Dynamic suggestion generation based on user queries
 
-```bash
-# Blockchain RPC Server Configuration
-NEXT_PUBLIC_BLOCKCHAIN_RPC_URL=http://localhost:3000/rpc
-NEXT_PUBLIC_BLOCKCHAIN_HEALTH_URL=http://localhost:3000/health
-NEXT_PUBLIC_BLOCKCHAIN_API_URL=http://localhost:3000/api
+### Voice Integration
 
-# Wallet Configuration
-NEXT_PUBLIC_WALLET_URL=http://localhost:3000
+- Speech-to-text input support
+- Text-to-speech response playback
+- Voice control for hands-free operation
 
-# ChainGPT API Configuration
-NEXT_PUBLIC_CHAINGPT_API_KEY=your_chaingpt_api_key_here
-NEXT_PUBLIC_CHAINGPT_API_URL=https://api.chaingpt.org/chat/stream
-```
+### Security & Privacy
 
-### Default Settings (when environment variables are not set)
+- API keys stored securely in environment variables
+- No sensitive data transmitted to AI service
+- Fallback mode when API is unavailable
 
-- **RPC Server**: `http://localhost:3000/rpc`
-- **Health Check**: `http://localhost:3000/health`
-- **Refresh Interval**: 5 seconds
-- **Request Timeout**: 10 seconds
-
-## 📡 API Endpoints
-
-### Blockchain Operations
-
-- `GET /api/blockchain/info` - Get blockchain information
-- `GET /api/blockchain/mempool` - Get mempool status
-
-### Wallet Operations
-
-- `POST /api/wallet/generate` - Generate new wallet
-- `POST /api/wallet/import` - Import existing wallet
-- `GET /api/wallet/[address]/balance` - Get wallet balance
-- `GET /api/wallet/[address]/transactions` - Get transaction history
-
-### Transaction Operations
-
-- `POST /api/transactions/send` - Send transaction
-
-## 🔐 Security Features
-
-- **Quantum-Safe Cryptography**: Uses TOPAY's quantum-resistant algorithms
-- **Secure Key Management**: Private keys handled securely
-- **Transaction Signing**: All transactions cryptographically signed
-- **Data Encryption**: Sensitive data encrypted using KEM
-
-## 🎯 Wallet Features
-
-1. **Multi-Tab Interface**:
-   - Wallet overview with balance
-   - Send transactions
-   - Transaction history
-   - Account management
-   - Settings and support
-
-2. **Real-time Updates**:
-   - Live balance updates
-   - Transaction status monitoring
-   - Connection status indicator
-
-3. **Transaction Management**:
-   - Send TOPAY tokens
-   - View transaction history
-   - Monitor pending transactions
-
-## 🔄 Workspace Integration
-
-The wallet integrates with the main blockchain workspace through:
-
-1. **RPC Client**: `BlockchainClient` class handles all communication
-2. **Health Monitoring**: Continuous connection status checking
-3. **Fallback Handling**: Graceful degradation when server unavailable
-4. **Error Recovery**: Automatic retry mechanisms
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Connection Failed**:
-   - Ensure blockchain server is running
-   - Check if ports 3000 and 3000 are available
-   - Verify firewall settings
-
-2. **Wallet Not Loading**:
-   - Run `npm install` to ensure dependencies
-   - Check console for JavaScript errors
-   - Verify Node.js version compatibility
-
-3. **Transaction Failures**:
-   - Check wallet balance
-   - Verify recipient address format
-   - Ensure blockchain server is synchronized
-
-### Debug Mode
-
-Enable debug logging by setting environment variable:
-
-```bash
-DEBUG=topay:* npm run dev
-```
-
-## 🔧 Development
+## Development
 
 ### Available Scripts
 
@@ -198,45 +109,55 @@ DEBUG=topay:* npm run dev
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
-- `npm run workspace` - Start complete workspace
-- `npm run blockchain` - Start blockchain server only
 
-### Adding Features
+### Adding New Features
 
-1. **New API Routes**: Add to `src/app/api/`
-2. **UI Components**: Add to `src/app/components/`
-3. **Blockchain Logic**: Extend `src/lib/blockchain-client.js`
+1. **AI Assistant Enhancements**: Modify `src/lib/chaingpt-service.ts`
+2. **UI Components**: Add components to `src/components/`
+3. **Styling**: Update `src/styles/components.css`
 
-## 📊 Monitoring
+## Security Considerations
 
-The wallet includes built-in monitoring:
+- Never commit API keys to version control
+- Use environment variables for all sensitive configuration
+- Regularly update dependencies for security patches
+- Validate all user inputs before processing
 
-- **Connection Status**: Visual indicator in UI
-- **Health Checks**: Automatic server health monitoring
-- **Error Logging**: Comprehensive error tracking
-- **Performance Metrics**: Response time monitoring
+## Troubleshooting
 
-## 🤝 Contributing
+### AI Assistant Not Working
+
+1. Check if `CHAINGPT_API_KEY` is set in `.env`
+2. Verify API key is valid and has sufficient credits
+3. Check network connectivity
+4. Review browser console for error messages
+
+### Wallet Connection Issues
+
+1. Ensure blockchain RPC server is running
+2. Verify `NEXT_PUBLIC_BLOCKCHAIN_RPC_URL` is correct
+3. Check firewall settings
+
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Add tests if applicable
 5. Submit a pull request
 
-## 📄 License
+## License
 
-This project is part of the TOPAY Foundation quantum-safe blockchain initiative.
+This project is part of the TOPAY Foundation ecosystem.
 
-## 🆘 Support
+## Support
 
-For support and questions:
+For technical support or questions about the AI assistant integration:
 
 - Check the troubleshooting section above
-- Review console logs for error details
-- Ensure all prerequisites are met
-- Verify workspace configuration
+- Review the ChainGPT documentation
+- Contact the development team
 
 ---
 
-**TOPAY Foundation** - Building the future of quantum-safe blockchain technology
+**Note**: The AI assistant requires an active internet connection and valid ChainGPT API key for full functionality. Without these, it will operate in fallback mode with pre-programmed responses.

@@ -247,3 +247,58 @@
   color: var(--text-secondary);
   font-style: italic;
 }
+
+/* Token Balances Styles */
+.tokenBalancesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.tokenBalanceCard {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.tokenBalanceCard:hover {
+  background: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.tokenInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.tokenName {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.25rem;
+  font-family: 'Courier New', monospace;
+}
+
+.tokenBalance {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #28a745;
+}
+
+.tokenLink {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.tokenLink:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}

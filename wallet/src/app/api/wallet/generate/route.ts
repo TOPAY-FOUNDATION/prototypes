@@ -31,20 +31,17 @@ async function generateWalletFallback() {
 }
 
 // Create wallet using blockchain RPC
-async function createWalletOnBlockchain(options = {}) {
+async function createWalletOnBlockchain(options: { label?: string } = {}) {
   try {
-    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3000/rpc';
+    const rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001';
     
     const requestBody = {
-      jsonrpc: '2.0',
-      method: 'topay_createWallet',
-      params: [options],
-      id: 1
+      label: options.label || `Wallet ${Date.now().toString().slice(-4)}`
     };
     
     console.log('🔗 Creating wallet on blockchain:', requestBody);
     
-    const response = await fetch(rpcUrl, {
+    const response = await fetch(`${rpcUrl}/topay/wallet/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -58,13 +55,13 @@ async function createWalletOnBlockchain(options = {}) {
 
     const result = await response.json();
     
-    if (result.error) {
-      console.log('🔍 RPC error response:', result.error);
-      throw new Error(`RPC error: ${result.error.message}`);
+    if (!result.success) {
+      console.log('🔍 Blockchain error response:', result.error);
+      throw new Error(`Blockchain error: ${result.error}`);
     }
 
-    console.log(`✅ Wallet created on blockchain:`, result.result);
-    return result.result;
+    console.log(`✅ Wallet created on blockchain with token allocation:`, result);
+    return result;
     
   } catch (error) {
     console.error('Failed to create wallet on blockchain:', error);
@@ -88,9 +85,16 @@ export async function POST() {
         // Don't return private key for security
         blockchainRegistration: {
           registered: true,
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          transactionHash: walletData.block?.hash || null
         },
-        message: walletData.message
+        message: walletData.message,
+        tokenDistribution: walletData.tokenDistribution || null,
+        welcomeTokens: walletData.tokenDistribution ? {
+          amount: walletData.tokenDistribution.amount,
+          symbol: walletData.tokenDistribution.symbol,
+          tokenId: walletData.tokenDistribution.tokenId
+        } : null
       });
       
     } catch (blockchainError) {

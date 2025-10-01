@@ -296,16 +296,407 @@ class SimpleBlockchainRPCServer {
       }
     });
 
-    // TOPAY Wallet - Placeholder for future wallet functionality
+    // TOPAY Token - Create new token
+    this.app.post('/topay/tokens/create', async (req, res) => {
+      try {
+        const { name, symbol, totalSupply, owner } = req.body;
+        
+        if (!name || !symbol || !totalSupply || !owner) {
+          return res.status(400).json({ 
+            error: 'Token creation requires: name, symbol, totalSupply, owner' 
+          });
+        }
+
+        const tokenTransaction = {
+          type: 'CREATE_TOKEN',
+          from: owner,
+          data: {
+            name,
+            symbol,
+            totalSupply
+          },
+          timestamp: Date.now()
+        };
+
+        const result = await this.blockchain.addTokenTransaction(tokenTransaction);
+        
+        if (result.success) {
+          res.json({
+            success: true,
+            tokenId: result.transaction.tokenId,
+            block: result.block,
+            message: `Token ${symbol} created successfully`
+          });
+        } else {
+          res.status(500).json({ error: result.error });
+        }
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // TOPAY Token - Transfer tokens
+    this.app.post('/topay/tokens/transfer', async (req, res) => {
+      try {
+        const { tokenId, from, to, amount } = req.body;
+        
+        if (!tokenId || !from || !to || !amount) {
+          return res.status(400).json({ 
+            error: 'Token transfer requires: tokenId, from, to, amount' 
+          });
+        }
+
+        const tokenTransaction = {
+          type: 'TRANSFER_TOKEN',
+          tokenId,
+          from,
+          to,
+          amount,
+          timestamp: Date.now()
+        };
+
+        const result = await this.blockchain.addTokenTransaction(tokenTransaction);
+        
+        if (result.success) {
+          res.json({
+            success: true,
+            block: result.block,
+            message: `Transferred ${amount} tokens from ${from} to ${to}`
+          });
+        } else {
+          res.status(500).json({ error: result.error });
+        }
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // TOPAY Token - Get token information
+    this.app.get('/topay/tokens/:tokenId', (req, res) => {
+      try {
+        const tokenId = req.params.tokenId;
+        const tokenInfo = this.blockchain.getTokenInfo(tokenId);
+        
+        if (tokenInfo) {
+          res.json(tokenInfo);
+        } else {
+          res.status(404).json({ error: 'Token not found' });
+        }
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // TOPAY Token - Get all tokens
+    this.app.get('/topay/tokens', (req, res) => {
+      try {
+        const tokens = this.blockchain.tokenManager.getAllTokens();
+        res.json(tokens);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // TOPAY Token - Get token balance for address
+    this.app.get('/topay/tokens/:tokenId/balance/:address', (req, res) => {
+      try {
+        const { tokenId, address } = req.params;
+        const balance = this.blockchain.getTokenBalance(tokenId, address);
+        
+        res.json({
+          tokenId,
+          address,
+          balance
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // TOPAY Token - Get all token balances for address
+    this.app.get('/topay/address/:address/tokens', (req, res) => {
+      try {
+        const address = req.params.address;
+        const balances = this.blockchain.getAllTokenBalances(address);
+        
+        res.json({
+          address,
+          balances
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // TOPAY Wallet - Create new wallet with automatic token distribution
+    this.app.post('/topay/wallet/create', async (req, res) => {
+      try {
+        const { label } = req.body;
+        
+        // Generate wallet address (simplified for demo)
+        const timestamp = Date.now();
+        const randomBytes = Math.random().toString(36).substring(2, 15);
+        const address = `TOPAY${timestamp.toString(16).toUpperCase()}${randomBytes.toUpperCase()}`;
+        
+        // Generate public/private key pair (simplified for demo)
+        const privateKey = Array.from(crypto.getRandomValues(new Uint8Array(32)));
+        const publicKey = Array.from(crypto.getRandomValues(new Uint8Array(32)));
+        
+        // Record wallet creation on blockchain
+        const walletCreationData = {
+          type: 'wallet_creation',
+          address: address,
+          publicKey: publicKey,
+          timestamp: timestamp,
+          label: label || `Wallet ${timestamp.toString().slice(-4)}`
+        };
+        
+        const result = await this.blockchain.addBlock(walletCreationData);
+        
+        if (result) {
+          // Distribute 1000 TPY tokens from genesis wallet to new wallet
+          try {
+            const tokenDistribution = await this.blockchain.distributeGenesisTokens(address, 1000);
+            
+            if (tokenDistribution.success) {
+              res.json({
+                success: true,
+                address: address,
+                publicKey: publicKey,
+                message: 'Wallet created successfully with 1000 TPY tokens',
+                block: {
+                  index: result.index,
+                  hash: result.hash,
+                  timestamp: result.timestamp
+                },
+                tokenDistribution: {
+                  amount: tokenDistribution.amount,
+                  symbol: tokenDistribution.symbol,
+                  tokenId: tokenDistribution.tokenId,
+                  block: tokenDistribution.block
+                }
+              });
+            } else {
+              // Wallet created but token distribution failed
+              res.json({
+                success: true,
+                address: address,
+                publicKey: publicKey,
+                message: 'Wallet created successfully but token distribution failed',
+                block: {
+                  index: result.index,
+                  hash: result.hash,
+                  timestamp: result.timestamp
+                },
+                tokenError: tokenDistribution.error
+              });
+            }
+          } catch (tokenError) {
+            // Wallet created but token distribution failed
+            res.json({
+              success: true,
+              address: address,
+              publicKey: publicKey,
+              message: 'Wallet created successfully but token distribution failed',
+              block: {
+                index: result.index,
+                hash: result.hash,
+                timestamp: result.timestamp
+              },
+              tokenError: tokenError.message
+            });
+          }
+        } else {
+           res.status(500).json({
+             success: false,
+             error: 'Failed to record wallet creation'
+           });
+         }
+      } catch (error) {
+        res.status(500).json({
+          success: false,
+          error: error.message
+        });
+      }
+    });
+
+    // TOPAY Wallet - Send tokens
+    this.app.post('/topay/wallet/send', async (req, res) => {
+      try {
+        const { from, to, amount, tokenId } = req.body;
+        
+        if (!from || !to || !amount) {
+          return res.status(400).json({
+            success: false,
+            error: 'Missing required fields: from, to, amount'
+          });
+        }
+
+        // Use native token if no tokenId specified
+        const targetTokenId = tokenId || this.blockchain.nativeTokenId;
+        
+        if (!targetTokenId) {
+          return res.status(400).json({
+            success: false,
+            error: 'Native token not available and no tokenId specified'
+          });
+        }
+
+        // Create transfer transaction
+        const transferTransaction = {
+          type: 'TRANSFER_TOKEN',
+          from: from,
+          to: to,
+          tokenId: targetTokenId,
+          amount: parseInt(amount),
+          timestamp: Date.now()
+        };
+
+        const result = await this.blockchain.addTokenTransaction(transferTransaction);
+        
+        if (result.success) {
+          res.json({
+            success: true,
+            message: 'Tokens sent successfully',
+            transaction: result.transaction,
+            block: result.block
+          });
+        } else {
+          res.status(400).json({
+            success: false,
+            error: result.error
+          });
+        }
+      } catch (error) {
+        res.status(500).json({
+          success: false,
+          error: error.message
+        });
+      }
+    });
+
+    // TOPAY Wallet - Get balance
+    this.app.get('/topay/wallet/:address/balance', (req, res) => {
+      try {
+        const { address } = req.params;
+        const { tokenId } = req.query;
+        
+        if (tokenId) {
+          // Get specific token balance
+          const balance = this.blockchain.tokenManager.getBalance(tokenId, address);
+          const tokenInfo = this.blockchain.tokenManager.getToken(tokenId);
+          
+          res.json({
+            address: address,
+            tokenId: tokenId,
+            balance: balance,
+            tokenInfo: tokenInfo,
+            message: 'Token balance retrieved successfully'
+          });
+        } else {
+          // Get native token balance
+          const nativeTokenId = this.blockchain.nativeTokenId;
+          if (!nativeTokenId) {
+            return res.status(400).json({
+              success: false,
+              error: 'Native token not available'
+            });
+          }
+          
+          const balance = this.blockchain.tokenManager.getBalance(nativeTokenId, address);
+          const tokenInfo = this.blockchain.tokenManager.getToken(nativeTokenId);
+          
+          res.json({
+            address: address,
+            balance: balance,
+            symbol: 'TPY',
+            tokenInfo: tokenInfo,
+            message: 'Native token balance retrieved successfully'
+          });
+        }
+      } catch (error) {
+        res.status(500).json({
+          success: false,
+          error: error.message
+        });
+      }
+    });
+
+    // TOPAY Wallet - Receive tokens (for transaction history/notifications)
+    this.app.get('/topay/wallet/:address/receive', (req, res) => {
+      try {
+        const { address } = req.params;
+        const { limit = 10 } = req.query;
+        
+        // Get recent incoming transactions
+        const allTokenBalances = this.blockchain.getAllTokenBalances(address);
+        const transactions = [];
+        
+        // Search through recent blocks for incoming transactions
+        const recentBlocks = this.blockchain.chain.slice(-50); // Last 50 blocks
+        
+        for (const block of recentBlocks.reverse()) {
+          if (block.data && typeof block.data === 'object' && block.data.type === 'TOKEN_TRANSACTION') {
+            const txData = block.data.transaction;
+            if (txData && txData.to === address) {
+              transactions.push({
+                from: txData.from,
+                to: txData.to,
+                amount: txData.amount,
+                tokenId: txData.tokenId,
+                timestamp: block.timestamp,
+                blockIndex: block.index,
+                blockHash: block.hash
+              });
+              
+              if (transactions.length >= limit) break;
+            }
+          }
+        }
+        
+        res.json({
+          address: address,
+          incomingTransactions: transactions,
+          totalReceived: transactions.length,
+          message: 'Incoming transactions retrieved successfully'
+        });
+      } catch (error) {
+        res.status(500).json({
+          success: false,
+          error: error.message
+        });
+      }
+    });
+
+    // TOPAY Wallet - Get wallet information
+    this.app.get('/topay/wallet/:address', (req, res) => {
+      try {
+        const { address } = req.params;
+        
+        // Get wallet balance and token balances
+        const tokenBalances = this.blockchain.getAllTokenBalances(address);
+        
+        res.json({
+          address: address,
+          tokenBalances: tokenBalances,
+          message: 'Wallet information retrieved successfully'
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // TOPAY Wallet - API information
     this.app.get('/topay/wallet', (req, res) => {
       res.json({
-        message: 'TOPAY Wallet API - Coming Soon',
-        features: [
-          'Create wallet',
-          'Check balance',
-          'Send transactions',
-          'Transaction history'
-        ]
+        message: 'TOPAY Wallet API',
+        endpoints: {
+          'POST /topay/wallet/create': 'Create new wallet with 1000 TPY tokens',
+          'POST /topay/wallet/send': 'Send tokens (requires: from, to, amount, optional: tokenId)',
+          'GET /topay/wallet/:address/balance': 'Get wallet balance (optional query: tokenId)',
+          'GET /topay/wallet/:address/receive': 'Get incoming transactions (optional query: limit)',
+          'GET /topay/wallet/:address': 'Get wallet information and token balances'
+        }
       });
     });
 
@@ -329,6 +720,17 @@ class SimpleBlockchainRPCServer {
           'POST /topay/admin/reset': 'Reset blockchain to genesis',
           'GET /topay/validate': 'Validate entire blockchain',
           'POST /topay/test-data': 'Add test blocks for demonstration',
+          'POST /topay/tokens/create': 'Create new token (requires: name, symbol, totalSupply, owner)',
+          'POST /topay/tokens/transfer': 'Transfer tokens (requires: tokenId, from, to, amount)',
+          'GET /topay/tokens': 'Get all tokens',
+          'GET /topay/tokens/:tokenId': 'Get token information',
+          'GET /topay/tokens/:tokenId/balance/:address': 'Get token balance for address',
+          'GET /topay/address/:address/tokens': 'Get all token balances for address',
+          'POST /topay/wallet/create': 'Create new wallet with 1000 TPY tokens',
+          'POST /topay/wallet/send': 'Send tokens (requires: from, to, amount, optional: tokenId)',
+          'GET /topay/wallet/:address/balance': 'Get wallet balance (optional query: tokenId)',
+          'GET /topay/wallet/:address/receive': 'Get incoming transactions (optional query: limit)',
+          'GET /topay/wallet/:address': 'Get wallet information and token balances',
           'GET /topay/wallet': 'Wallet API information',
           'GET /topay/cache': 'Get cache information',
           'POST /topay/cache/clear': 'Clear cache and reset blockchain',

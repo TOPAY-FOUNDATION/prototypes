@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Address } from '@/lib/blockchain';
+import { Address, BlockchainClient, TokenBalance } from '@/lib/blockchain';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { formatHash, formatBalance, formatNumber, copyToClipboard } from '@/lib/utils';
 import styles from './address-page.module.css';
@@ -12,6 +12,7 @@ export default function AddressDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [addressData, setAddressData] = useState<Address | null>(null);
+  const [tokenBalances, setTokenBalances] = useState<TokenBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState('');
@@ -24,14 +25,26 @@ export default function AddressDetailPage() {
         setLoading(true);
         setError(null);
         
-        const response = await fetch(`/api/address?address=${address}`);
+        const [addressResponse, tokenBalancesData] = await Promise.all([
+          fetch(`/api/address?address=${address}`),
+          (async () => {
+            try {
+              const client = new BlockchainClient();
+              return await client.getAddressTokenBalances(address);
+            } catch (err) {
+              console.warn('Failed to fetch token balances:', err);
+              return [];
+            }
+          })()
+        ]);
         
-        if (!response.ok) {
+        if (!addressResponse.ok) {
           throw new Error('Address not found');
         }
         
-        const data = await response.json();
+        const data = await addressResponse.json();
         setAddressData(data.address);
+        setTokenBalances(tokenBalancesData);
       } catch (err) {
         console.error('Error fetching address:', err);
         setError('Address not found or failed to load');
@@ -206,6 +219,31 @@ export default function AddressDetailPage() {
               )}
             </div>
           </div>
+
+          {/* Token Balances */}
+          {tokenBalances.length > 0 && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>Token Balances</h2>
+              <div className={styles.tokenBalancesGrid}>
+                {tokenBalances.map((tokenBalance) => (
+                  <div key={tokenBalance.tokenId} className={styles.tokenBalanceCard}>
+                    <div className={styles.tokenInfo}>
+                      <div className={styles.tokenName}>{tokenBalance.tokenId}</div>
+                      <div className={styles.tokenBalance}>
+                        {tokenBalance.balance.toLocaleString()}
+                      </div>
+                    </div>
+                    <Link 
+                      href={`/tokens/${tokenBalance.tokenId}`}
+                      className={styles.tokenLink}
+                    >
+                      View Token →
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Transaction History Placeholder */}
           <div className={styles.card}>

@@ -4,38 +4,32 @@ interface SendTransactionRequest {
   from: string;
   to: string;
   amount: number;
-  tokenAddress?: string;
-  gasLimit?: number;
-  gasPrice?: number;
-  privateKey?: string;
-  signature?: string;
+  tokenId?: string;
+}
+
+interface SendTransactionResponse {
+  success: boolean;
+  message: string;
+  transaction: {
+    success: boolean;
+    message: string;
+  };
+  block: {
+    index: number;
+    hash: string;
+    timestamp: number;
+  };
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: SendTransactionRequest = await request.json();
-    const { from, to, amount, tokenAddress, gasLimit, gasPrice, signature } = body;
+    const { from, to, amount, tokenId } = body;
     
     // Validate required fields
     if (!from || !to || !amount) {
       return NextResponse.json(
         { error: 'Missing required fields: from, to, amount' },
-        { status: 400 }
-      );
-    }
-
-    // Validate addresses
-    if (!from.match(/^0x[a-fA-F0-9]{40}$/) || !to.match(/^0x[a-fA-F0-9]{40}$/)) {
-      return NextResponse.json(
-        { error: 'Invalid address format' },
-        { status: 400 }
-      );
-    }
-
-    // Validate token address if provided
-    if (tokenAddress && !tokenAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
-      return NextResponse.json(
-        { error: 'Invalid token address format' },
         { status: 400 }
       );
     }
@@ -48,74 +42,66 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Connect to blockchain client
-    const blockchainUrl = process.env.BLOCKCHAIN_URL || 'http://localhost:3000';
+    // Connect to blockchain RPC server
+    const blockchainUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001';
     
     try {
-      // Determine transaction type and method
-      const method = tokenAddress ? 'topay_sendTokenTransaction' : 'topay_sendTransaction';
-      const params = tokenAddress 
-        ? [from, to, amount, tokenAddress, gasLimit || 100000, gasPrice || 20, signature]
-        : [from, to, amount, gasLimit || 21000, gasPrice || 20, signature];
-      
-      const response = await fetch(`${blockchainUrl}/rpc`, {
+      // Use the new wallet send endpoint
+      const response = await fetch(`${blockchainUrl}/topay/wallet/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          jsonrpc: '2.0',
-          method,
-          params,
-          id: 1
+          from,
+          to,
+          amount: parseInt(amount.toString()),
+          tokenId: tokenId || undefined // Let the backend use native token if not specified
         })
       });
 
       if (!response.ok) {
-        throw new Error(`Blockchain request failed: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Request failed: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as SendTransactionResponse;
       
-      if (data.error) {
-        throw new Error(data.error.message || 'Transaction failed');
+      if (!data.success) {
+        throw new Error(data.message || 'Transaction failed');
       }
-
-      const transactionHash = data.result;
 
       return NextResponse.json({
         success: true,
-        transactionHash,
+        transactionHash: data.block?.hash || 'unknown',
         from,
         to,
         amount,
-        tokenAddress,
-        timestamp: Date.now(),
-        status: 'pending'
+        tokenId,
+        blockIndex: data.block?.index,
+        timestamp: data.block?.timestamp || Date.now(),
+        status: 'confirmed',
+        message: data.message
       });
     } catch (blockchainError) {
       console.error('Blockchain connection error:', blockchainError);
       
-      // Return mock transaction for development
-      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      
-      return NextResponse.json({
-        success: true,
-        transactionHash: mockTxHash,
-        from,
-        to,
-        amount,
-        tokenAddress,
-        timestamp: Date.now(),
-        status: 'pending',
-        mock: true,
-        note: 'Using mock data - blockchain not available'
-      });
+      return NextResponse.json(
+        { 
+          success: false,
+          error: `Transaction failed: ${(blockchainError as Error).message}`,
+          suggestion: 'Make sure the blockchain server is running and the wallet has sufficient balance'
+        },
+        { status: 400 }
+      );
     }
   } catch (error) {
     console.error('Send transaction API error:', error);
     return NextResponse.json(
-      { error: 'Failed to send transaction' },
+      { 
+        success: false,
+        error: 'Failed to process transaction request' 
+      },
       { status: 500 }
     );
   }
@@ -133,20 +119,15 @@ export async function GET(request: NextRequest) {
   }
 
   // Connect to blockchain client
-  const blockchainUrl = process.env.BLOCKCHAIN_URL || 'http://localhost:3000';
+  const blockchainUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001';
   
   try {
-    const response = await fetch(`${blockchainUrl}/rpc`, {
-      method: 'POST',
+    // Search for the transaction in recent blocks
+    const response = await fetch(`${blockchainUrl}/topay/search?q=${encodeURIComponent(txHash)}`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'topay_getTransactionStatus',
-        params: [txHash],
-        id: 1
-      })
+      }
     });
 
     if (!response.ok) {
@@ -155,29 +136,32 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
     
-    if (data.error) {
-      throw new Error(data.error.message || 'Failed to get transaction status');
+    if (data.results && data.results.length > 0) {
+      const transaction = data.results[0];
+      return NextResponse.json({
+        transactionHash: txHash,
+        status: 'confirmed',
+        blockNumber: transaction.blockIndex,
+        blockHash: transaction.blockHash,
+        timestamp: transaction.timestamp,
+        found: true
+      });
+    } else {
+      return NextResponse.json({
+        transactionHash: txHash,
+        status: 'not_found',
+        found: false,
+        message: 'Transaction not found in blockchain'
+      });
     }
-
-    return NextResponse.json({
-      transactionHash: txHash,
-      status: data.result.status || 'pending',
-      blockNumber: data.result.blockNumber,
-      confirmations: data.result.confirmations || 0,
-      timestamp: Date.now()
-    });
   } catch (blockchainError) {
     console.error('Blockchain connection error:', blockchainError);
     
-    // Return mock status for development
     return NextResponse.json({
       transactionHash: txHash,
-      status: Math.random() > 0.3 ? 'confirmed' : 'pending',
-      blockNumber: Math.floor(Math.random() * 1000000) + 500000,
-      confirmations: Math.floor(Math.random() * 10),
-      timestamp: Date.now(),
-      mock: true,
-      note: 'Using mock data - blockchain not available'
+      status: 'unknown',
+      error: 'Unable to check transaction status',
+      message: 'Blockchain server not available'
     });
   }
 }

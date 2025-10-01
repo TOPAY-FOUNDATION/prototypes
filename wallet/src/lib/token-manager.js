@@ -8,12 +8,13 @@ import BlockchainClient from './blockchain-client.js';
 import WalletStorage from './wallet-storage.js';
 
 export class TokenManager {
-  constructor(rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3000/rpc', walletAddress = null) {
+  constructor(rpcUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001', walletAddress = null) {
     this.contractUtils = new BrowserContractUtils();
     this.blockchainClient = new BlockchainClient(rpcUrl);
     this.walletAddress = walletAddress;
     this.storage = walletAddress ? new WalletStorage(walletAddress) : null;
     this.tokens = new Map(); // Cache for token information
+    this.rpcUrl = rpcUrl;
   }
 
   /**
@@ -31,6 +32,11 @@ export class TokenManager {
 
       // Auto-discover TOPAY tokens on the blockchain
       await this.discoverTOPAYTokens();
+      
+      // Fetch blockchain tokens for this wallet
+      if (this.walletAddress) {
+        await this.fetchBlockchainTokens();
+      }
       
       console.log(`🎯 Token Manager initialized with ${this.tokens.size} tokens`);
     } catch (error) {
@@ -387,6 +393,59 @@ export class TokenManager {
   parseTokenAmount(amount, decimals = 18) {
     const multiplier = Math.pow(10, decimals);
     return Math.floor(parseFloat(amount) * multiplier);
+  }
+
+  /**
+   * Fetch blockchain tokens for this wallet
+   */
+  async fetchBlockchainTokens() {
+    try {
+      if (!this.walletAddress) {
+        console.warn('⚠️ No wallet address provided for blockchain token fetching');
+        return;
+      }
+
+      // Fetch wallet information from blockchain
+      const response = await fetch(`${this.rpcUrl}/topay/wallet/${this.walletAddress}`);
+      
+      if (!response.ok) {
+        console.warn(`⚠️ Failed to fetch wallet info from blockchain: ${response.status}`);
+        return;
+      }
+
+      const walletData = await response.json();
+      
+      if (walletData.success && walletData.data && walletData.data.tokens) {
+        const blockchainTokens = walletData.data.tokens;
+        
+        for (const tokenId in blockchainTokens) {
+          const tokenData = blockchainTokens[tokenId];
+          
+          // Create token entry
+          const token = {
+            address: tokenId,
+            name: tokenData.name || 'Unknown Token',
+            symbol: tokenData.symbol || 'UNK',
+            decimals: 18, // Default decimals
+            totalSupply: tokenData.totalSupply || 0,
+            balance: tokenData.balance || 0,
+            type: 'BLOCKCHAIN',
+            isNative: false,
+            isWelcomeToken: tokenData.symbol && tokenData.symbol.startsWith('TWT'),
+            fetchedAt: new Date().toISOString()
+          };
+          
+          this.tokens.set(tokenId, token);
+        }
+        
+        // Save updated tokens
+        this.saveTokens();
+        
+        console.log(`🔗 Fetched ${Object.keys(blockchainTokens).length} blockchain tokens`);
+      }
+    } catch (error) {
+      console.error('❌ Failed to fetch blockchain tokens:', error.message);
+    }
   }
 
   /**

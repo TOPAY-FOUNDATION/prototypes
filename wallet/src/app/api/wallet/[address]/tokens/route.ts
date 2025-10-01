@@ -19,7 +19,7 @@ interface Token {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const { address } = params;
+    const { address } = await params;
     
     if (!address) {
       return NextResponse.json(
@@ -28,8 +28,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Validate address format
-    if (!address.match(/^0x[a-fA-F0-9]{40}$/)) {
+    // Validate address format (support both Ethereum and TOPAY formats)
+    if (!address.match(/^(0x[a-fA-F0-9]{40}|TOPAY[A-Z0-9]+)$/)) {
       return NextResponse.json(
         { error: 'Invalid wallet address format' },
         { status: 400 }
@@ -37,20 +37,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Connect to blockchain client
-    const blockchainUrl = process.env.BLOCKCHAIN_URL || 'http://localhost:3000';
+    const blockchainUrl = process.env.NEXT_PUBLIC_BLOCKCHAIN_RPC_URL || 'http://localhost:3001';
     
     try {
-      const response = await fetch(`${blockchainUrl}/rpc`, {
-        method: 'POST',
+      const response = await fetch(`${blockchainUrl}/topay/address/${address}/tokens`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          method: 'topay_getTokenBalances',
-          params: [address],
-          id: 1
-        })
+        }
       });
 
       if (!response.ok) {
@@ -63,7 +57,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         throw new Error(data.error.message || 'Blockchain error');
       }
 
-      const tokens = data.result || [];
+      const tokens = data.balances || [];
 
       return NextResponse.json({
         address,
