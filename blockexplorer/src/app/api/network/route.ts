@@ -13,7 +13,7 @@ export async function GET() {
 
     return NextResponse.json({ 
       network: {
-        ...networkInfo,
+        ...(networkInfo || {}),
         stats
       }
     });

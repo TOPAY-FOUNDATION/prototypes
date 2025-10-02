@@ -66,7 +66,7 @@ export default function TransactionCard({ transaction, className = '' }: Transac
             {formatBalance(transaction.value)} TPY
           </p>
           <p className={styles['tx-gas-price']}>
-            {formatGwei(transaction.gasPrice)}
+            {formatGwei(((transaction.gasPrice || 0) * 1000000000).toString())}
           </p>
         </div>
       </div>
@@ -121,7 +121,7 @@ export default function TransactionCard({ transaction, className = '' }: Transac
         <div className={styles['footer-content']}>
           <div className={styles['gas-info']}>
             <span className={styles['gas-text']}>
-              Gas: {formatGas(transaction.gas)}
+              Gas: {formatGas(transaction.gas ?? 0)}
             </span>
             {copied && (
               <span className={styles['copied-text']}>

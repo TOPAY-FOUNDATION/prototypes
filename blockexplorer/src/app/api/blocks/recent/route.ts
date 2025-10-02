@@ -22,6 +22,14 @@ export async function GET(request: Request) {
     const blocks = [latestBlock];
     const latestBlockNumber = latestBlock.number;
 
+    // Ensure we have a valid block number
+    if (typeof latestBlockNumber !== 'number') {
+      return NextResponse.json(
+        { error: 'Invalid block number' },
+        { status: 400 }
+      );
+    }
+
     // Fetch previous blocks
     for (let i = 1; i < maxLimit && (latestBlockNumber - i) >= 0; i++) {
       try {

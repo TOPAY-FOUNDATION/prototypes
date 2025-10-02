@@ -41,7 +41,7 @@ export default function TransactionsPage() {
 
       {/* Main Content */}
       <main className={styles.mainContent}>
-        <RecentTransactions maxTransactions={20} blocksToScan={20} />
+        <RecentTransactions maxTransactions={20} />
       </main>
     </div>
   );
