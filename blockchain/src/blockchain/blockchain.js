@@ -408,6 +408,208 @@ export class Blockchain {
   }
 
   /**
+   * Get block by hash
+   * @param {string} hash - Block hash to search for
+   * @returns {Block|null} Block object or null if not found
+   */
+  getBlockByHash(hash) {
+    if (!hash || typeof hash !== 'string') {
+      return null;
+    }
+    
+    return this.chain.find(block => block.hash === hash) || null;
+  }
+
+  /**
+   * Get transaction by hash (simplified implementation)
+   * @param {string} txHash - Transaction hash
+   * @returns {Object|null} Transaction object or null if not found
+   */
+  getTransactionByHash(txHash) {
+    if (!txHash || typeof txHash !== 'string') {
+      return null;
+    }
+
+    // Search through all blocks for the transaction
+    for (const block of this.chain) {
+      if (block.data && Array.isArray(block.data)) {
+        for (let i = 0; i < block.data.length; i++) {
+          const tx = block.data[i];
+          const generatedHash = this.generateTxHash(block.hash, i);
+          if (generatedHash === txHash.replace('0x', '')) {
+            return {
+              hash: txHash,
+              blockNumber: block.index,
+              blockHash: block.hash,
+              transactionIndex: i,
+              from: tx.from || '0x0000000000000000000000000000000000000000',
+              to: tx.to || '0x0000000000000000000000000000000000000000',
+              value: tx.value || 0,
+              gas: tx.gas || 21000,
+              gasPrice: tx.gasPrice || 1000000000,
+              input: tx.input || '0x',
+              nonce: tx.nonce || 0
+            };
+          }
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Get transaction receipt (simplified implementation)
+   * @param {string} txHash - Transaction hash
+   * @returns {Object|null} Transaction receipt or null if not found
+   */
+  getTransactionReceipt(txHash) {
+    const transaction = this.getTransactionByHash(txHash);
+    if (!transaction) {
+      return null;
+    }
+
+    return {
+      transactionHash: txHash,
+      transactionIndex: transaction.transactionIndex,
+      blockNumber: transaction.blockNumber,
+      blockHash: transaction.blockHash,
+      cumulativeGasUsed: 21000,
+      gasUsed: 21000,
+      contractAddress: null,
+      logs: [],
+      status: 1 // Success
+    };
+  }
+
+  /**
+   * Get balance for an address (simplified implementation)
+   * @param {string} address - Account address
+   * @param {string|number} blockNumber - Block number or 'latest'
+   * @returns {number} Balance
+   */
+  getBalance(address, blockNumber = 'latest') {
+    if (!address || typeof address !== 'string') {
+      return 0;
+    }
+
+    // Simplified balance calculation
+    // In a real implementation, this would track balances through transactions
+    if (address === this.genesisWalletAddress) {
+      return 1000000000000000000000000; // 1M TOPAY for genesis wallet
+    }
+    
+    return 0;
+  }
+
+  /**
+   * Get transaction count for an address (simplified implementation)
+   * @param {string} address - Account address
+   * @param {string|number} blockNumber - Block number or 'latest'
+   * @returns {number} Transaction count
+   */
+  getTransactionCount(address, blockNumber = 'latest') {
+    if (!address || typeof address !== 'string') {
+      return 0;
+    }
+
+    let count = 0;
+    for (const block of this.chain) {
+      if (block.data && Array.isArray(block.data)) {
+        for (const tx of block.data) {
+          if (tx.from === address) {
+            count++;
+          }
+        }
+      }
+    }
+    
+    return count;
+  }
+
+  /**
+   * Get code at address (for smart contracts)
+   * @param {string} address - Contract address
+   * @param {string|number} blockNumber - Block number or 'latest'
+   * @returns {string} Contract code or empty string
+   */
+  getCode(address, blockNumber = 'latest') {
+    // Simplified - no smart contract support yet
+    return '';
+  }
+
+  /**
+   * Get address information
+   * @param {string} address - Address to get info for
+   * @returns {Object|null} Address information or null if not found
+   */
+  getAddressInfo(address) {
+    if (!address || typeof address !== 'string') {
+      return null;
+    }
+
+    const balance = this.getBalance(address);
+    const transactionCount = this.getTransactionCount(address);
+    
+    if (balance > 0 || transactionCount > 0) {
+      return {
+        address: address,
+        balance: balance,
+        transactionCount: transactionCount,
+        type: address === this.genesisWalletAddress ? 'genesis' : 'wallet',
+        lastActivity: Date.now() // Simplified
+      };
+    }
+    
+    return null;
+  }
+
+  /**
+   * Get recent transactions (simplified implementation)
+   * @param {number} limit - Number of transactions to return
+   * @returns {Array} Array of recent transactions
+   */
+  getRecentTransactions(limit = 10) {
+    const transactions = [];
+    
+    // Iterate through blocks in reverse order to get most recent first
+    for (let i = this.chain.length - 1; i >= 0 && transactions.length < limit; i--) {
+      const block = this.chain[i];
+      if (block.data && Array.isArray(block.data)) {
+        for (let j = block.data.length - 1; j >= 0 && transactions.length < limit; j--) {
+          const tx = block.data[j];
+          transactions.push({
+            hash: `0x${this.generateTxHash(block.hash, j)}`,
+            blockNumber: block.index,
+            blockHash: block.hash,
+            transactionIndex: j,
+            from: tx.from || '0x0000000000000000000000000000000000000000',
+            to: tx.to || '0x0000000000000000000000000000000000000000',
+            value: tx.value || 0,
+            gas: tx.gas || 21000,
+            gasPrice: tx.gasPrice || 1000000000,
+            input: tx.input || '0x',
+            nonce: tx.nonce || 0
+          });
+        }
+      }
+    }
+    
+    return transactions;
+  }
+
+  /**
+   * Generate transaction hash (helper method)
+   * @param {string} blockHash - Block hash
+   * @param {number} index - Transaction index
+   * @returns {string} Transaction hash
+   */
+  generateTxHash(blockHash, index) {
+    const combined = blockHash + index.toString().padStart(8, '0');
+    return combined.substring(0, 64);
+  }
+
+  /**
    * Clear the blockchain (reset to genesis)
    */
   reset() {

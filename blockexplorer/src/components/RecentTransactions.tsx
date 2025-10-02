@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import TransactionCard from '@/components/TransactionCard';
-import { type Transaction, type Block } from '@/lib/blockchain';
+import { type Transaction, BlockchainClient } from '@/lib/blockchain';
 import { useBlockchainPolling } from '@/lib/hooks/usePolling';
 import styles from './recent-transactions.module.css';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
@@ -11,38 +11,19 @@ import { ArrowPathIcon } from '@heroicons/react/24/outline';
 interface RecentTransactionsProps {
   maxTransactions?: number;
   className?: string;
-  // How many recent blocks to scan for transactions. Defaults to 10.
-  blocksToScan?: number;
 }
 
 export default function RecentTransactions({
   maxTransactions = 10,
-  className = '',
-  blocksToScan = 10
+  className = ''
 }: RecentTransactionsProps) {
+  // Use useMemo to prevent blockchain client recreation on every render
+  const blockchain = useMemo(() => new BlockchainClient(), []);
+
   const fetchRecentTransactions = async (): Promise<{ transactions: Transaction[] }> => {
-    // Fetch recent blocks and aggregate their transactions
-    const response = await fetch(`/api/blocks?limit=${blocksToScan}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch recent blocks for transactions');
-    }
-
-    const data = await response.json();
-    const blocks: Block[] = data.blocks || [];
-
-    // Flatten transactions and enrich ordering metadata
-    const allTxs: Transaction[] = [];
-    for (const block of blocks) {
-      const txs = (block.transactions || []).map((tx) => ({
-        ...tx,
-        // Ensure blockNumber and blockHash are present (formatters set these already)
-        blockNumber: tx.blockNumber ?? block.number,
-        blockHash: tx.blockHash ?? block.hash,
-      }));
-      allTxs.push(...txs);
-    }
-
-    return { transactions: allTxs };
+    // Use the new blockchain client to get recent transactions directly
+    const transactions = await blockchain.getRecentTransactions(maxTransactions);
+    return { transactions };
   };
 
   const { data, loading, error, lastUpdated } = useBlockchainPolling(fetchRecentTransactions, {
@@ -56,7 +37,9 @@ export default function RecentTransactions({
     const txs = data?.transactions || [];
     // Sort by blockNumber desc, then transactionIndex desc to show newest first
     const sorted = [...txs].sort((a, b) => {
-      if (a.blockNumber !== b.blockNumber) return b.blockNumber - a.blockNumber;
+      const aBlockNumber = a.blockNumber || a.blockIndex || 0;
+      const bBlockNumber = b.blockNumber || b.blockIndex || 0;
+      if (aBlockNumber !== bBlockNumber) return bBlockNumber - aBlockNumber;
       return (b.transactionIndex ?? 0) - (a.transactionIndex ?? 0);
     });
     return sorted.slice(0, maxTransactions);

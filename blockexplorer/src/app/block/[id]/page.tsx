@@ -1,12 +1,13 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Block } from '@/lib/blockchain';
+import { Block, BlockchainClient } from '@/lib/blockchain';
 import TransactionCard from '@/components/TransactionCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { formatHash, formatTimestamp, formatNumber, formatGas, copyToClipboard } from '@/lib/utils';
 import styles from './block-page.module.css';
+
 export default function BlockDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -14,7 +15,12 @@ export default function BlockDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState('');
+  
+  // Use useMemo to prevent blockchain client recreation on every render
+  const blockchain = useMemo(() => new BlockchainClient(), []);
+
   const blockId = params.id as string;
+
   useEffect(() => {
     const fetchBlock = async () => {
       try {
@@ -22,16 +28,15 @@ export default function BlockDetailPage() {
         setError(null);
         
         const isBlockNumber = /^\d+$/.test(blockId);
-        const queryParam = isBlockNumber ? `number=${blockId}` : `hash=${blockId}`;
         
-        const response = await fetch(`/api/blocks?${queryParam}`);
-        
-        if (!response.ok) {
-          throw new Error('Block not found');
+        let blockData: Block;
+        if (isBlockNumber) {
+          blockData = await blockchain.getBlockByNumber(blockId, true);
+        } else {
+          blockData = await blockchain.getBlockByHash(blockId, true);
         }
         
-        const data = await response.json();
-        setBlock(data.block);
+        setBlock(blockData);
       } catch (err) {
         console.error('Error fetching block:', err);
         setError('Block not found or failed to load');
@@ -42,7 +47,7 @@ export default function BlockDetailPage() {
     if (blockId) {
       fetchBlock();
     }
-  }, [blockId]);
+  }, [blockId, blockchain]);
   const handleCopy = async (text: string, type: string) => {
     try {
       await copyToClipboard(text);
@@ -86,27 +91,18 @@ export default function BlockDetailPage() {
             <span className={styles.breadcrumbSeparator}>/</span>
             <Link href="/blocks" className={styles.breadcrumbLink}>Blocks</Link>
             <span className={styles.breadcrumbSeparator}>/</span>
-            <span className={styles.breadcrumbCurrent}>Block {formatNumber(block.number)}</span>
+            <span className={styles.breadcrumbCurrent}>Block {formatNumber(block.index)}</span>
           </div>
           
           <div className={styles.headerContent}>
-            <div className={styles.titleSection}>
-              <div className={styles.blockIcon}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
-              </div>
-              <div>
-                <h1 className={styles.pageTitle}>Block</h1>
-                <div className={styles.blockNumber}>#{formatNumber(block.number)}</div>
-              </div>
+            <div className={styles.blockIcon}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
             </div>
-            
-            <div className={styles.statusSection}>
-              <div className={styles.statusBadge}>
-                <div className={styles.statusDot}></div>
-                <span>Confirmed</span>
-              </div>
+            <div>
+              <h1 className={styles.pageTitle}>Block</h1>
+              <div className={styles.blockNumber}>#{formatNumber(block.index)}</div>
             </div>
           </div>
         </div>
@@ -123,7 +119,7 @@ export default function BlockDetailPage() {
             </div>
             <div className={styles.overviewContent}>
               <div className={styles.overviewLabel}>Block Height</div>
-              <div className={styles.overviewValue}>{formatNumber(block.number)}</div>
+              <div className={styles.overviewValue}>{formatNumber(block.index)}</div>
             </div>
           </div>
           
@@ -135,7 +131,7 @@ export default function BlockDetailPage() {
             </div>
             <div className={styles.overviewContent}>
               <div className={styles.overviewLabel}>Transactions</div>
-              <div className={styles.overviewValue}>{formatNumber(block.transactions.length)}</div>
+              <div className={styles.overviewValue}>{formatNumber(block.transactions?.length || 0)}</div>
             </div>
           </div>
           
@@ -147,7 +143,7 @@ export default function BlockDetailPage() {
             </div>
             <div className={styles.overviewContent}>
               <div className={styles.overviewLabel}>Gas Used</div>
-              <div className={styles.overviewValue}>{((block.gasUsed / block.gasLimit) * 100).toFixed(1)}%</div>
+              <div className={styles.overviewValue}>{(((block.gasUsed || 0) / (block.gasLimit || 21000)) * 100).toFixed(1)}%</div>
             </div>
           </div>
           
@@ -210,7 +206,7 @@ export default function BlockDetailPage() {
               <div className={styles.infoRow}>
                 <div className={styles.infoLabel}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+                    <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8 8z"/>
                     <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
                   </svg>
                   Timestamp:
@@ -229,8 +225,8 @@ export default function BlockDetailPage() {
                   Transactions:
                 </div>
                 <div className={styles.infoValue}>
-                  <span className={styles.transactionCount}>{formatNumber(block.transactions.length)} transactions</span>
-                  {block.transactions.length > 0 && (
+                  <span className={styles.transactionCount}>{formatNumber(block.transactions?.length || 0)} transactions</span>
+                  {(block.transactions?.length || 0) > 0 && (
                     <Link href={`#transactions`} className={styles.viewLink}>View all</Link>
                   )}
                 </div>
@@ -245,49 +241,17 @@ export default function BlockDetailPage() {
                 </div>
                 <div className={styles.infoValue}>
                   <Link 
-                    href={`/block/${block.parentHash}`}
+                    href={`/block/${block.previousHash}`}
                     className={styles.hashLink}
                   >
-                    {formatHash(block.parentHash)}
+                    {formatHash(block.previousHash)}
                   </Link>
                   <button
-                    onClick={() => handleCopy(block.parentHash, 'parent')}
+                    onClick={() => handleCopy(block.previousHash, 'parent')}
                     className={styles.copyButton}
                     title="Copy to clipboard"
                   >
                     {copied === 'parent' ? (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                      </svg>
-                    ) : (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-              
-              <div className={styles.infoRow}>
-                <div className={styles.infoLabel}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                  </svg>
-                  Miner:
-                </div>
-                <div className={styles.infoValue}>
-                  <Link 
-                    href={`/address/${block.miner}`}
-                    className={styles.addressLink}
-                  >
-                    {formatHash(block.miner)}
-                  </Link>
-                  <button
-                    onClick={() => handleCopy(block.miner, 'miner')}
-                    className={styles.copyButton}
-                    title="Copy to clipboard"
-                  >
-                    {copied === 'miner' ? (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                       </svg>
@@ -308,8 +272,8 @@ export default function BlockDetailPage() {
                   Gas Used:
                 </div>
                 <div className={styles.infoValue}>
-                  <span>{formatGas(block.gasUsed)}</span>
-                  <span className={styles.gasPercentage}>({((block.gasUsed / block.gasLimit) * 100).toFixed(2)}%)</span>
+                  <span>{formatGas(block.gasUsed || 0)}</span>
+                  <span className={styles.gasPercentage}>({(((block.gasUsed || 0) / (block.gasLimit || 21000)) * 100).toFixed(2)}%)</span>
                 </div>
               </div>
               
@@ -321,7 +285,7 @@ export default function BlockDetailPage() {
                   Gas Limit:
                 </div>
                 <div className={styles.infoValue}>
-                  <span>{formatGas(block.gasLimit)}</span>
+                  <span>{formatGas(block.gasLimit || 21000)}</span>
                 </div>
               </div>
             </div>
@@ -331,13 +295,13 @@ export default function BlockDetailPage() {
               <div className={styles.gasUsageHeader}>
                 <span className={styles.gasUsageTitle}>Gas Usage</span>
                 <span className={styles.gasUsageStats}>
-                  {formatGas(block.gasUsed)} / {formatGas(block.gasLimit)} ({((block.gasUsed / block.gasLimit) * 100).toFixed(2)}%)
+                  {formatGas(block.gasUsed || 0)} / {formatGas(block.gasLimit || 21000)} ({(((block.gasUsed || 0) / (block.gasLimit || 21000)) * 100).toFixed(2)}%)
                 </span>
               </div>
               <div className={styles.gasUsageBar}>
                 <div 
                   className={styles.gasUsageFill} 
-                  style={{ width: `${(block.gasUsed / block.gasLimit) * 100}%` }}
+                  style={{ width: `${((block.gasUsed || 0) / (block.gasLimit || 21000)) * 100}%` }}
                 />
               </div>
               <div className={styles.gasUsageLabels}>
@@ -356,9 +320,9 @@ export default function BlockDetailPage() {
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
                 Transactions
-                <span className={styles.transactionBadge}>{formatNumber(block.transactions.length)}</span>
+                <span className={styles.transactionBadge}>{formatNumber(block.transactions?.length || 0)}</span>
               </h2>
-              {block.transactions.length > 0 && (
+              {(block.transactions?.length || 0) > 0 && (
                 <div className={styles.cardActions}>
                   <button className={styles.filterButton}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -371,7 +335,7 @@ export default function BlockDetailPage() {
             </div>
             
             <div className={styles.transactionsSection}>
-              {block.transactions.length === 0 ? (
+              {block.transactions?.length === 0 ? (
                 <div className={styles.noTransactions}>
                   <div className={styles.emptyState}>
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
@@ -383,7 +347,7 @@ export default function BlockDetailPage() {
                 </div>
               ) : (
                 <div className={styles.transactionsList}>
-                  {block.transactions.map((tx, index) => (
+                  {block.transactions?.map((tx, index) => (
                     <TransactionCard key={tx.hash || index} transaction={tx} />
                   ))}
                 </div>

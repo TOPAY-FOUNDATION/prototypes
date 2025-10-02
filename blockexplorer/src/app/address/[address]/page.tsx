@@ -154,7 +154,7 @@ export default function AddressDetailPage() {
                 <div className={styles.balanceValue}>
                   {formatBalance(addressData.balance)}
                 </div>
-                <div className={styles.balanceLabel}>ETH Balance</div>
+                <div className={styles.balanceLabel}>TOPAY Balance</div>
               </div>
               
               {/* Transaction Count */}
@@ -183,7 +183,7 @@ export default function AddressDetailPage() {
                 <div>
                   <div className={styles.balanceLabel}>Current Balance</div>
                   <div className={styles.balanceValue}>
-                    {formatBalance(addressData.balance)} <span className={styles.balanceCurrency}>ETH</span>
+                    {formatBalance(addressData.balance)} <span className={styles.balanceCurrency}>TOPAY</span>
                   </div>
                 </div>
                 <div className={styles.addressContainer}>

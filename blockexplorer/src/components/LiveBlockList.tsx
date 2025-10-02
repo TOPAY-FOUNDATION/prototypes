@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import BlockCard from './BlockCard';
 import LoadingSpinner from './LoadingSpinner';
-import { Block } from '@/lib/blockchain';
+import { Block, BlockchainClient } from '@/lib/blockchain';
 import { useBlockchainPolling } from '@/lib/hooks/usePolling';
 import styles from './live-block-list.module.css';
 import { CubeIcon } from '@heroicons/react/24/outline';
@@ -16,16 +16,10 @@ interface LiveBlockListProps {
 export default function LiveBlockList({ maxBlocks = 5, className = '' }: LiveBlockListProps) {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [newBlocksCount, setNewBlocksCount] = useState(0);
+  const blockchain = new BlockchainClient();
 
   const fetchRecentBlocks = async () => {
-    const response = await fetch(`/api/blocks?limit=${maxBlocks}`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch blocks');
-    }
-
-    const data = await response.json();
-    return data.blocks || [];
+    return await blockchain.getRecentBlocks(maxBlocks);
   };
 
   const {
@@ -42,8 +36,8 @@ export default function LiveBlockList({ maxBlocks = 5, className = '' }: LiveBlo
 
   useEffect(() => {
     if (fetchedBlocks && Array.isArray(fetchedBlocks)) {
-      const currentBlockNumbers = blocks.map(b => b.number);
-      const newBlocks = fetchedBlocks.filter(block => !currentBlockNumbers.includes(block.number));
+      const currentBlockNumbers = blocks.map(b => b.index);
+      const newBlocks = fetchedBlocks.filter(block => !currentBlockNumbers.includes(block.index));
       
       if (newBlocks.length > 0 && blocks.length > 0) {
         setNewBlocksCount(prev => prev + newBlocks.length);

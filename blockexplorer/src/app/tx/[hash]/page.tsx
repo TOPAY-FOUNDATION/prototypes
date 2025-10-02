@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Transaction } from '@/lib/blockchain';
+import { Transaction, BlockchainClient } from '@/lib/blockchain';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { formatHash, formatBalance, formatGwei, formatGas, formatNumber, copyToClipboard } from '@/lib/utils';
 import styles from './transaction-page.module.css';
@@ -15,6 +15,9 @@ export default function TransactionDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState('');
+  
+  // Use useMemo to prevent blockchain client recreation on every render
+  const blockchain = useMemo(() => new BlockchainClient(), []);
 
   const txHash = params.hash as string;
 
@@ -24,14 +27,8 @@ export default function TransactionDetailPage() {
         setLoading(true);
         setError(null);
         
-        const response = await fetch(`/api/transactions?hash=${txHash}`);
-        
-        if (!response.ok) {
-          throw new Error('Transaction not found');
-        }
-        
-        const data = await response.json();
-        setTransaction(data.transaction);
+        const transactionData = await blockchain.getTransactionByHash(txHash);
+        setTransaction(transactionData);
       } catch (err) {
         console.error('Error fetching transaction:', err);
         setError('Transaction not found or failed to load');
@@ -43,7 +40,7 @@ export default function TransactionDetailPage() {
     if (txHash) {
       fetchTransaction();
     }
-  }, [txHash]);
+  }, [txHash, blockchain]);
 
   const handleCopy = async (text: string, type: string) => {
     try {
@@ -149,13 +146,13 @@ export default function TransactionDetailPage() {
                   <span className={styles.infoLabel}>Block Hash:</span>
                   <div className={styles.infoValue}>
                     <Link 
-                      href={`/block/${transaction.blockHash}`}
+                      href={`/block/${transaction.blockHash || ''}`}
                       className={styles.hashLink}
                     >
-                      {formatHash(transaction.blockHash)}
+                      {formatHash(transaction.blockHash || '')}
                     </Link>
                     <button
-                      onClick={() => handleCopy(transaction.blockHash, 'blockhash')}
+                      onClick={() => handleCopy(transaction.blockHash || '', 'blockhash')}
                       className={styles.copyButton}
                     >
                       {copied === 'blockhash' ? 'Copied!' : 'Copy'}
@@ -165,7 +162,7 @@ export default function TransactionDetailPage() {
                 
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Transaction Index:</span>
-                  <span className={styles.infoText}>{transaction.transactionIndex}</span>
+                  <span className={styles.infoText}>{transaction.transactionIndex || 0}</span>
                 </div>
               </div>
               
@@ -181,14 +178,14 @@ export default function TransactionDetailPage() {
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Gas Price:</span>
                   <span className={styles.gasText}>
-                    {formatGwei(transaction.gasPrice)}
+                    {formatGwei((transaction.gasPrice || 0).toString())}
                   </span>
                 </div>
                 
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Gas Limit:</span>
                   <span className={styles.gasText}>
-                    {formatGas(transaction.gas)}
+                    {formatGas(transaction.gas || 21000)}
                   </span>
                 </div>
               </div>

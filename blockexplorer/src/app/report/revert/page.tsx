@@ -81,20 +81,22 @@ export default function ReportRevertPage() {
     setAiError(null);
 
     try {
-      const reviewData = {
-        reportType,
-        walletAddress: reportType === 'wallet' ? formData.walletAddress : '',
-        transactionHash: reportType === 'revert' ? formData.transactionHash : '',
-        description: formData.description,
-        evidenceImages: formData.evidenceImages.length
-      };
+      // Create FormData to handle file uploads
+      const formDataToSend = new FormData();
+      formDataToSend.append('reportType', reportType);
+      formDataToSend.append('walletAddress', reportType === 'wallet' ? formData.walletAddress : '');
+      formDataToSend.append('transactionHash', reportType === 'revert' ? formData.transactionHash : '');
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('evidenceImages', formData.evidenceImages.length.toString());
+
+      // Add image files
+      formData.evidenceImages.forEach((file, index) => {
+        formDataToSend.append(`imageFile_${index}`, file);
+      });
 
       const response = await fetch('/api/ai-review', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(reviewData),
+        body: formDataToSend, // Send FormData instead of JSON
       });
 
       if (!response.ok) {
@@ -109,7 +111,7 @@ export default function ReportRevertPage() {
     } finally {
       setAiLoading(false);
     }
-  }, [reportType, formData.walletAddress, formData.transactionHash, formData.description, formData.evidenceImages.length]);
+  }, [reportType, formData.walletAddress, formData.transactionHash, formData.description, formData.evidenceImages]);
 
   // Trigger AI review when form data changes
   useEffect(() => {
@@ -169,17 +171,42 @@ export default function ReportRevertPage() {
       return;
     }
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      setSubmitted(true);
-      // In a real implementation, you would send the report data including images to your backend
-      console.log('Report submitted:', {
-        ...formData,
-        evidenceImagesCount: formData.evidenceImages.length,
-        aiReview: aiReview
+    try {
+      // Create FormData for automated analysis and enforcement
+      const formDataToSend = new FormData();
+      formDataToSend.append('reportType', reportType);
+      formDataToSend.append('walletAddress', reportType === 'wallet' ? formData.walletAddress : '');
+      formDataToSend.append('transactionHash', reportType === 'revert' ? formData.transactionHash : '');
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('evidenceImages', formData.evidenceImages.length.toString());
+
+      // Add image files
+      formData.evidenceImages.forEach((file, index) => {
+        formDataToSend.append(`imageFile_${index}`, file);
       });
-    }, 1000);
+
+      // Call automated analysis and enforcement API
+      const response = await fetch('/api/analyze-and-enforce', {
+        method: 'POST',
+        body: formDataToSend,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process report');
+      }
+
+      const result = await response.json();
+      
+      // Store the result for display
+      setSubmitted(true);
+      console.log('Automated analysis and enforcement result:', result);
+      
+    } catch (error) {
+      console.error('Report submission error:', error);
+      alert('Failed to submit report. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {

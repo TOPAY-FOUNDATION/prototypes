@@ -24,30 +24,26 @@ export default function MarketStats({ className = '' }: MarketStatsProps) {
     const fetchMarketData = async () => {
       try {
         const client = new BlockchainClient();
-        const stats = await client.getBlockchainStats();
+        const marketData = await client.getMarketData();
         
-        // In a real application, this would fetch from an API
-        // For now, we'll use mock data with real token count
-        const mockData: MarketData = {
-          price: 0,
-          marketCap: 0,
-          volume24h: 0,
-          change24h: 0,
-          totalTokens: stats.totalTokens || 0,
-        };
-
-        setMarketData(mockData);
+        setMarketData({
+          price: marketData.price,
+          marketCap: marketData.marketCap,
+          volume24h: marketData.volume24h,
+          change24h: marketData.change24h,
+          totalTokens: marketData.totalSupply,
+        });
       } catch (error) {
         console.error('Failed to fetch market data:', error);
-        // Fallback to mock data
-        const mockData: MarketData = {
+        // Fallback to zero values when API fails
+        const fallbackData: MarketData = {
           price: 0,
           marketCap: 0,
           volume24h: 0,
           change24h: 0,
           totalTokens: 0,
         };
-        setMarketData(mockData);
+        setMarketData(fallbackData);
       } finally {
         setLoading(false);
       }

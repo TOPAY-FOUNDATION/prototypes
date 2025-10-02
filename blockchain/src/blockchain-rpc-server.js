@@ -6,13 +6,21 @@
 import express from 'express';
 import cors from 'cors';
 import { Blockchain } from './blockchain/blockchain.js';
+import { ExplorerMethods } from './rpc/explorer-methods.js';
 
 class SimpleBlockchainRPCServer {
   constructor(port = 3001) {
     this.app = express();
     this.port = port;
     this.blockchain = new Blockchain();
+    this.explorerMethods = new ExplorerMethods(this.blockchain);
     this.initialized = false;
+    
+    // Security enforcement storage
+    this.securityActions = new Map(); // walletAddress -> SecurityAction
+    this.blockedWallets = new Set();
+    this.restrictedWallets = new Map(); // walletAddress -> restrictions
+    
     this.setupMiddleware();
     this.setupRoutes();
   }
@@ -71,6 +79,35 @@ class SimpleBlockchainRPCServer {
         res.json(stats);
       } catch (error) {
         res.status(500).json({ error: error.message });
+      }
+    });
+
+    // TOPAY API - Get market data (mock for now, would connect to real price feeds)
+    this.app.get('/topay/market', async (req, res) => {
+      try {
+        const stats = this.blockchain.getStats();
+        
+        // Mock market data - in production this would come from price feeds
+        const marketData = {
+          price: 0.00, // USD price per TOPAY
+          marketCap: 0.00, // Total market cap in USD
+          volume24h: 0.00, // 24h trading volume in USD
+          change24h: 0.00, // 24h price change percentage
+          totalSupply: stats.totalTokens || 1000000, // Total TOPAY tokens in circulation
+          circulatingSupply: stats.totalTokens || 1000000, // Circulating supply
+          maxSupply: 1000000000, // Maximum possible supply
+          lastUpdated: Date.now()
+        };
+        
+        res.json({
+          success: true,
+          data: marketData
+        });
+      } catch (error) {
+        res.status(500).json({ 
+          success: false,
+          error: error.message 
+        });
       }
     });
 
@@ -700,6 +737,343 @@ class SimpleBlockchainRPCServer {
       });
     });
 
+    // ========================================
+    // BLOCKCHAIN EXPLORER API ENDPOINTS
+    // Standard blockchain API methods following Ethereum JSON-RPC conventions
+    // ========================================
+
+    // Get block by number (standard: eth_getBlockByNumber)
+    this.app.get('/explorer/block/number/:blockNumber', async (req, res) => {
+      try {
+        const { blockNumber } = req.params;
+        const { fullTransactions = false } = req.query;
+        
+        const block = await this.explorerMethods.getBlockByNumber(
+          blockNumber, 
+          fullTransactions === 'true'
+        );
+        
+        if (block) {
+          res.json({ success: true, block });
+        } else {
+          res.status(404).json({ error: 'Block not found' });
+        }
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get block by hash (standard: eth_getBlockByHash)
+    this.app.get('/explorer/block/hash/:blockHash', async (req, res) => {
+      try {
+        const { blockHash } = req.params;
+        const { fullTransactions = false } = req.query;
+        
+        const block = await this.explorerMethods.getBlockByHash(
+          blockHash, 
+          fullTransactions === 'true'
+        );
+        
+        if (block) {
+          res.json({ success: true, block });
+        } else {
+          res.status(404).json({ error: 'Block not found' });
+        }
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get transaction by hash (standard: eth_getTransactionByHash)
+    this.app.get('/explorer/transaction/:txHash', async (req, res) => {
+      try {
+        const { txHash } = req.params;
+        
+        const transaction = await this.explorerMethods.getTransactionByHash(txHash);
+        
+        if (transaction) {
+          res.json({ success: true, transaction });
+        } else {
+          res.status(404).json({ error: 'Transaction not found' });
+        }
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get transaction receipt (standard: eth_getTransactionReceipt)
+    this.app.get('/explorer/transaction/:txHash/receipt', async (req, res) => {
+      try {
+        const { txHash } = req.params;
+        
+        const receipt = await this.explorerMethods.getTransactionReceipt(txHash);
+        
+        if (receipt) {
+          res.json({ success: true, receipt });
+        } else {
+          res.status(404).json({ error: 'Transaction receipt not found' });
+        }
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get account balance (standard: eth_getBalance)
+    this.app.get('/explorer/account/:address/balance', async (req, res) => {
+      try {
+        const { address } = req.params;
+        const { blockNumber = 'latest' } = req.query;
+        
+        const balance = await this.explorerMethods.getBalance(address, blockNumber);
+        
+        res.json({ 
+          success: true, 
+          address,
+          balance,
+          blockNumber: blockNumber === 'latest' ? await this.explorerMethods.getBlockNumber() : blockNumber
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get transaction count (standard: eth_getTransactionCount)
+    this.app.get('/explorer/account/:address/nonce', async (req, res) => {
+      try {
+        const { address } = req.params;
+        const { blockNumber = 'latest' } = req.query;
+        
+        const nonce = await this.explorerMethods.getTransactionCount(address, blockNumber);
+        
+        res.json({ 
+          success: true, 
+          address,
+          nonce,
+          blockNumber: blockNumber === 'latest' ? await this.explorerMethods.getBlockNumber() : blockNumber
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get code at address (standard: eth_getCode)
+    this.app.get('/explorer/account/:address/code', async (req, res) => {
+      try {
+        const { address } = req.params;
+        const { blockNumber = 'latest' } = req.query;
+        
+        const code = await this.explorerMethods.getCode(address, blockNumber);
+        
+        res.json({ 
+          success: true, 
+          address,
+          code,
+          blockNumber: blockNumber === 'latest' ? await this.explorerMethods.getBlockNumber() : blockNumber
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get latest block number (standard: eth_blockNumber)
+    this.app.get('/explorer/block/latest', async (req, res) => {
+      try {
+        const blockNumber = await this.explorerMethods.getBlockNumber();
+        
+        res.json({ 
+          success: true, 
+          blockNumber,
+          decimal: parseInt(blockNumber, 16)
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get network information
+    this.app.get('/explorer/network', async (req, res) => {
+      try {
+        const networkInfo = await this.explorerMethods.getNetworkInfo();
+        
+        res.json({ 
+          success: true, 
+          network: networkInfo
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Search blockchain data
+    this.app.get('/explorer/search', async (req, res) => {
+      try {
+        const { q } = req.query;
+        
+        if (!q) {
+          return res.status(400).json({ error: 'Search query parameter "q" is required' });
+        }
+        
+        const results = await this.explorerMethods.search(q);
+        
+        res.json({ 
+          success: true, 
+          ...results
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get recent blocks
+    this.app.get('/explorer/blocks/recent', async (req, res) => {
+      try {
+        const { limit = 10 } = req.query;
+        const parsedLimit = Math.min(parseInt(limit) || 10, 100); // Max 100 blocks
+        
+        const blocks = await this.explorerMethods.getRecentBlocks(parsedLimit);
+        
+        res.json({ 
+          success: true, 
+          blocks,
+          count: blocks.length
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get recent transactions
+    this.app.get('/explorer/transactions/recent', async (req, res) => {
+      try {
+        const { limit = 10 } = req.query;
+        const parsedLimit = Math.min(parseInt(limit) || 10, 100); // Max 100 transactions
+        
+        const transactions = await this.explorerMethods.getRecentTransactions(parsedLimit);
+        
+        res.json({ 
+          success: true, 
+          transactions,
+          count: transactions.length
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // JSON-RPC 2.0 endpoint for standard blockchain methods
+    this.app.post('/explorer/rpc', async (req, res) => {
+      try {
+        const { method, params = [], id = 1, jsonrpc = '2.0' } = req.body;
+        
+        let result;
+        
+        switch (method) {
+          case 'eth_blockNumber':
+            result = await this.explorerMethods.getBlockNumber();
+            break;
+            
+          case 'eth_getBlockByNumber':
+            result = await this.explorerMethods.getBlockByNumber(params[0], params[1] || false);
+            break;
+            
+          case 'eth_getBlockByHash':
+            result = await this.explorerMethods.getBlockByHash(params[0], params[1] || false);
+            break;
+            
+          case 'eth_getTransactionByHash':
+            result = await this.explorerMethods.getTransactionByHash(params[0]);
+            break;
+            
+          case 'eth_getTransactionReceipt':
+            result = await this.explorerMethods.getTransactionReceipt(params[0]);
+            break;
+            
+          case 'eth_getBalance':
+            result = await this.explorerMethods.getBalance(params[0], params[1] || 'latest');
+            break;
+            
+          case 'eth_getTransactionCount':
+            result = await this.explorerMethods.getTransactionCount(params[0], params[1] || 'latest');
+            break;
+            
+          case 'eth_getCode':
+            result = await this.explorerMethods.getCode(params[0], params[1] || 'latest');
+            break;
+            
+          case 'net_version':
+            result = '1'; // TOPAY mainnet
+            break;
+            
+          case 'web3_clientVersion':
+            result = 'TOPAY/v2.0.0/blockchain-rpc-server';
+            break;
+            
+          default:
+            return res.json({
+              jsonrpc,
+              id,
+              error: {
+                code: -32601,
+                message: 'Method not found'
+              }
+            });
+        }
+        
+        res.json({
+          jsonrpc,
+          id,
+          result
+        });
+      } catch (error) {
+        res.json({
+          jsonrpc: req.body.jsonrpc || '2.0',
+          id: req.body.id || 1,
+          error: {
+            code: -32603,
+            message: 'Internal error',
+            data: error.message
+          }
+        });
+      }
+    });
+
+    // Explorer API documentation
+    this.app.get('/explorer', (req, res) => {
+      res.json({
+        name: 'TOPAY Blockchain Explorer API',
+        version: '1.0.0',
+        description: 'Standard blockchain explorer API following Ethereum JSON-RPC conventions',
+        baseUrl: '/explorer',
+        endpoints: {
+          'GET /explorer/block/number/:blockNumber': 'Get block by number (query: fullTransactions=true/false)',
+          'GET /explorer/block/hash/:blockHash': 'Get block by hash (query: fullTransactions=true/false)',
+          'GET /explorer/block/latest': 'Get latest block number',
+          'GET /explorer/transaction/:txHash': 'Get transaction by hash',
+          'GET /explorer/transaction/:txHash/receipt': 'Get transaction receipt',
+          'GET /explorer/account/:address/balance': 'Get account balance (query: blockNumber)',
+          'GET /explorer/account/:address/nonce': 'Get transaction count/nonce (query: blockNumber)',
+          'GET /explorer/account/:address/code': 'Get contract code (query: blockNumber)',
+          'GET /explorer/network': 'Get network information',
+          'GET /explorer/search?q=term': 'Search blocks, transactions, and addresses',
+          'GET /explorer/blocks/recent?limit=10': 'Get recent blocks',
+          'GET /explorer/transactions/recent?limit=10': 'Get recent transactions',
+          'POST /explorer/rpc': 'JSON-RPC 2.0 endpoint for standard methods'
+        },
+        jsonRpcMethods: [
+          'eth_blockNumber',
+          'eth_getBlockByNumber',
+          'eth_getBlockByHash', 
+          'eth_getTransactionByHash',
+          'eth_getTransactionReceipt',
+          'eth_getBalance',
+          'eth_getTransactionCount',
+          'eth_getCode',
+          'net_version',
+          'web3_clientVersion'
+        ]
+      });
+    });
+
     // TOPAY API Documentation
     this.app.get('/topay', (req, res) => {
       res.json({
@@ -745,6 +1119,9 @@ class SimpleBlockchainRPCServer {
       res.redirect(301, '/topay');
     });
 
+    // Security Enforcement API
+    this.setupSecurityRoutes();
+
     // Catch all for undefined routes
     this.app.use('*', (req, res) => {
       res.status(404).json({
@@ -752,6 +1129,218 @@ class SimpleBlockchainRPCServer {
         message: 'Visit /topay for available endpoints'
       });
     });
+  }
+
+  /**
+   * Setup security enforcement routes
+   */
+  setupSecurityRoutes() {
+    // Enforce security action on a wallet
+    this.app.post('/security/enforce', (req, res) => {
+      try {
+        const { walletAddress, action, severity, reason, duration, restrictions } = req.body;
+
+        if (!walletAddress || !action || !severity || !reason) {
+          return res.status(400).json({
+            success: false,
+            error: 'Missing required fields: walletAddress, action, severity, reason'
+          });
+        }
+
+        // Validate wallet address format
+        if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid wallet address format'
+          });
+        }
+
+        const securityAction = {
+          walletAddress,
+          action,
+          severity,
+          reason,
+          duration,
+          restrictions: restrictions || [],
+          timestamp: new Date().toISOString(),
+          expiresAt: duration ? new Date(Date.now() + duration * 60 * 60 * 1000).toISOString() : null
+        };
+
+        // Store security action
+        this.securityActions.set(walletAddress, securityAction);
+
+        // Apply enforcement
+        switch (action) {
+          case 'block':
+            this.blockedWallets.add(walletAddress);
+            break;
+          case 'restrict':
+            this.restrictedWallets.set(walletAddress, {
+              restrictions: restrictions || [],
+              expiresAt: securityAction.expiresAt
+            });
+            break;
+          case 'monitor':
+            // Enhanced monitoring - just log for now
+            console.log(`🔍 Enhanced monitoring enabled for wallet: ${walletAddress}`);
+            break;
+        }
+
+        console.log(`🚨 Security action applied: ${action} on ${walletAddress} - ${reason}`);
+
+        res.json({
+          success: true,
+          message: `Security action '${action}' applied to wallet ${walletAddress}`,
+          action: securityAction
+        });
+
+      } catch (error) {
+        console.error('Security enforcement error:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to enforce security action'
+        });
+      }
+    });
+
+    // Get security status for a wallet
+    this.app.get('/security/status/:walletAddress', (req, res) => {
+      try {
+        const { walletAddress } = req.params;
+
+        if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid wallet address format'
+          });
+        }
+
+        const securityAction = this.securityActions.get(walletAddress);
+        const isBlocked = this.blockedWallets.has(walletAddress);
+        const restrictions = this.restrictedWallets.get(walletAddress);
+
+        // Check if restrictions have expired
+        if (restrictions && restrictions.expiresAt && new Date() > new Date(restrictions.expiresAt)) {
+          this.restrictedWallets.delete(walletAddress);
+          this.securityActions.delete(walletAddress);
+        }
+
+        res.json({
+          success: true,
+          walletAddress,
+          isBlocked,
+          isRestricted: !!restrictions,
+          restrictions: restrictions?.restrictions || [],
+          securityAction: securityAction || null,
+          status: isBlocked ? 'blocked' : restrictions ? 'restricted' : 'normal'
+        });
+
+      } catch (error) {
+        console.error('Security status check error:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to check security status'
+        });
+      }
+    });
+
+    // Remove security action (unblock/unrestrict)
+    this.app.delete('/security/enforce/:walletAddress', (req, res) => {
+      try {
+        const { walletAddress } = req.params;
+        const { reason } = req.body;
+
+        if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid wallet address format'
+          });
+        }
+
+        const hadAction = this.securityActions.has(walletAddress);
+        
+        // Remove all security measures
+        this.securityActions.delete(walletAddress);
+        this.blockedWallets.delete(walletAddress);
+        this.restrictedWallets.delete(walletAddress);
+
+        console.log(`✅ Security action removed for wallet: ${walletAddress} - ${reason || 'Manual removal'}`);
+
+        res.json({
+          success: true,
+          message: hadAction 
+            ? `Security measures removed for wallet ${walletAddress}` 
+            : `No security measures found for wallet ${walletAddress}`,
+          walletAddress
+        });
+
+      } catch (error) {
+        console.error('Security removal error:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to remove security action'
+        });
+      }
+    });
+
+    // List all security actions
+    this.app.get('/security/actions', (req, res) => {
+      try {
+        const actions = Array.from(this.securityActions.entries()).map(([address, action]) => ({
+          walletAddress: address,
+          ...action
+        }));
+
+        res.json({
+          success: true,
+          totalActions: actions.length,
+          blockedWallets: Array.from(this.blockedWallets),
+          restrictedWallets: Array.from(this.restrictedWallets.keys()),
+          actions
+        });
+
+      } catch (error) {
+        console.error('Security actions list error:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to retrieve security actions'
+        });
+      }
+    });
+  }
+
+  /**
+   * Check if a wallet is allowed to perform a transaction
+   */
+  isWalletAllowed(walletAddress, transactionAmount = 0) {
+    // Check if wallet is blocked
+    if (this.blockedWallets.has(walletAddress)) {
+      return {
+        allowed: false,
+        reason: 'Wallet is blocked due to security concerns'
+      };
+    }
+
+    // Check restrictions
+    const restrictions = this.restrictedWallets.get(walletAddress);
+    if (restrictions) {
+      // Check if restrictions have expired
+      if (restrictions.expiresAt && new Date() > new Date(restrictions.expiresAt)) {
+        this.restrictedWallets.delete(walletAddress);
+        this.securityActions.delete(walletAddress);
+        return { allowed: true };
+      }
+
+      // Apply transaction limits (simplified example)
+      if (transactionAmount > 1) { // 1 TOPAY limit for restricted wallets
+        return {
+          allowed: false,
+          reason: 'Transaction amount exceeds limit for restricted wallet'
+        };
+      }
+    }
+
+    return { allowed: true };
   }
 
   async start() {

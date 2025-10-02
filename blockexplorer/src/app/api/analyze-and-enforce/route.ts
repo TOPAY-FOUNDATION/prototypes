@@ -23,25 +23,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Create request body
-    const body: ReportReviewRequest = {
+    const reportData: ReportReviewRequest = {
       reportType,
       walletAddress,
       transactionHash,
       description,
       evidenceImages: evidenceImagesCount,
-      imageFiles // Add the actual image files
+      imageFiles
     };
 
     // Validate required fields
-    if (!body.reportType || !body.walletAddress || !body.description) {
+    if (!reportData.reportType || !reportData.walletAddress || !reportData.description) {
       return NextResponse.json(
         { error: 'Missing required fields: reportType, walletAddress, description' },
         { status: 400 }
       );
     }
 
-    // Validate wallet address format (basic validation)
-    if (!/^0x[a-fA-F0-9]{40}$/.test(body.walletAddress)) {
+    // Validate wallet address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(reportData.walletAddress)) {
       return NextResponse.json(
         { error: 'Invalid wallet address format' },
         { status: 400 }
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate transaction hash if provided
-    if (body.transactionHash && !/^0x[a-fA-F0-9]{64}$/.test(body.transactionHash)) {
+    if (reportData.transactionHash && !/^0x[a-fA-F0-9]{64}$/.test(reportData.transactionHash)) {
       return NextResponse.json(
         { error: 'Invalid transaction hash format' },
         { status: 400 }
@@ -59,20 +59,34 @@ export async function POST(request: NextRequest) {
     // Get ChainGPT service instance
     const chainGPT = getChainGPTService();
 
-    // Perform AI review
-    const reviewResult = await chainGPT.reviewReport(body);
+    // Perform automated analysis and enforcement
+    const result = await chainGPT.analyzeAndEnforce(reportData);
 
-    // Return the analysis
+    // Return comprehensive result
     return NextResponse.json({
       success: true,
-      review: reviewResult,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      reportData: {
+        reportType: reportData.reportType,
+        walletAddress: reportData.walletAddress,
+        transactionHash: reportData.transactionHash,
+        description: reportData.description,
+        evidenceCount: evidenceImagesCount
+      },
+      analysis: result.analysis,
+      actionExecuted: result.actionExecuted,
+      message: result.message,
+      nextSteps: result.analysis.requiresHumanReview 
+        ? ['Manual review required', 'Security team will investigate within 24 hours']
+        : result.actionExecuted 
+        ? ['Security measures implemented', 'Wallet monitoring active', 'Report logged for audit']
+        : ['Analysis completed', 'Manual intervention may be required']
     });
 
   } catch (error) {
-    console.error('AI Review API Error:', error);
+    console.error('Analyze and Enforce API Error:', error);
 
-    // Handle specific ChainGPT errors
+    // Handle specific errors
     if (error instanceof Error) {
       if (error.message.includes('Invalid API key')) {
         return NextResponse.json(
@@ -89,7 +103,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Failed to analyze report. Please try again later.' },
+      { 
+        error: 'Failed to analyze and enforce security measures. Please try again later.',
+        success: false
+      },
       { status: 500 }
     );
   }
@@ -104,14 +121,22 @@ export async function GET() {
     return NextResponse.json({
       status: health.healthy ? 'operational' : 'error',
       message: health.message,
+      service: 'Automated Analysis and Enforcement',
+      capabilities: [
+        'Report legitimacy verification',
+        'Automated security analysis',
+        'Wallet blocking/restriction',
+        'Image evidence processing',
+        'Risk assessment and scoring'
+      ],
       timestamp: new Date().toISOString()
     });
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { 
         status: 'error', 
-        message: 'AI service not configured',
-        timestamp: new Date().toISOString()
+        message: 'Service health check failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );

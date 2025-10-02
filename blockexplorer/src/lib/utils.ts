@@ -29,10 +29,20 @@ export function formatBalance(balance: string, decimals: number = 18): string {
     return wholePart.toString();
   }
   
+  // Convert fractional part to decimal representation
   const fractionalStr = fractionalPart.toString().padStart(decimals, '0');
-  const trimmedFractional = fractionalStr.replace(/0+$/, '');
+  // Remove trailing zeros, then remove leading zeros (but keep at least one digit)
+  const trimmedFractional = fractionalStr.replace(/0+$/, '').replace(/^0+/, '') || '0';
   
-  return `${wholePart}.${trimmedFractional}`;
+  // If the fractional part becomes empty or just '0', don't show it
+  if (trimmedFractional === '0') {
+    return wholePart.toString();
+  }
+  
+  // Limit to maximum 5 decimal places
+  const limitedFractional = trimmedFractional.length > 5 ? trimmedFractional.substring(0, 5) : trimmedFractional;
+  
+  return `${wholePart}.${limitedFractional}`;
 }
 
 export function formatTimestamp(timestamp: number): string {
